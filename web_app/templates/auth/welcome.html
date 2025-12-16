@@ -1,0 +1,16 @@
+{% extends "base_form.html" %} {% block content %} {% block form_content %}
+<form action="" method="POST" class="needs-validation">
+  <div class="mb-3">
+    <label for="email" class="form-label">Podaj e-mail</label>
+    <input
+      type="email"
+      class="form-control"
+      id="email"
+      name="email"
+      placeholder="Twój e-mail"
+      required
+    />
+  </div>
+  <button type="submit" class="btn btn-primary w-100">Dalej</button>
+</form>
+{% endblock %} {% endblock %}

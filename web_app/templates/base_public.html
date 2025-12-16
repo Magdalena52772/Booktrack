@@ -1,0 +1,123 @@
+{% extends "base.html"%} {% block head %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/public.css') }}"
+/>
+{% endblock %} {% block header %}
+
+<nav
+  class="navbar navbar-expand-lg navbar-dark sticky-top"
+  style="background-color: var(--public-header-bg)"
+>
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">Book Track</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            >Książki</a
+          >
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="/books/most-added"
+                >Najczęściej dodawane</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="/books/trending">Popularne</a>
+            </li>
+          </ul>
+        </li>
+
+        <!--Gatunki-->
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            >Gatunki</a
+          >
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/genres/drama">Dramat</a></li>
+            <li>
+              <a class="dropdown-item" href="/genres/fiction"
+                >Literatura piękna</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="/genres/childrens_literature"
+                >Literatura dziecięca</a
+              >
+            </li>
+            <li><a class="dropdown-item" href="/genres/crime">Kryminał</a></li>
+            <li>
+              <a class="dropdown-item" href="/genres/thriller">Thriller</a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/genres/biography">Biografia</a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/genres/fantasy">Fantastyka</a>
+            </li>
+            <li><a class="dropdown-item" href="/genres/sci-fi">Sci-Fi</a></li>
+            <li>
+              <a class="dropdown-item" href="/genres/historical_fiction"
+                >Powieść historyczna</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="/genres/young_adult"
+                >Powieść młodzieżowa</a
+              >
+            </li>
+            <li><a class="dropdown-item" href="/genres/romance">Romans</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <!-- Formularz wyszukiwania -->
+      <form class="d-flex me-2" action="/books/explore" method="get">
+        <input
+          class="form-control me-2"
+          type="search"
+          name="query"
+          placeholder="Szukaj książek..."
+          aria-label="Szukaj"
+        />
+        <button class="btn btn-outline-light search-btn" type="submit">
+          <img
+            src="{{ url_for('static', filename='icons/search.svg') }}"
+            alt="Szukaj"
+            class="search-icon"
+          />
+        </button>
+      </form>
+
+      <!-- Logowanie/Rejestracja -->
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/welcome">Zaloguj się</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/welcome">Zarejestruj się</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}

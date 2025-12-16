@@ -1,0 +1,108 @@
+:root {
+  --account-bg: #ede0d4;
+  --account-bg-secondary: #d6ccc2;
+  --account-text: #2c1810;
+  --account-accent: #774936;
+  --account-highlight: #b08968;
+  --account-light-text: #f8f5f2;
+}
+
+/* --- OGÓLNE --- */
+body {
+  background-color: var(--account-bg);
+  color: var(--account-text);
+  min-height: 100vh;
+  font-family: "Roboto", sans-serif;
+}
+
+/* --- HEADER --- */
+header {
+  background-color: var(--account-accent);
+  color: var(--account-light-text);
+  padding: 8px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  font-size: 1.8rem;
+}
+
+nav ul {
+  display: flex;
+  gap: 15px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav a {
+  color: var(--account-light-text);
+  font-weight: 500;
+  transition: opacity 0.3s ease;
+}
+
+nav a:hover {
+  opacity: 0.8;
+}
+
+/* --- MAIN --- */
+main {
+  background-color: var(--account-bg-secondary);
+  padding: 30px;
+  border-radius: 16px;
+  margin: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* --- DASHBOARD / CARDS --- */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+  color: var(--account-accent);
+  margin-bottom: 10px;
+}
+
+.card p {
+  color: var(--account-text);
+}
+
+/* --- BUTTONS --- */
+button,
+.btn {
+  display: inline-block;
+  background-color: var(--account-accent);
+  color: var(--account-light-text);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover,
+.btn:hover {
+  background-color: var(--account-highlight);
+  transform: translateY(-2px);
+}

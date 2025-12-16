@@ -1,0 +1,44 @@
+:root {
+  --text-color: #2c1810;
+  --accent-color: #774936;
+  --bg-color: #ede0d4;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: var(--accent-color);
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #5c3024;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px; /* <=== to doda wnętrze karty */
+  margin-bottom: 20px; /* odstęp między kartami */
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
