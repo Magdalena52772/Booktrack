@@ -1,0 +1,67 @@
+{% extends "base_account.html" %}
+
+  {% block content %}
+<main>
+  <div class="user_panel">
+    <div class="user_panel_account">
+      <div class="user_data">
+        <div class="user_avatar"></div>
+        <div class="user_name"><p class="user_id">9993845</p></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Statystyki</h3>
+  <div class="dashboard">
+    <div class="card">
+      <h3>Przeczytane książki</h3>
+        <p>Przeczytano książek: {{ stats.books_read }}</p>
+      <a href="{{ url_for('user.stats') }}" class="btn">Zobacz przeczytane</a>
+    </div>
+
+    <div class="card">
+      <h3>Czytane obecnie</h3>
+      <p>„Wiedźmin" 300/400, „Duna" 200/300, „Imię róży" 125/200</p>
+      <a href="{{ url_for('user.reading_list') }}" class="btn">Zobacz listę</a>
+    </div>
+
+    <div class="card">
+      <h3>Wyzwania</h3>
+      <p>Przeczytaj 5 książek w 2025</p>
+      <a href="{{ url_for('user.reading_list') }}" class="btn">Zobacz wyzwania</a>
+    </div>
+
+    <div class="card">
+      <h3>Rekomendacje</h3>
+      <p>Zobacz książki, które mogą Ci się spodobać!</p>
+      <a href="{{ url_for('user.recommendations') }}" class="btn">Sprawdź</a>
+    </div>
+
+
+
+  <h3>Listy</h3>
+  <div class="user_lists">
+    <div class="card">
+      <h3>Dodane książki</h3>
+      <p>„Wiedźmin 2", „Pamiętnik", „Pan kleks" "Mały książę"</p>
+      <a href="{{ url_for('user.reading_list') }}" class="btn">Zobacz listę</a>
+    </div>
+    <div class="card">
+      <h3>Ulubione książki</h3>
+      <p>„Wiedźmin", „Muminki", „Ania z zielonego wzgórza"</p>
+      <a href="{{ url_for('user.reading_list') }}" class="btn">Zobacz listę</a>
+    </div>
+    <div class="card">
+      <h3>Dodaj swoją listę</h3>
+      <p>+</p>
+      <a href="{{ url_for('user.reading_list') }}" class="btn">+</a>
+    </div>
+  </div>
+
+    <div class="card">
+      <h3><a href="">Nasze rekomendacje dla ciebie</a></h3>
+      <p>„Wiedźmin 3", „Duna 2", „Pani róża"</p>
+      <a href="{{ url_for('user.recommendations') }}" class="btn">Sprawdź</a>
+    </div>
+</main>
+{% endblock %}

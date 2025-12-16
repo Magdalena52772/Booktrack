@@ -1,0 +1,30 @@
+:root {
+  --forms-bg: #fff5f0;
+  --forms-primary: #5e151c;
+  --forms-primary-hover: #88384f;
+  --forms-link: #88384f;
+}
+
+.auth-box {
+  background-color: var(--forms-bg);
+  border-radius: 15px;
+  max-width: 400px;
+  width: 100%;
+}
+
+.btn-primary {
+  background-color: var(--forms-primary);
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--forms-primary-hover);
+}
+
+a {
+  color: var(--forms-link);
+}
+
+a:hover {
+  text-decoration: underline;
+}

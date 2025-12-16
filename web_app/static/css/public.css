@@ -1,0 +1,158 @@
+:root {
+  --public-bg: #f5e9da;
+  --public-text: #3a2e2e;
+  --public-accent: #8e2b2b; /* przyciski */
+  --public-accent-hover: #a35549; /* hover przycisku na jasnym tle */
+  --public-secondary: #f5e9da; /* linki w ciemnym headerze */
+  --public-highlight: #f2a172; /* hover/akcenty */
+  --public-header-text: beige;
+  --public-header-bg: #5e151c;
+}
+
+body {
+  background-color: var(--public-bg);
+  color: var(--public-text);
+}
+
+header {
+  background-color: var(--public-header-bg);
+  color: var(--public-header-text);
+  padding: 15px 20px;
+}
+
+.navbar-nav .dropdown-menu {
+  background-color: var(--public-header-bg);
+  border: none;
+  border-radius: 8px;
+}
+
+.navbar-nav .dropdown-item {
+  color: var(--public-highlight);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar-nav .dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--public-secondary);
+}
+
+.main-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px;
+  background: linear-gradient(
+    to right,
+    rgba(143, 31, 31, 0.15),
+    rgba(246, 229, 209, 0)
+  );
+}
+
+.main-content h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: var(--public-text);
+}
+
+.main-content ul {
+  padding-left: 20px;
+  margin-bottom: 30px;
+}
+
+.main-content ul li {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.main-content .btn-reg {
+  background-color: var(--public-accent);
+  color: var(--public-secondary);
+  border-radius: 20px;
+  padding: 12px 17px;
+  transition: background-color 0.3s ease;
+}
+
+.main-content .btn-reg:hover {
+  background-color: var(--public-accent-hover);
+}
+
+.main-content-l,
+.main-content-r {
+  flex: 1 1 300px;
+  max-width: 50%;
+}
+
+.main-content-r img {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 40px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  object-fit: cover;
+  -webkit-mask-image: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 1) 50%,
+    rgba(0, 0, 0, 0.5) 80%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 1) 50%,
+    rgba(0, 0, 0, 0.5) 80%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.main-content-r img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+section h3 {
+  margin-top: 25px;
+  font-size: 1.3rem;
+}
+
+section h3 a {
+  display: block;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background-color: var(--public-bg);
+  color: var(--public-accent);
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+section h3 a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  color: var(--public-accent-hover);
+}
+
+.benefits-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.benefits-list li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.benefit-icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(30%) saturate(500%)
+    hue-rotate(330deg);
+  transition: transform 0.2s ease;
+}
+
+.benefits-list li:hover .benefit-icon {
+  transform: scale(1.1);
+}

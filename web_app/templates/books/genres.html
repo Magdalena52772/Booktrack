@@ -1,0 +1,13 @@
+{% extends "base_public.html" %} {% block title %}{{ genre_label }} – Book
+Track{% endblock %} {% block content %}
+<h2>{{ genre_label }}</h2>
+
+{% if books %}
+<ul>
+  {% for book in books %}
+  <li>{{ book.title }} – {{ book.author }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>Brak książek w tym gatunku.</p>
+{% endif %} {% endblock %}

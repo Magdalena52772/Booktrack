@@ -1,0 +1,62 @@
+{% extends "base_public.html" %}{% block title %}Book Track - Monitoruj książki,
+które czytasz{% endblock %} {% block content %}
+<main>
+  <section class="main-content">
+    <div class="main-content-l">
+      <h2>
+        Dołącz do zaczytanej społeczności i odkrywaj książki, które pokochasz:
+      </h2>
+      <ul class="benefits-list">
+        <li>
+          <img
+            src="{{ url_for('static', filename='icons/open_book.svg') }}"
+            alt="Monitoruj książki"
+            class="benefit-icon"
+          />
+          Monitoruj wszystko, co czytasz
+        </li>
+        <li>
+          <img
+            src="{{ url_for('static', filename='icons/lightbulb.svg') }}"
+            alt="Sugestie książek"
+            class="benefit-icon"
+          />
+          Otrzymuj sugestie następnych książek
+        </li>
+        <li>
+          <img
+            src="{{ url_for('static', filename='icons/workspace_premium.svg') }}"
+            alt="Wyzwania czytelnicze"
+            class="benefit-icon"
+          />
+          Stawiaj sobie wyzwania czytelnicze
+        </li>
+        <li>
+          <img
+            src="{{ url_for('static', filename='icons/notifications_active.svg') }}"
+            alt="Powiadomienia o nowościach"
+            class="benefit-icon"
+          />
+          Nie przegap książek, które mogą ci się spodobać!
+        </li>
+      </ul>
+      <a href="/welcome" class="btn-reg"
+        ><strong>ZAREJESTRUJ SIĘ ZA DARMO</strong>
+      </a>
+    </div>
+    <div class="main-content-r">
+      <img
+        src="/static/img/pexels-martabranco-23833967.jpg"
+        alt="Stos książek"
+      />
+    </div>
+  </section>
+  <section>
+    <h3>
+      <a href="/books/trending">Popularne - zobacz, co teraz czytają inni(5)</a>
+    </h3>
+    <h3><a href="/books/most_added">Najczęściej wybierane (5)</a></h3>
+    <h3><a href="/books/genres">Przeglądaj według gatunku</a></h3>
+  </section>
+</main>
+{% endblock %}
