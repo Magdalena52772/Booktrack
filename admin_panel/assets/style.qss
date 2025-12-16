@@ -1,0 +1,194 @@
+/* ================
+Book Track Admin Panel Stylesheet
+Author: Magdalena Popczyk
+================*/
+
+/* GLOBAL */
+QMainWindow {
+    background-color: #f5f3f1;
+    font-family: "Segoe UI", "Arial", "Helvetica";
+}
+
+/* SIDEBAR */
+QWidget#Sidebar {
+    background-color: #4A2E2A;
+    padding: 12px 20px;
+    color: #fff;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+QLabel#lbl_account_info {
+    font-size: 14px;
+    font-weight: 600;
+    color: #faf6f4;
+    margin-bottom: 14px;
+}
+
+QPushButton.sidebarButton {
+    background-color: transparent;
+    padding: 10px 18px;
+    text-align: left;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+QPushButton.sidebarButton:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    padding-left: 24px;
+}
+
+QPushButton.sidebarButton:checked {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-left: 3px solid #e7c3a9;
+    font-weight: 600;
+    padding-left: 26px;
+}
+
+/* TOPBAR */
+QWidget#Topbar {
+    padding: 6px 14px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e3dcd6;
+}
+
+QPushButton#btn_logout {
+    background-color: #6d3b2f;
+    padding: 6px 16px;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+QPushButton#btn_logout:hover {
+    background-color: #874b3c;
+}
+
+/* MAIN CONTENT */
+QFrame#MainContent {
+    background-color: #ffffff;
+    border-radius: 10px;
+    margin: 12px;
+    padding: 22px;
+    border: 1px solid #e9e2dc;
+}
+
+/* PAGE TITLE */
+QLabel#lbl_title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #4A2E2A;
+    margin-bottom: 16px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #d4c5b8;
+}
+
+/* BUTTONS */
+QPushButton {
+    background-color: #6B2F2F;
+    color: #fff;
+    font-size: 12px;
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    background-color: #7f3a3a;
+}
+
+QPushButton:pressed {
+    background-color: #552323;
+}
+
+/* INPUTS */
+QLineEdit, QComboBox, QTextEdit {
+    border: 1px solid #cfc6c2;
+    border-radius: 6px;
+    background-color: #fdfdfd;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
+    border: 1px solid #b79578;
+    background-color: #fffaf6;
+}
+
+/* FORM LABELS */
+QLabel#lbl_info, QLabel#lbl_desc {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5a4a4a;
+    padding-left: 8px;
+    margin-top: 6px;
+    margin-bottom: 8px;
+    border-left: 3px solid rgba(107, 47, 47, 0.3);
+}
+
+/* TABLE */
+QTableWidget {
+    background-color: #ffffff;
+    border: 1px solid #d7cfc9;
+    border-radius: 8px;
+    gridline-color: #e5e1df;
+    font-size: 12px;
+    selection-background-color: #d8e6f9;
+    selection-color: #1e1e1e;
+}
+
+QHeaderView::section {
+    background-color: #f3efec;
+    color: #4a3b39;
+    font-weight: 600;
+    padding: 6px 4px;
+    border: 1px solid #dbd2cd;
+    border-radius: 4px;
+}
+
+/* METRICS */
+#frame_metrics QLabel {
+    background-color: #faf9f8;
+    border: 1px solid #cdc7c2;
+    padding: 10px 14px;
+    font-size: 11px;
+    border-radius: 10px;
+    min-width: 110px;
+    color: #3d3d3d;
+    text-align: center;
+}
+
+#frame_metrics QLabel:hover {
+    background-color: #f1e9e2;
+    border-color: #bba28d;
+    font-weight: 600;
+}
+
+/* CHART DESCRIPTION */
+QLabel#lbl_chart_desc {
+    font-size: 12px;
+    font-weight: 600;
+    color: #514341;
+    padding-left: 8px;
+    border-left: 3px solid rgba(107, 47, 47, 0.4);
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+/* STATUS BAR */
+QStatusBar {
+    background-color: #f4f1ef;
+    border-top: 1px solid #dbd5d0;
+    padding: 8px 12px;
+    color: #3a3a3a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* STATUS COLORS */
+QStatusBar[statusType="info"]    { color: #1E3A8A; }
+QStatusBar[statusType="warning"] { color: #B45309; }
+QStatusBar[statusType="success"] { color: #15803D; }
+QStatusBar[statusType="error"]   { color: #B91C1C; }
