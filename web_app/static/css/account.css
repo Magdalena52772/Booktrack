@@ -1,10 +1,10 @@
 :root {
-  --account-bg: #ede0d4;
-  --account-bg-secondary: #d6ccc2;
+  --account-bg: #f7f6f4;
+  --account-bg-secondary: #e2ddd7;
   --account-text: #2c1810;
   --account-accent: #774936;
   --account-highlight: #b08968;
-  --account-light-text: #f8f5f2;
+  --account-light-text: #ffffff;
 }
 
 /* --- OGÓLNE --- */
