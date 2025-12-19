@@ -38,7 +38,26 @@
    </item>
    <item>
     <widget class="QFrame" name="frame_filters">
-     <layout class="QHBoxLayout" name="filter_box" stretch="0,0,0,0">
+     <layout class="QHBoxLayout" name="filter_box" stretch="0,0,0,0,0">
+      <item>
+       <widget class="QComboBox" name="cb_time">
+        <item>
+         <property name="text">
+          <string>week</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>month</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>year</string>
+         </property>
+        </item>
+       </widget>
+      </item>
       <item>
        <widget class="QLabel" name="lbl_desc">
         <property name="text">
@@ -106,6 +125,9 @@
         </property>
         <property name="selectionBehavior">
          <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
         </property>
         <attribute name="horizontalHeaderDefaultSectionSize">
          <number>130</number>
