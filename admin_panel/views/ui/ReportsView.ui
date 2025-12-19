@@ -106,6 +106,25 @@
        </widget>
       </item>
       <item>
+       <widget class="QComboBox" name="comboBox">
+        <item>
+         <property name="text">
+          <string>week</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>month</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>year</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
        <widget class="QFrame" name="frame_table">
         <property name="minimumSize">
          <size>
@@ -125,11 +144,17 @@
            <property name="editTriggers">
             <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
            </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
            </property>
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
            </property>
            <attribute name="horizontalHeaderDefaultSectionSize">
             <number>150</number>
