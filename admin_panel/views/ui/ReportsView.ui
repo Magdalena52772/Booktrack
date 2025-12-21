@@ -10,6 +10,12 @@
     <height>623</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -91,7 +97,7 @@
          <item>
           <widget class="QPushButton" name="btn_export">
            <property name="text">
-            <string>Export</string>
+            <string>Export csv</string>
            </property>
            <property name="icon">
             <iconset>
@@ -103,25 +109,6 @@
           </widget>
          </item>
         </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="comboBox">
-        <item>
-         <property name="text">
-          <string>week</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>month</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>year</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item>
@@ -139,6 +126,71 @@
          <enum>QFrame::Shadow::Raised</enum>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QFrame" name="frame_time">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Shape::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Shadow::Raised</enum>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLabel" name="lbl_desc1">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Select time range:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cb_time">
+              <item>
+               <property name="text">
+                <string>all</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>week</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>month</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>year</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lbl_info1">
+           <property name="text">
+            <string>💡 Select the report type and time range, and then generate the report</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QTableWidget" name="table_reports">
            <property name="editTriggers">

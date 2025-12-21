@@ -117,6 +117,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="lbl_info">
+        <property name="text">
+         <string>💡 Data from over last 30 days</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="btn_refresh">
         <property name="text">
          <string>Refresh</string>

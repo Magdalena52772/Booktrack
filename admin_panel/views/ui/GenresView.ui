@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,2">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
    <item>
     <widget class="QLabel" name="lbl_title">
      <property name="text">
@@ -46,16 +46,6 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QLabel" name="lbl_chart_desc">
-        <property name="text">
-         <string>Popularity by genre</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QLabel" name="chart_genres_popularity">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -72,37 +62,62 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="comboBox">
-        <item>
-         <property name="text">
-          <string>0 - 12</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>13 - 17</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>18 - 24</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>25 - 39</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>40 - 59</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>60+</string>
-         </property>
-        </item>
+       <widget class="QFrame" name="frame_metrics">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="lbl_info">
+           <property name="text">
+            <string>Select age group:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cb_age_group">
+           <item>
+            <property name="text">
+             <string>All</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>less than 18</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>18 - 25</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>26 - 40</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>41 - 60</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>60+</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
@@ -190,17 +205,6 @@
            <property name="icon">
             <iconset>
              <normaloff>../../assets/icons/refresh.svg</normaloff>../../assets/icons/refresh.svg</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btn_export_csv">
-           <property name="text">
-            <string>Export csv</string>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>../../assets/icons/export.svg</normaloff>../../assets/icons/export.svg</iconset>
            </property>
           </widget>
          </item>

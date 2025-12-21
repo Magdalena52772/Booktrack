@@ -38,9 +38,21 @@
    </item>
    <item>
     <widget class="QFrame" name="frame_filters">
-     <layout class="QHBoxLayout" name="filter_box" stretch="0,0,0,0,0">
+     <layout class="QHBoxLayout" name="filter_box" stretch="0,1,0,1,0">
+      <item>
+       <widget class="QLabel" name="lbl_desc1">
+        <property name="text">
+         <string>Select time range:</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QComboBox" name="cb_time">
+        <item>
+         <property name="text">
+          <string>all</string>
+         </property>
+        </item>
         <item>
          <property name="text">
           <string>week</string>
@@ -69,20 +81,6 @@
        <widget class="QLineEdit" name="input_search_user">
         <property name="inputMethodHints">
          <set>Qt::InputMethodHint::ImhNone</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btn_filter">
-        <property name="text">
-         <string>Filter</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>../../assets/icons/search.svg</normaloff>../../assets/icons/search.svg</iconset>
-        </property>
-        <property name="checkable">
-         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -143,6 +141,11 @@
         <column>
          <property name="text">
           <string>Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Age</string>
          </property>
         </column>
         <column>

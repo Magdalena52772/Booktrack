@@ -1,11 +1,21 @@
 """
-BookTrack Admin Panel — entry point
+BookTrack Admin Panel — Główny punkt wejścia aplikacji (Entry Point)
+
+Moduł integrujący wszystkie komponenty systemu administracyjnego. Odpowiada za:
+* Inicjalizację cyklu życia aplikacji (QApplication) oraz głównego okna (MainWindow).
+* Zarządzanie współdzielonym połączeniem z bazą danych SQLite (Dependency Injection).
+* Koordynację nawigacji między widokami (Dashboard, Genres, Activity, Reports) 
+  za pomocą mechanizmu QStackedWidget.
+* Obsługę procesów w tle (QTimer), w tym dynamicznego generatora aktywności 
+  symulującego ruch użytkowników w czasie rzeczywistym.
+* Zapewnienie integralności danych poprzez bezpieczne zamykanie sesji bazy danych 
+  przy wyjściu z programu.
 """
 
 import sys
 import os
 import random
-from datetime import datetime
+
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QTimer
 from views.main_window import MainWindow
@@ -23,93 +33,105 @@ from data.data_generator.generator import (
     ACTIVITY_COUNT
 )
 
-# poprawia skalowanie bez używania usuniętych flag Qt5
+# Konfiguracja systemowa w celu poprawnego skalowania interfejsu użytkownika
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
 
 def main():
+    # Inicjalizacja struktury bazy danych SQLite oraz ustanowienie połączenia
     initialize_database()
     conn = get_connection()
     cursor = conn.cursor()
 
-    all_users = []  # <-- inicjalizacja, zawsze istnieje
+    # Deklaracja list obiektów w celu zapewnienia ich dostępności dla mechanizmów symulacji
+    all_users = []
+    books = []
 
-    # sprawdzenie, czy baza jest pusta
+    # Weryfikacja obecności danych w systemie poprzez sprawdzenie liczby rekordów w tabeli użytkowników
     cursor.execute("SELECT COUNT(*) FROM users")
     user_count = cursor.fetchone()[0]
 
     if user_count == 0:
-        # pełne generowanie startowe
-        users = generate_users(conn, count=USER_COUNT)
-        books = generate_books(conn, users, count=BOOK_COUNT)
-        challenges = generate_challenges(conn, users)
-        activity = generate_activity(conn, users, books)
-        all_users = users
-        print(f"[INIT] Generated {len(users)} users, {len(books)} books, {len(challenges)} challenges, {len(activity)} activity records")
+        # SCENARIUSZ A: PIERWSZE URUCHOMIENIE SYSTEMU
+        # Następuje generowanie pełnego zestawu danych syntetycznych (użytkownicy, książki, logi aktywności)
+        users_list = generate_users(conn, count=USER_COUNT)
+        books_list = generate_books(conn, users_list)
+        generate_challenges(conn, users_list)
+        generate_activity(conn, users_list, books_list)
+        
+        all_users = users_list
+        books = books_list
+        print(f"[INIT] System zainicjalizowany pomyślnie. Utworzono {len(all_users)} rekordów użytkowników.")
     else:
-        # baza istnieje – przyrost
-        cursor.execute("SELECT id, status, age, name, external_id FROM users")
+        # SCENARIUSZ B: URUCHOMIENIE PRZYROSTOWE
+        # Pobierane są dane o istniejących rekordach w celu przeprowadzenia symulacji rozwoju bazy
+        cursor.execute("SELECT id, status, age, name, external_id, books_read FROM users")
         existing_users = [
-            {"id": row[0], "status": row[1], "age": row[2], "nickname": row[3], "external_id": row[4]}
+            {
+                "id": row[0], 
+                "status": row[1], 
+                "age": row[2], 
+                "name": row[3], 
+                "external_id": row[4],
+                "books_read": row[5]
+            }
             for row in cursor.fetchall()
         ]
 
-        # dopisanie nowych userów w czasie rzeczywistym
-        new_users_count = random.randint(0, 5)
+        # Symulacja dołączenia nowych użytkowników do systemu (zdarzenia losowe w czasie rzeczywistym)
         new_users = []
-        for _ in range(new_users_count):
+        for _ in range(random.randint(0, 3)):
             new_user_id = generate_realtime_user(conn)
-            cursor.execute(
-                "SELECT id, status, register_date, last_activity FROM users WHERE id = ?",
-                (new_user_id,)
-            )
+            cursor.execute("SELECT id, status, name, books_read FROM users WHERE id = ?", (new_user_id,))
             row = cursor.fetchone()
-            new_users.append({
-                "id": row[0],
-                "status": row[1],
-                "register_date": datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S"),
-                "last_activity": datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S")
-            })
+            if row:
+                new_users.append({"id": row[0], "status": row[1], "name": row[2], "books_read": row[3]})
 
         all_users = existing_users + new_users
-
-        # dopisanie nowych książek
-        additional_books_count = random.randint(5, 15)
-        books = generate_books(conn, all_users, count=additional_books_count)
-
-        # dopisanie nowych wyzwań
-        challenges = generate_challenges(conn, all_users, count_per_user=1)
-
-        # aktywność tylko dla active users
+        
+        # Synchronizacja i weryfikacja rekordów książek przypisanych do użytkowników
+        books = generate_books(conn, all_users)
+        
+        # Generowanie przyrostowych sesji czytelniczych odzwierciedlających aktywność między sesjami pracy panelu
         active_users = [u for u in all_users if u["status"] == "active"]
-        activity = simulate_incremental_activity(conn, active_users, books, count=random.randint(5, 20))
+        simulate_incremental_activity(conn, active_users, books, count=random.randint(5, 15))
+        
+        print(f"[GROWTH] Synchronizacja danych zakończona. Łączna liczba użytkowników: {len(all_users)}.")
 
-        print(f"[GROWTH] Added {len(new_users)} new users, {len(books)} new books, {len(challenges)} new challenges, {len(activity)} activity records")
-
-    # aktualizacja statystyk gatunków
+    # Agregacja danych i aktualizacja statystyk gatunkowych przed inicjalizacją warstwy prezentacji
     update_genre_stats(conn)
 
-    # start PyQt
+    # Inicjalizacja silnika aplikacji graficznej PyQt6
     app = QApplication(sys.argv)
-
+    
+    # Utworzenie i wyświetlenie okna głównego panelu administracyjnego
     window = MainWindow(conn)
     window.show()
 
-    # ===================== TIMER =====================
-    # Drobne przyrosty aktywności co minutę (dla testów dynamicznych)
+    # ===================== SYMULACJA AKTYWNOŚCI CIĄGŁEJ (TIMED UPDATE) =====================
+    def run_timer_update():
+        """
+        Funkcja wywoływana cyklicznie przez mechanizm QTimer. 
+        Odpowiada za symulację bieżącej aktywności czytelniczej użytkowników 
+        i wymuszenie odświeżenia widoków interfejsu.
+        """
+        active = [u for u in all_users if u["status"] == "active"]
+        if active and books:
+            # Rejestracja nowych zdarzeń czytelniczych w bazie danych
+            simulate_incremental_activity(conn, active, books, count=random.randint(1, 4))
+            
+            # Jeśli instancja MainWindow implementuje metodę update_users_view, następuje odświeżenie danych
+            # Pozwala to na wizualizację zmian statystycznych (np. strony na dzień) w trybie rzeczywistym
+            if hasattr(window, 'update_users_view'):
+                window.update_users_view()
+
+    # Konfiguracja timera systemowego (częstotliwość wywołań: raz na 60 sekund)
     timer = QTimer()
-    timer.timeout.connect(
-        lambda: simulate_incremental_activity(
-            conn,
-            [u for u in all_users if u["status"] == "active"],
-            books,
-            count=random.randint(2, 8)
-        )
-    )
-    timer.start(60_000)  # co 60 sekund
+    timer.timeout.connect(run_timer_update)
+    timer.start(60000) 
 
+    # Uruchomienie głównej pętli zdarzeń środowiska PyQt6
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
