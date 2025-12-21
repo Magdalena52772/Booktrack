@@ -118,7 +118,7 @@ QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
 }
 
 /* FORM LABELS */
-QLabel#lbl_info, QLabel#lbl_desc {
+QLabel#lbl_info, QLabel#lbl_info1, QLabel#lbl_desc, QLabel#lbl_desc1 {
     font-size: 12px;
     font-weight: 600;
     color: #5a4a4a;

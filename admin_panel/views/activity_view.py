@@ -1,6 +1,7 @@
 from PyQt6 import uic
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QWidget
+from views.dashboard_view import ActivityChart
 from data.repositories.activity_repo import ActivityRepository
 
 class ActivityView(QWidget):
@@ -10,30 +11,54 @@ class ActivityView(QWidget):
         super().__init__()
         self.conn = conn
         self.repo = ActivityRepository(conn)
-
         uic.loadUi("views/ui/ActivityView.ui", self)
 
-        # podłączenie przycisku odświeżania
-        self.btn_refresh_activity.clicked.connect(self.refresh_kpi)
+        # Inicjalizacja wykresu
+        self.canvas = ActivityChart(self.activity_chart)
+        # Usunięcie placeholdera i dodanie wykresu do layoutu
+        self.verticalLayout_4.replaceWidget(self.lbl_chart_placeholder, self.canvas)
+        self.lbl_chart_placeholder.deleteLater()
 
-        # opcjonalnie można od razu załadować widok
-        self.refresh_kpi()
+        # Konfiguracja Tooltipów dla KPI
+        self.setup_tooltips()
 
-    def load_view(self):
-        self.statusMessage.emit("Activity view loaded.", "info")
-        self.refresh_kpi()
+        # Sygnały
+        self.btn_refresh_activity.clicked.connect(self.refresh_data)
+        self.cb_time_filter.currentTextChanged.connect(self.refresh_data)
 
-    def refresh_kpi(self):
-        # pobranie aktualnie wybranego filtra czasu
+        self.refresh_data()
+
+    def setup_tooltips(self):
+        """Dodaje podpowiedzi do KPIs po najechaniu kursorem"""
+        self.lbl_books_count.setToolTip(
+            "Total number of pages read by all users in the selected period."
+        )
+        self.lbl_active_days.setToolTip(
+            "Number of days with at least one reading session recorded."
+        )
+        self.lbl_challenges.setToolTip(
+            "Average pages read per single session (reading intensity)."
+        )
+
+    def refresh_data(self):
+        """Pełne odświeżenie widoku i wskaźników."""
         time_filter = self.cb_time_filter.currentText()
         
-        # pobranie KPI z repozytorium
-        books, active_days, challenges = self.repo.get_activity_kpi(time_filter)
+        # Pobranie KPI z nową logiką (Strony, Dni, Średnia)
+        total_pages, active_days, avg_session = self.repo.get_activity_kpi(time_filter)
         
-        # aktualizacja UI
-        self.lbl_books_count.setText(f"Books: {books}")
-        self.lbl_active_days.setText(f"Active days: {active_days}")
-        self.lbl_challenges.setText(f"Challenges: {challenges}")
+        # Aktualizacja etykiet tekstowych
+        self.lbl_books_count.setText(f"Total Pages: {total_pages}")
+        self.lbl_active_days.setText(f"Active Days: {active_days}")
+        self.lbl_challenges.setText(f"Avg Session: {avg_session}")
         
-        # sygnał statusu
-        self.statusMessage.emit("Activity data refreshed.", "info")
+        # Pobranie i odświeżenie złotego wykresu
+        trend_data = self.repo.get_activity_trend(time_filter)
+        if trend_data:
+            dates = [row[0] for row in trend_data]
+            pages = [row[1] for row in trend_data]
+            # Przekazujemy time_filter, aby zoptymalizować oś X
+            self.canvas.plot_data(dates, pages, time_filter=time_filter)
+        
+        # Logowanie statusu
+        self.statusMessage.emit(f"Activity analytics updated ({time_filter})", "info")

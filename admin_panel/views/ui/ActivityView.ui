@@ -65,6 +65,11 @@
           <widget class="QComboBox" name="cb_time_filter">
            <item>
             <property name="text">
+             <string>all</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
              <string>week</string>
             </property>
            </item>
@@ -121,16 +126,6 @@
             <enum>QFrame::Shadow::Raised</enum>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1">
-            <item>
-             <widget class="QLabel" name="lbl_chart_desc">
-              <property name="text">
-               <string>Reading activity per day</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignmentFlag::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="QLabel" name="lbl_chart_placeholder">
               <property name="text">

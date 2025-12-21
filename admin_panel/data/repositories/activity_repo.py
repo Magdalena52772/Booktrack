@@ -1,3 +1,4 @@
+from data.utils.time_periods import period_start
 from datetime import datetime, timedelta
 import sqlite3
 
@@ -7,39 +8,45 @@ class ActivityRepository:
 
     def get_activity_kpi(self, time_filter="week"):
         cursor = self.conn.cursor()
-        now = datetime.now()
+        start_dt = period_start(time_filter)
+        
+        # Obsługa przypadku "all" (start_dt is None)
+        params = []
+        date_clause = ""
+        if start_dt:
+            date_clause = "WHERE timestamp >= ?"
+            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
 
-        if time_filter == "week":
-            start = now - timedelta(days=7)
-        elif time_filter == "month":
-            start = now - timedelta(days=30)
-        elif time_filter == "year":
-            start = now - timedelta(days=365)
-        else:
-            start = datetime.min
-
-        start_str = start.strftime("%Y-%m-%d %H:%M:%S")
-        now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-
-        cursor.execute("""
-            SELECT COUNT(DISTINCT book_id) 
-            FROM activity 
-            WHERE timestamp BETWEEN ? AND ?
-        """, (start_str, now_str))
+        # Statystyka książek
+        cursor.execute(f"SELECT COUNT(DISTINCT book_id) FROM activity {date_clause}", params)
         books_count = cursor.fetchone()[0] or 0
 
-        cursor.execute("""
-            SELECT COUNT(DISTINCT DATE(timestamp))
-            FROM activity
-            WHERE timestamp BETWEEN ? AND ?
-        """, (start_str, now_str))
+        # Statystyka aktywnych dni
+        cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {date_clause}", params)
         active_days = cursor.fetchone()[0] or 0
 
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM challenges
-            WHERE status = 'active' AND start_date <= ? AND end_date >= ?
-        """, (now_str, start_str))
+        # Wyzwania (niezależne od daty aktywności, tylko status)
+        cursor.execute("SELECT COUNT(*) FROM challenges WHERE status = 'active'")
         challenges_count = cursor.fetchone()[0] or 0
 
         return books_count, active_days, challenges_count
+
+    def get_activity_trend(self, time_filter="week"):
+        cursor = self.conn.cursor()
+        start_dt = period_start(time_filter)
+        
+        params = []
+        date_clause = ""
+        if start_dt:
+            date_clause = "WHERE timestamp >= ?"
+            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+        query = f"""
+            SELECT DATE(timestamp), SUM(pages_read)
+            FROM activity
+            {date_clause}
+            GROUP BY DATE(timestamp)
+            ORDER BY DATE(timestamp) ASC
+        """
+        cursor.execute(query, params)
+        return cursor.fetchall()

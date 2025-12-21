@@ -1,0 +1,17 @@
+from datetime import datetime, timedelta
+
+def period_start(period: str) -> datetime:
+    """
+    Zwraca początek okresu dla filtrów: week, month, year
+    """
+    now = datetime.now()
+    if period == "week":
+        return now - timedelta(days=7)
+    elif period == "month":
+        return now - timedelta(days=30)
+    elif period == "year":
+        return now - timedelta(days=365)
+    elif period == "all":
+        return None
+    else:
+        return None

@@ -1,7 +1,6 @@
 from PyQt6 import uic
-from PyQt6.QtCore import QTimer
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtCore import QTimer, pyqtSignal
+from PyQt6.QtWidgets import QMainWindow, QMessageBox
 from views import DashboardView, UsersView, ActivityView, GenresView, ReportsView
 
 class MainWindow(QMainWindow):
@@ -11,22 +10,16 @@ class MainWindow(QMainWindow):
 
         uic.loadUi("views/ui/MainWindow.ui", self)
 
-        with open("assets/style.qss", "r") as f:
-            self.setStyleSheet(f.read())
+        # Ładowanie stylów
+        try:
+            with open("assets/style.qss", "r") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            pass
             
         # ====== Status Bar ======
         self.status = self.statusBar()
         
-        # ====== Predefined messages ======
-        self.messages = {
-            "data_loaded": ("Data refreshed successfully.", "success"),
-            "data_failed": ("Failed to load data.", "error"),
-            "report_ready": ("Report generated successfully.", "success"),
-            "report_error": ("Report generation failed.", "error"),
-            "no_results": ("No matching results found.", "warning"),
-            "connection_lost": ("Connection to database lost.", "error"),
-            "reconnected": ("Connection reestablished.", "success")
-        }
         
         # ====== Create views ======
         self.page_dashboard = DashboardView(self.conn)
@@ -34,7 +27,6 @@ class MainWindow(QMainWindow):
         self.page_genres = GenresView(self.conn)
         self.page_activity = ActivityView(self.conn)
         self.page_reports = ReportsView(self.conn)
-
 
         # ====== Map buttons to pages ======
         self.pages = {
@@ -54,19 +46,52 @@ class MainWindow(QMainWindow):
             if hasattr(page, "statusMessage"):
                 page.statusMessage.connect(self.show_status_message)
             
+        # ====== Obsługa Logout ======
+        self.btn_logout.clicked.connect(self.handle_logout)
+        self.btn_logout.setToolTip("End session and secure database")
+
+        # Domyślny start
         self.btn_dashboard.setChecked(True)
         self.switch_page(self.page_dashboard)
-
-        # ====== First message ======
         self.show_status_message("System ready — logged in as admin.", "success")
 
+    def handle_logout(self):
+        """Obsługuje proces wylogowania i zamknięcia sesji."""
+        # TODO in future: dodanie funkcji logoutu np. self.auth_service.logout()
         
-    # ====== Status Bar msg handler ======
+        confirm = QMessageBox.question(
+            self, 
+            "Logout", 
+            "Are you sure you want to log out and close the session?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if confirm == QMessageBox.StandardButton.Yes:
+            self.show_status_message("Closing session...", "warning")
+            # Bezpieczne zamknięcie połączenia przed wyjściem
+            self.close()
+
+    def closeEvent(self, event):
+        """Zdarzenie wywoływane przy zamykaniu okna (przez X lub Logout)."""
+        try:
+            # 1. Zatrzymanie generatorów tła (jeśli są przypięte do self)
+            if hasattr(self, 'update_timer'):
+                self.update_timer.stop()
+            
+            # 2. Fizyczne zamknięcie bazy danych
+            if self.conn:
+                self.conn.close()
+                print("Database connection closed securely.")
+            
+            event.accept()
+        except Exception as e:
+            print(f"Error during shutdown: {e}")
+            event.accept()
+
     def show_status_message(self, message: str, status_type: str = "info"):
         self.status.setProperty("statusType", status_type)
         self.status.style().unpolish(self.status)
         self.status.style().polish(self.status)
-
         self.status.showMessage(message, 4000)
 
 
@@ -74,7 +99,6 @@ class MainWindow(QMainWindow):
     def switch_page(self, page):
         # change active page
         self.ContentArea.setCurrentWidget(page)
-        
         for btn, p in self.pages.items():
             btn.setChecked(p == page)
         
