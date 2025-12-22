@@ -34,18 +34,25 @@ INACTIVE_PROBABILITY = 0.05  # 5% użytkowników nieaktywnych
 # waga gatunków dla ulubionych
 GENRE_WEIGHTS = [15, 15, 12, 12, 8, 8, 5, 5, 5, 10, 5]
 
-def weighted_age(min_age=12, max_age=80, peak_min=18, peak_max=40):
+
+def weighted_age(min_age=12, max_age=75):
     """
-    Generuje realistyczny wiek:
-    - większość użytkowników w wieku 18-40
-    - reszta w mniejszych proporcjach
+    Generuje wiek z gwarancją wystąpienia wszystkich grup:
+    - 70% to użytkownicy 'mainstream' (18-45 lat)
+    - 15% to seniorzy (60-75 lat)
+    - 15% to młodzież (12-17 lat)
     """
-    mu = (peak_min + peak_max) / 2       # środek 29
-    sigma = 10
-    while True:
-        age = int(np.random.normal(mu, sigma))
-        if min_age <= age <= max_age:
-            return age
+    rand = random.random()
+    
+    if rand < 0.70:
+        # Rozkład normalny wokół 30-tki dla głównej grupy
+        return int(np.random.normal(30, 7)) % (45 - 18) + 18
+    elif rand < 0.85:
+        # Gwarantowani seniorzy (rozkład płaski)
+        return random.randint(60, max_age)
+    else:
+        # Gwarantowana młodzież
+        return random.randint(min_age, 17)
 
 # =============== USER GENERATOR ===================
 def generate_users(conn, count=50):
@@ -260,32 +267,53 @@ def generate_challenges(conn, users, count_per_user=3):
     return challenges_list
 
 
+# Słownik preferencji: Gatunek -> Prawdopodobieństwo wystąpienia w danej grupie
+AGE_BASED_GENRES = {
+    "junior": ["Childrens literature", "Fantasy", "Young Adult"],
+    "young_adult": ["Young Adult", "Romance", "Drama", "Fantasy", "Sci-Fi"],
+    "adult": ["Crime", "Thriller", "Fiction", "Biography", "Historical fiction"],
+    "senior": ["Historical fiction", "Biography", "Crime", "Drama"]
+}
+
 # =================== BOOKS GENERATOR ===================
-# =================== POPRAWIONY BOOKS GENERATOR ===================
 def generate_books(conn, users):
     cursor = conn.cursor()
     books = []
     title_words = ["Shadow", "Forest", "Dream", "Fire", "Storm", "Heart", "Secret", "Moon", "Whisper", "Glass"]
 
     for user in users:
+        # ZABEZPIECZENIE: używamy .get(), aby uniknąć KeyError
+        age = user.get("age", 25) 
+        
+        if age < 18:
+            cat = "junior"
+        elif age <= 25:
+            cat = "young_adult"
+        elif age <= 60:
+            cat = "adult"
+        else:
+            cat = "senior"
+
+        # Pobranie listy preferowanych gatunków dla danej kategorii
+        pref_list = AGE_BASED_GENRES.get(cat, GENRES)
+
         for _ in range(user["books_read"] + random.randint(1, 3)):
-            title = f"The {random.choice(title_words)} {random.choice(title_words)}"
-            author = f"{fake.first_name()} {fake.last_name()}"
-            total_pages = random.randint(120, 800)
-            genre_name = random.choice(GENRES)
+            # 85% szans na gatunek z grupy wiekowej, 15% na całkowicie losowy (szum statystyczny)
+            if random.random() < 0.85:
+                genre_name = random.choice(pref_list)
+            else:
+                genre_name = random.choice(GENRES)
             
-            # Bezpieczne pobieranie lub tworzenie genre_id
+            # Pobieranie/tworzenie genre_id
             cursor.execute("SELECT id FROM genres WHERE name = ?", (genre_name,))
             row = cursor.fetchone()
-            
             if row:
                 genre_id = row[0]
             else:
-                # Jeśli gatunek nie istnieje, zostaje dodany do bazy
                 cursor.execute("INSERT INTO genres (name) VALUES (?)", (genre_name,))
                 genre_id = cursor.lastrowid
 
-            # Określenie statusu (przeczytane lub w trakcie)
+            total_pages = random.randint(120, 800)
             is_finished = random.random() > 0.3
             status = 'finished' if is_finished else 'reading'
             current_page = total_pages if is_finished else random.randint(1, total_pages-1)
@@ -293,14 +321,10 @@ def generate_books(conn, users):
             cursor.execute("""
                 INSERT INTO books (user_id, title, authors, genre_id, total_pages, current_page, status, added_by_generator)
                 VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-            """, (user["id"], title, author, genre_id, total_pages, current_page, status))
+            """, (user["id"], f"The {random.choice(title_words)} {random.choice(title_words)}", 
+                  f"{fake.first_name()} {fake.last_name()}", genre_id, total_pages, current_page, status))
             
-            books.append({
-                "id": cursor.lastrowid, 
-                "user_id": user["id"], 
-                "total_pages": total_pages, 
-                "status": status
-            })
+            books.append({"id": cursor.lastrowid, "user_id": user["id"], "status": status})
 
     conn.commit()
     return books

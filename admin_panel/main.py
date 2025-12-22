@@ -82,10 +82,17 @@ def main():
         new_users = []
         for _ in range(random.randint(0, 3)):
             new_user_id = generate_realtime_user(conn)
-            cursor.execute("SELECT id, status, name, books_read FROM users WHERE id = ?", (new_user_id,))
+            # DODANO: age do zapytania SELECT
+            cursor.execute("SELECT id, status, name, books_read, age FROM users WHERE id = ?", (new_user_id,))
             row = cursor.fetchone()
             if row:
-                new_users.append({"id": row[0], "status": row[1], "name": row[2], "books_read": row[3]})
+                new_users.append({
+                    "id": row[0], 
+                    "status": row[1], 
+                    "name": row[2], 
+                    "books_read": row[3],
+                    "age": row[4] # Teraz klucz 'age' będzie dostępny
+                })
 
         all_users = existing_users + new_users
         
