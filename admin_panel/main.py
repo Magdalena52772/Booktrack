@@ -124,13 +124,20 @@ def main():
         """
         active = [u for u in all_users if u["status"] == "active"]
         if active and books:
+            # Losowanie liczby nowych aktywności w tej sesji
+            count = random.randint(1, 4)
+            
             # Rejestracja nowych zdarzeń czytelniczych w bazie danych
-            simulate_incremental_activity(conn, active, books, count=random.randint(1, 4))
+            simulate_incremental_activity(conn, active, books, count=count)
+            
+            # Informacja o postępie symulacji w konsoli
+            print(f"[LIVE UPDATE] Wygenerowano {count} nowe aktywności czytelnicze.")
             
             # Jeśli instancja MainWindow implementuje metodę update_users_view, następuje odświeżenie danych
             # Pozwala to na wizualizację zmian statystycznych (np. strony na dzień) w trybie rzeczywistym
             if hasattr(window, 'update_users_view'):
                 window.update_users_view()
+                print("[LIVE UPDATE] Widok użytkowników został odświeżony.")
 
     # Konfiguracja timera systemowego (częstotliwość wywołań: raz na 60 sekund)
     timer = QTimer()

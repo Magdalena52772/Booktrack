@@ -29,7 +29,7 @@ GENRES = [
 USER_COUNT = 50
 BOOK_COUNT = 80
 ACTIVITY_COUNT = 200
-INACTIVE_PROBABILITY = 0.05  # 5% użytkowników nieaktywnych
+INACTIVE_PROBABILITY = 0.07  # 7% użytkowników nieaktywnych
 
 # waga gatunków dla ulubionych
 GENRE_WEIGHTS = [15, 15, 12, 12, 8, 8, 5, 5, 5, 10, 5]
@@ -57,8 +57,8 @@ def weighted_age(min_age=12, max_age=75):
 # =============== USER GENERATOR ===================
 def generate_users(conn, count=50):
     """
-    Tworzy użytkowników z realistycznym books_read i pages_per_day powiązanym z czasem konta,
-    sortuje ich po dacie rejestracji, przypisuje ulubione gatunki i faworyzuje wiek 18-40 lat.
+    Tworzy użytkowników z realistycznym books_read i pages_per_day.
+    Gwarantuje obecność użytkowników nieaktywnych (cel: ~7%).
     """
     cursor = conn.cursor()
     users_to_insert = []
@@ -66,8 +66,12 @@ def generate_users(conn, count=50):
     now = datetime.now()
     existing_external_ids = set()
     existing_nicknames = set()
+    
+    # Cel: 7% z count (dla 50 osób to ~3-4 osoby)
+    target_inactive = max(1, int(count * 0.07))
+    inactive_count = 0
 
-    for _ in range(count):
+    for i in range(count):
         # unikalny nickname
         while True:
             nickname = fake.user_name()
@@ -82,9 +86,18 @@ def generate_users(conn, count=50):
                 existing_external_ids.add(external_id)
                 break
 
-        status = "inactive" if random.random() < INACTIVE_PROBABILITY else "active"
+        # Logika statusu: 7% szans LUB wymuszenie, jeśli jesteśmy pod koniec i wciąż jest 0
+        status = "active"
+        if random.random() < 0.07:
+            status = "inactive"
+            inactive_count += 1
+        
+        # Safety break: jeśli zbliżamy się do końca, a nieaktywnych brak, wymuś ich
+        if i > (count - (target_inactive - inactive_count)) and inactive_count < target_inactive:
+            status = "inactive"
+            inactive_count += 1
 
-        # wybiera czas rejestracji
+        # wybiera czas rejestracji i aktywności
         if status == "inactive":
             register_date = fake.date_time_between(start_date='-2y', end_date='-6M')
             last_activity = fake.date_time_between(start_date=register_date, end_date='-6M')
@@ -94,7 +107,6 @@ def generate_users(conn, count=50):
 
         account_days = max(1, (now - register_date).days)
 
-        # books_read – zależne od wieku konta i statusu użytkownika
         if status == "inactive":
             books_read = max(1, int(random.uniform(0.1, 0.3) * account_days / 30))
             pages_per_day = None
@@ -102,10 +114,6 @@ def generate_users(conn, count=50):
             avg_books_per_month = random.choices([0.5,0.8,1,1.2,1.5,2], [0.05,0.1,0.35,0.2,0.2,0.1])[0]
             books_read = max(1, min(31, int(avg_books_per_month*(account_days/30) + random.gauss(0,2))))
             pages_per_day = round(random.uniform(15,50),1)
-
-        # favorite genres
-        weighted_choices = random.choices(GENRES, weights=GENRE_WEIGHTS, k=5)
-        favorite_genres = list(set(weighted_choices))[:random.randint(1,3)]
 
         users_to_insert.append({
             "name": nickname,
@@ -116,44 +124,32 @@ def generate_users(conn, count=50):
             "last_activity": last_activity,
             "pages_per_day": pages_per_day,
             "books_read": books_read,
-            "favorite_genres": favorite_genres
+            "favorite_genres": random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1,3))
         })
 
-    # sortujemy użytkowników po dacie rejestracji (ID rośnie chronologicznie)
+    # Sortowanie i Insert (bez zmian)
     users_to_insert.sort(key=lambda u: u['register_date'])
-
     inserted_users = []
     for u in users_to_insert:
         cursor.execute("""
             INSERT INTO users (name, register_date, status, age,
                                external_id, last_activity, pages_per_day, books_read)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            u['name'],
-            u['register_date'].strftime("%Y-%m-%d %H:%M:%S"),
-            u['status'],
-            u['age'],
-            u['external_id'],
-            u['last_activity'].strftime("%Y-%m-%d %H:%M:%S"),
-            u['pages_per_day'],
-            u['books_read']
-        ))
+        """, (u['name'], u['register_date'].strftime("%Y-%m-%d %H:%M:%S"), u['status'],
+              u['age'], u['external_id'], u['last_activity'].strftime("%Y-%m-%d %H:%M:%S"),
+              u['pages_per_day'], u['books_read']))
+        
         user_id = cursor.lastrowid
-
-        # wstawienie favorite genres
-        for genre in u['favorite_genres']:
+        for genre in list(set(u['favorite_genres'])):
             cursor.execute("SELECT id FROM genres WHERE name = ?", (genre,))
             row = cursor.fetchone()
-            if row:
-                genre_id = row[0]
-            else:
-                cursor.execute("INSERT INTO genres (name) VALUES (?)", (genre,))
-                genre_id = cursor.lastrowid
+            genre_id = row[0] if row else cursor.execute("INSERT INTO genres (name) VALUES (?)", (genre,)).lastrowid
             cursor.execute("INSERT OR IGNORE INTO user_favorite_genres (user_id, genre_id) VALUES (?, ?)", (user_id, genre_id))
-
+        
         inserted_users.append({**u, "id": user_id})
 
     conn.commit()
+    print(f"[INIT] Wygenerowano {count} użytkowników (w tym {inactive_count} nieaktywnych).")
     return inserted_users
 
 
