@@ -63,15 +63,13 @@ class ActivityView(QWidget):
         self.ui.lbl_challenges.setText(f"Avg Session: {avg_session}")
         
         # Pobranie danych trendu (wykres)
-        trend_data = self.repo.get_all_trend(time_filter) if hasattr(self.repo, 'get_all_trend') else self.repo.get_activity_trend(time_filter)
-        
+        trend_data = self.repo.get_activity_trend(time_filter)
+    
         if trend_data:
             dates = [row[0] for row in trend_data]
             pages = [row[1] for row in trend_data]
-            # Przekazanie danych do kontrolki wykresu
+            
+            # Jeśli to widok "all", możemy zmienić tytuł osi lub info
             self.canvas.plot_data(dates, pages, time_filter=time_filter)
-        else:
-            # Jeśli brak danych, wyczyść wykres, aby nie pokazywał starej skali
-            self.canvas.plot_data([], [], time_filter=time_filter)
         
         self.statusMessage.emit(f"Activity analytics updated ({time_filter})", "info")

@@ -323,35 +323,45 @@ def generate_books(conn, users):
 # =================== ACTIVITY GENERATOR ===================
 def generate_activity(conn, users, books):
     """
-    Dopisuje historię i daty zakończenia do książek o statusie 'finished'.
-    Realistyczny rozkład: większość książek rozłożona na rok, mało w ostatnim tygodniu.
+    Generuje historię aktywności z naturalnym rozkładem (bonusy weekendowe i piątkowe).
     """
     cursor = conn.cursor()
     finished_books = [b for b in books if b["status"] == "finished"]
 
     for book in finished_books:
-        rand = random.random()
-        # REALISTYCZNY ROZKŁAD CZASU:
-        if rand < 0.05: # 5% szans na ostatni tydzień
-            finish_date = fake.date_time_between(start_date='-7d', end_date='now')
-        elif rand < 0.20: # 15% szans na ostatni miesiąc (wyłączając ostatni tydzień)
-            finish_date = fake.date_time_between(start_date='-30d', end_date='-8d')
-        else: # 80% szans na resztę roku
-            finish_date = fake.date_time_between(start_date='-1y', end_date='-31d')
+        # Losowanie daty zakończenia
+        finish_date = fake.date_time_between(start_date='-2y', end_date='now')
+        wd = finish_date.weekday() # 0=Pon, 4=Pią, 5=Sob, 6=Nie
+        
+        # Losowanie bazowej liczbę stron (np. 15-35)
+        base_pages = random.randint(15, 35)
+        
+        # Mnożnik zależny od dnia tygodnia
+        if wd >= 5: # Weekend
+            # Bonus 20-50% względem bazy
+            multiplier = random.uniform(1.1, 1.4)
+        elif wd == 4: # Piątek
+            # Bonus 10-25%
+            multiplier = random.uniform(1.1, 1.25)
+        else: # Dni robocze
+            # Czasem (15% szans) trafia się "zaczytany wtorek"
+            if random.random() < 0.15:
+                multiplier = random.uniform(1.1, 1.4)
+            else:
+                multiplier = random.uniform(0.7, 1.0)
 
+        pages = min(int(base_pages * multiplier), 50)
         date_str = finish_date.strftime("%Y-%m-%d %H:%M:%S")
 
-        # Każda zakończona książka musi mieć przynajmniej jeden wpis w activity,
-        # żeby statystyka "pages/day" miała z czego liczyć.
         cursor.execute("""
             INSERT INTO activity (user_id, book_id, timestamp, pages_read, session_minutes)
             VALUES (?, ?, ?, ?, ?)
-        """, (book["user_id"], book["id"], date_str, random.randint(15, 45), random.randint(20, 60)))
+        """, (book["user_id"], book["id"], date_str, pages, random.randint(20, 60)))
 
         cursor.execute("UPDATE books SET finish_date = ? WHERE id = ?", (date_str, book["id"]))
 
     conn.commit()
-    print(f"Fixed activity: Linked {len(finished_books)} books with realistic dates.")
+    print(f"Fixed activity: Generated {len(finished_books)} records with natural week flow.")
 
 
 # =================== GENRE STATS UPDATER ===================
@@ -431,48 +441,85 @@ def simulate_incremental_activity(conn, users, books, count=1):
         cursor.execute("SELECT current_page, total_pages FROM books WHERE id = ?", (book['id'],))
         current, total = cursor.fetchone()
         
+        # Obliczanie stron do końca
         pages_left = total - current
         if pages_left <= 0:
             continue
 
-        max_to_read = min(20, pages_left)
-        pages_read = random.randint(1, max_to_read) 
+        # Logika weekendowa:
+        now = datetime.now()
+        is_weekend = now.weekday() >= 5  # Sobota = 5, Niedziela = 6
+        
+        if is_weekend:
+            # W weekendy użytkownicy czytają więcej (np. 15-40 stron)
+            pages_read = random.randint(15, min(40, pages_left))
+        else:
+            # W dni robocze czytają mniej (np. 1-15 stron)
+            pages_read = random.randint(1, min(15, pages_left))
         
         new_page = current + pages_read
         status = 'finished' if new_page >= total else 'reading'
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Usunięto activity_type ORAZ current_page Z INSERT INTO activity
+        # Wstawienie nowej aktywności
         cursor.execute("""
             INSERT INTO activity (user_id, book_id, timestamp, pages_read)
             VALUES (?, ?, ?, ?)
         """, (user['id'], book['id'], timestamp, pages_read))
 
-        # Aktualizacja książki
-        cursor.execute("UPDATE books SET current_page = ?, status = ? WHERE id = ?", 
-                       (new_page, status, book['id']))
+        # Aktualizacja statusu i strony w tabeli books
+        update_query = "UPDATE books SET current_page = ?, status = ? WHERE id = ?"
+        params = [new_page, status, book['id']]
+        
+        # Jeśli książka została skończona, dodaj datę zakończenia
+        if status == 'finished':
+            update_query = "UPDATE books SET current_page = ?, status = ?, finish_date = ? WHERE id = ?"
+            params = [new_page, status, timestamp, book['id']]
+
+        cursor.execute(update_query, tuple(params))
     
     conn.commit()
 
 
 # ===================== MAIN =====================
 if __name__ == "__main__":
-    conn = get_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    # Czyszczenie tabel oraz resetowanie liczników autoinkrementacji (sqlite_sequence)
-    tables = ['user_favorite_genres', 'activity', 'challenges', 'books', 'users', 'genres']
-    for table in tables:
-        cursor.execute(f"DELETE FROM {table}")
-        cursor.execute(f"DELETE FROM sqlite_sequence WHERE name='{table}'")
-    
-    conn.commit()
+        print("--- Starting database cleanup ---")
+        # DROP/CREATE lub sprawdzanie istnienia, aby uniknąć błędów
+        tables = ['user_favorite_genres', 'activity', 'challenges', 'books', 'users', 'genres']
+        
+        for table in tables:
+            # Użycie "DELETE FROM" zadziała tylko jeśli tabela istnieje. 
+            # Obsługa błędów dla każdej tabeli
+            try:
+                cursor.execute(f"DELETE FROM {table}")
+            except Exception:
+                print(f"Skipping cleanup for {table} (table might not exist yet)")
 
-    # Wywoływanie generatorów danych masowych
-    users = generate_users(conn, count=USER_COUNT)
-    challenges = generate_challenges(conn, users)
-    books = generate_books(conn, users)
-    activity = generate_activity(conn, users, books)
-    
-    update_genre_stats(conn)
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'")
+        if cursor.fetchone():
+            cursor.execute("DELETE FROM sqlite_sequence")
+        conn.commit()
+        cursor.execute("VACUUM") # Optymalizacja rozmiaru pliku
+        
+        print(f"--- Generating {USER_COUNT} users with realistic age distribution ---")
+        users = generate_users(conn, count=USER_COUNT)
+        
+        print("--- Building library and activity history ---")
+        generate_challenges(conn, users)
+        books = generate_books(conn, users)
+        generate_activity(conn, users, books)
+        
+        print("--- Recalculating genre analytics ---")
+        update_genre_stats(conn)
+        
+        print("--- GENERATOR FINISHED SUCCESSFULLY ---")
+        
+    except Exception as e:
+        print(f"CRITICAL ERROR IN GENERATOR: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
