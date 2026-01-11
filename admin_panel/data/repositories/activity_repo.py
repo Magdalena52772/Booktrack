@@ -40,14 +40,18 @@ class ActivityRepository:
         return total_pages, active_days, round(avg_session, 1)
 
     def get_activity_trend(self, time_filter="week"):
-        # Pobieranie danych do wykresu trendu dziennego
         cursor = self.conn.cursor()
         params = []
         date_clause = ""
-        
         f_type = time_filter.lower()
         
-        if f_type != "all":
+        # Logika grupowania - dni dla krótkich okresów, miesiące dla "all"
+        group_by = "DATE(timestamp)"
+        
+        if f_type == "all":
+            # Dla widoku wszystkiego grupujemy po YYYY-MM dla lepszej czytelności
+            group_by = "STRFTIME('%Y-%m', timestamp)"
+        else:
             if f_type == "week":
                 start_dt = datetime.now() - timedelta(days=6)
                 date_clause = "WHERE timestamp >= ?"
@@ -59,10 +63,10 @@ class ActivityRepository:
                     params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
 
         query = f"""
-            SELECT DATE(timestamp), SUM(pages_read)
+            SELECT {group_by}, SUM(pages_read)
             FROM activity
             {date_clause}
-            GROUP BY DATE(timestamp)
+            GROUP BY {group_by}
             ORDER BY DATE(timestamp) ASC
         """
         cursor.execute(query, params)
