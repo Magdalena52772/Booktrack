@@ -1,106 +1,112 @@
-from PyQt6 import uic
-from PyQt6.QtCore import QTimer, pyqtSignal
-from PyQt6.QtWidgets import QMainWindow, QMessageBox
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtCore import QFile
+from PySide6.QtWidgets import QMainWindow, QMessageBox, QSizePolicy, QVBoxLayout
 from views import DashboardView, UsersView, ActivityView, GenresView, ReportsView
 
 class MainWindow(QMainWindow):
     def __init__(self, conn):
         super().__init__()
         self.conn = conn
-
-        uic.loadUi("views/ui/MainWindow.ui", self)
-
-        # Ładowanie stylów
-        try:
-            with open("assets/style.qss", "r") as f:
-                self.setStyleSheet(f.read())
-        except FileNotFoundError:
-            pass
+        
+        # Inicjalizacja ładowania interfejsu użytkownika
+        loader = QUiLoader()
+        ui_file = QFile("views/ui/MainWindow.ui")
+        
+        if not ui_file.open(QFile.ReadOnly):
+            return
             
-        # ====== Status Bar ======
-        self.status = self.statusBar()
-        
-        
-        # ====== Create views ======
+        # Ładowanie interfejsu jako komponentu klasy nadrzędnej
+        self.ui = loader.load(ui_file, self)
+        ui_file.close()
+
+        # Osadzenie załadowanego widgetu centralnego w oknie głównym
+        if hasattr(self.ui, 'centralwidget'):
+            self.setCentralWidget(self.ui.centralwidget)
+        else:
+            self.setCentralWidget(self.ui)
+
+        # Inicjalizacja poszczególnych widoków aplikacyjnych
         self.page_dashboard = DashboardView(self.conn)
         self.page_users = UsersView(self.conn)
         self.page_genres = GenresView(self.conn)
         self.page_activity = ActivityView(self.conn)
         self.page_reports = ReportsView(self.conn)
 
-        # ====== Map buttons to pages ======
-        self.pages = {
-            self.btn_dashboard: self.page_dashboard,
-            self.btn_users: self.page_users,
-            self.btn_genres: self.page_genres,
-            self.btn_activity: self.page_activity,
-            self.btn_reports: self.page_reports
+        # Mapowanie przycisków na kontenery w QStackedWidget oraz obiekty widoków
+        self.pages_map = {
+            self.ui.btn_dashboard: (self.ui.page_dashboard, self.page_dashboard),
+            self.ui.btn_users: (self.ui.page_users, self.page_users),
+            self.ui.btn_genres: (self.ui.page_genres, self.page_genres),
+            self.ui.btn_activity: (self.ui.page_activity, self.page_activity),
+            self.ui.btn_reports: (self.ui.page_reports, self.page_reports)
         }
 
-        # ====== Add pages and connect buttons ======
-        for btn, page in self.pages.items():
-            self.ContentArea.addWidget(page)
-            btn.clicked.connect(lambda checked, p=page: self.switch_page(p))
-
-            # ====== Emit status message ======
-            if hasattr(page, "statusMessage"):
-                page.statusMessage.connect(self.show_status_message)
+        # Konfiguracja layoutów kontenerów i połączeń sygnałów
+        for btn, (container, view) in self.pages_map.items():
+            # Zapewnienie obecności layoutu w kontenerze strony
+            if container.layout() is None:
+                layout = QVBoxLayout(container)
+                layout.setContentsMargins(0, 0, 0, 0)
+                layout.setSpacing(0)
             
-        # ====== Obsługa Logout ======
-        self.btn_logout.clicked.connect(self.handle_logout)
-        self.btn_logout.setToolTip("End session and secure database")
+            # Integracja widoku z układem graficznym kontenera
+            view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            container.layout().addWidget(view)
+            
+            # Rejestracja zdarzenia kliknięcia przycisku
+            btn.clicked.connect(lambda checked=False, c=container, v=view: self.switch_page(c, v))
+            
+            if hasattr(view, "statusMessage"):
+                view.statusMessage.connect(self.show_status_message)
 
-        # Domyślny start
-        self.btn_dashboard.setChecked(True)
-        self.switch_page(self.page_dashboard)
-        self.show_status_message("System ready — logged in as admin.", "success")
+        # Wczytanie arkuszy stylów i konfiguracja paska stanu
+        self.load_styles()
+        self.ui.btn_logout.clicked.connect(self.handle_logout)
+        self.status = self.statusBar()
+
+        # Konfiguracja parametrów startowych okna
+        self.setMinimumSize(1100, 750)
+        self.ui.btn_dashboard.setChecked(True)
+        self.switch_page(self.ui.page_dashboard, self.page_dashboard)
+
+    def load_styles(self):
+        """Wczytywanie definicji stylów QSS z pliku zewnętrznego."""
+        try:
+            with open("assets/style.qss", "r") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            pass
+
+    def switch_page(self, container, view):
+        """Przełączanie aktywnego widoku wewnątrz QStackedWidget."""
+        self.ui.ContentArea.setCurrentWidget(container)
+        
+        # Aktualizacja stanu wizualnego przycisków nawigacyjnych
+        for btn in self.pages_map.keys():
+            is_active = (btn == self.sender() or self.pages_map[btn][0] == container)
+            btn.setChecked(is_active)
+        
+        # Wywołanie procedur odświeżania danych w widoku
+        if hasattr(view, "load_view"):
+            view.load_view()
+        
+        view.updateGeometry()
 
     def handle_logout(self):
-        """Obsługuje proces wylogowania i zamknięcia sesji."""
-        # TODO in future: dodanie funkcji logoutu np. self.auth_service.logout()
-        
-        confirm = QMessageBox.question(
-            self, 
-            "Logout", 
-            "Are you sure you want to log out and close the session?",
+        """Obsługa procedury wylogowania użytkownika."""
+        msg = QMessageBox.question(
+            self, "Logout", "Are you sure you want to exit?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
-
-        if confirm == QMessageBox.StandardButton.Yes:
-            self.show_status_message("Closing session...", "warning")
-            # Bezpieczne zamknięcie połączenia przed wyjściem
+        if msg == QMessageBox.StandardButton.Yes:
             self.close()
 
-    def closeEvent(self, event):
-        """Zdarzenie wywoływane przy zamykaniu okna (przez X lub Logout)."""
-        try:
-            # 1. Zatrzymanie generatorów tła (jeśli są przypięte do self)
-            if hasattr(self, 'update_timer'):
-                self.update_timer.stop()
-            
-            # 2. Fizyczne zamknięcie bazy danych
-            if self.conn:
-                self.conn.close()
-                print("Database connection closed securely.")
-            
-            event.accept()
-        except Exception as e:
-            print(f"Error during shutdown: {e}")
-            event.accept()
-
     def show_status_message(self, message: str, status_type: str = "info"):
-        self.status.setProperty("statusType", status_type)
-        self.status.style().unpolish(self.status)
-        self.status.style().polish(self.status)
+        """Wyświetlanie komunikatu na pasku stanu aplikacji."""
         self.status.showMessage(message, 4000)
 
-
-    # ====== Page Switch Handler ======
-    def switch_page(self, page):
-        # change active page
-        self.ContentArea.setCurrentWidget(page)
-        for btn, p in self.pages.items():
-            btn.setChecked(p == page)
-        
-        if hasattr(page, "load_view"):
-            page.load_view()
+    def closeEvent(self, event):
+        """Zwalnianie zasobów i zamykanie połączeń przy wyjściu z aplikacji."""
+        if self.conn:
+            self.conn.close()
+        event.accept()

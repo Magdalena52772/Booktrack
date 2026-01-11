@@ -1,5 +1,5 @@
 """
-BookTrack Admin Panel — Główny punkt wejścia aplikacji (Entry Point)
+Book Track Admin Panel — Główny punkt wejścia aplikacji (Entry Point)
 
 Moduł integrujący wszystkie komponenty systemu administracyjnego. Odpowiada za:
 * Inicjalizację cyklu życia aplikacji (QApplication) oraz głównego okna (MainWindow).
@@ -16,8 +16,8 @@ import sys
 import os
 import random
 
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer, Qt
 from views.main_window import MainWindow
 from data.database import initialize_database, get_connection
 from data.data_generator.generator import (
@@ -35,6 +35,13 @@ from data.data_generator.generator import (
 
 # Konfiguracja systemowa w celu poprawnego skalowania interfejsu użytkownika
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+# Poprawia renderowanie na monitorach o wysokiej rozdzielczości (DPI)
+if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+
+# Ustawienie katalogu roboczego na folder, w którym znajduje się main.py
+basedir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(basedir)
 
 
 def main():
@@ -82,7 +89,6 @@ def main():
         new_users = []
         for _ in range(random.randint(0, 3)):
             new_user_id = generate_realtime_user(conn)
-            # DODANO: age do zapytania SELECT
             cursor.execute("SELECT id, status, name, books_read, age FROM users WHERE id = ?", (new_user_id,))
             row = cursor.fetchone()
             if row:
@@ -91,7 +97,7 @@ def main():
                     "status": row[1], 
                     "name": row[2], 
                     "books_read": row[3],
-                    "age": row[4] # Teraz klucz 'age' będzie dostępny
+                    "age": row[4]
                 })
 
         all_users = existing_users + new_users
@@ -108,11 +114,14 @@ def main():
     # Agregacja danych i aktualizacja statystyk gatunkowych przed inicjalizacją warstwy prezentacji
     update_genre_stats(conn)
 
-    # Inicjalizacja silnika aplikacji graficznej PyQt6
+    # Inicjalizacja silnika aplikacji graficznej PySide6
     app = QApplication(sys.argv)
     
     # Utworzenie i wyświetlenie okna głównego panelu administracyjnego
     window = MainWindow(conn)
+    
+    # Wyświetlenie okna w trybie zmaksymalizowanym
+    window.showMaximized()
     window.show()
 
     # ===================== SYMULACJA AKTYWNOŚCI CIĄGŁEJ (TIMED UPDATE) =====================
@@ -122,30 +131,38 @@ def main():
         Odpowiada za symulację bieżącej aktywności czytelniczej użytkowników 
         i wymuszenie odświeżenia widoków interfejsu.
         """
-        active = [u for u in all_users if u["status"] == "active"]
-        if active and books:
-            # Losowanie liczby nowych aktywności w tej sesji
-            count = random.randint(1, 4)
+        active_list = [u for u in all_users if u.get("status") == "active"]
+        if active_list and books:
+            new_activity_count = random.randint(1, 4)
+            simulate_incremental_activity(conn, active_list, books, count=new_activity_count)
+            print(f"[LIVE UPDATE] Wygenerowano {new_activity_count} nowe aktywności czytelnicze.")
             
-            # Rejestracja nowych zdarzeń czytelniczych w bazie danych
-            simulate_incremental_activity(conn, active, books, count=count)
-            
-            # Informacja o postępie symulacji w konsoli
-            print(f"[LIVE UPDATE] Wygenerowano {count} nowe aktywności czytelnicze.")
-            
-            # Jeśli instancja MainWindow implementuje metodę update_users_view, następuje odświeżenie danych
-            # Pozwala to na wizualizację zmian statystycznych (np. strony na dzień) w trybie rzeczywistym
-            if hasattr(window, 'update_users_view'):
-                window.update_users_view()
-                print("[LIVE UPDATE] Widok użytkowników został odświeżony.")
+            # Pobierany jest aktualnie aktywny widok z MainWindow
+            # Wywoływana jest metoda load_view() dla aktualnie wyświetlanej strony
+            if hasattr(window, 'ui') and hasattr(window.ui, 'ContentArea'):
+                current_container = window.ui.ContentArea.currentWidget()
+                # Przeszukiwanie mapy stron w celu znalezienia obiektu widoku
+                for container, view in window.pages_map.values():
+                    if container == current_container:
+                        if hasattr(view, "load_view"):
+                            view.load_view()
+                            print(f"[LIVE UPDATE] Widok {view.__class__.__name__} został odświeżony.")
+                        break
 
-    # Konfiguracja timera systemowego (częstotliwość wywołań: raz na 60 sekund)
+    # Konfiguracja timera systemowego
     timer = QTimer()
     timer.timeout.connect(run_timer_update)
-    timer.start(60000) 
+    timer.start(60000)
 
-    # Uruchomienie głównej pętli zdarzeń środowiska PyQt6
-    sys.exit(app.exec())
+    # Uruchomienie głównej pętli zdarzeń środowiska PySide6
+    exit_code = app.exec() 
+
+    # Bezpieczne zamykanie połączenia z bazą danych
+    conn.close()
+    print("[EXIT] Database connection closed. Goodbye!")
+    
+    sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()

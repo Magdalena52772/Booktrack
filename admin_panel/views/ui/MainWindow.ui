@@ -19,11 +19,26 @@
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-     <horstretch>0</horstretch>
+     <horstretch>1</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QWidget" name="Sidebar" native="true">
       <property name="sizePolicy">
@@ -83,7 +98,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>../../assets/icons/dashboard.svg</normaloff>../../assets/icons/dashboard.svg</iconset>
+           <normaloff>assets/icons/dashboard.svg</normaloff>assets/icons/dashboard.svg</iconset>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -103,7 +118,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>../../assets/icons/users.svg</normaloff>../../assets/icons/users.svg</iconset>
+           <normaloff>assets/icons/users.svg</normaloff>assets/icons/users.svg</iconset>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -123,7 +138,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>../../assets/icons/genres.svg</normaloff>../../assets/icons/genres.svg</iconset>
+           <normaloff>assets/icons/genres.svg</normaloff>assets/icons/genres.svg</iconset>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -143,7 +158,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>../../assets/icons/activity.svg</normaloff>../../assets/icons/activity.svg</iconset>
+           <normaloff>assets/icons/activity.svg</normaloff>assets/icons/activity.svg</iconset>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -163,7 +178,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>../../assets/icons/reports.svg</normaloff>../../assets/icons/reports.svg</iconset>
+           <normaloff>assets/icons/reports.svg</normaloff>assets/icons/reports.svg</iconset>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -180,7 +195,7 @@
      <widget class="QFrame" name="MainContent">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
+        <horstretch>1</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -190,7 +205,7 @@
       <property name="frameShadow">
        <enum>QFrame::Shadow::Raised</enum>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
        <item>
         <widget class="QWidget" name="Topbar" native="true">
          <property name="sizePolicy">
@@ -210,7 +225,14 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QWidget" name="spacer" native="true"/>
+            <widget class="QWidget" name="spacer" native="true">
+              <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+              </sizepolicy>
+              </property>
+            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="btn_logout">
@@ -231,7 +253,7 @@
             </property>
             <property name="icon">
              <iconset>
-              <normaloff>../../assets/icons/logout.svg</normaloff>../../assets/icons/logout.svg</iconset>
+              <normaloff>assets/icons/logout.svg</normaloff>assets/icons/logout.svg</iconset>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -245,15 +267,105 @@
         <widget class="QStackedWidget" name="ContentArea">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
+           <horstretch>1</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
-         <widget class="QWidget" name="page_genres"/>
-         <widget class="QWidget" name="page_dashboard"/>
-         <widget class="QWidget" name="page_reports"/>
-         <widget class="QWidget" name="page_users"/>
-         <widget class="QWidget" name="page_activity"/>
+         <widget class="QWidget" name="page_dashboard">
+          <layout class="QVBoxLayout" name="layout_dash">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_users">
+          <layout class="QVBoxLayout" name="layout_users">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_genres">
+          <layout class="QVBoxLayout" name="layout_genres">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_activity">
+          <layout class="QVBoxLayout" name="layout_activity">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_reports">
+          <layout class="QVBoxLayout" name="layout_reports">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>

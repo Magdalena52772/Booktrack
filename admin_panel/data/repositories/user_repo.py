@@ -9,7 +9,7 @@ class UserRepository:
         self.conn = conn
 
     def get_dashboard_metrics(self):
-        """Zwraca ogólne statystyki dla Dashboardu."""
+        # Pobieranie statystyk ogólnych dla panelu głównego
         cursor = self.conn.cursor()
         thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
         
@@ -24,18 +24,15 @@ class UserRepository:
         return cursor.fetchone()
     
     def get_user_report_metrics(self, period="year"):
-        """
-        Dedykowana metoda dla ReportsView.
-        Zwraca: (total_users, new_users_in_period, avg_engagement)
-        """
+        # Pobieranie statystyk dla widoku raportów z obsługą pełnej historii
         cursor = self.conn.cursor()
-        start_dt = period_start(period)
         
-        # Statystyka całkowitej liczby kont (zawsze liczona dla całej bazy)
+        # Rozróżnienie okresu "all" od filtrów czasowych
+        start_dt = None if period.lower() == "all" else period_start(period)
+        
         cursor.execute("SELECT COUNT(id) FROM users")
         total_users = cursor.fetchone()[0] or 0
 
-        # Statystyka nowych kont w wybranym okresie
         params = []
         where_clause = ""
         if start_dt:
@@ -45,15 +42,12 @@ class UserRepository:
         cursor.execute(f"SELECT COUNT(id) FROM users {where_clause}", params)
         new_users = cursor.fetchone()[0] or 0
 
-        # Statystyka średniego zaangażowania (pages_per_day)
         cursor.execute(f"SELECT AVG(pages_per_day) FROM users {where_clause}", params)
         avg_engagement = cursor.fetchone()[0] or 0.0
 
         return total_users, new_users, round(avg_engagement, 1)
-    
 
     def get_favorite_genres(self, user_id: int) -> List[str]:
-        """Pobiera nazwy ulubionych gatunków przypisanych do użytkownika."""
         cursor = self.conn.cursor()
         rows = cursor.execute("""
             SELECT g.name 
@@ -63,16 +57,14 @@ class UserRepository:
         """, (user_id,)).fetchall()
         return [r[0] for r in rows]
 
-    def get_all(self, period="year", search_term: str = None) -> List[User]:
-        """
-        Główna metoda pobierająca listę użytkowników.
-        Zsynchronizowana z generatorem (obsługuje kolumnę age).
-        """
+    def get_all(self, period="all", search_term: str = None, limit: int = 50, offset: int = 0, sort_by="id", order="DESC") -> List[User]:
         cursor = self.conn.cursor()
-        since = period_start(period)
+        
+        # Wyznaczenie filtra czasowego dla statystyk wewnątrz obiektu User
+        since = None if period.lower() == "all" else period_start(period)
         since_str = since.strftime("%Y-%m-%d %H:%M:%S") if since else None
 
-        # 1. Budowa zapytania SQL - dodano kolumnę 'age' (u[7])
+        # Zapytanie o dane profilowe
         query = "SELECT id, name, status, books_read, pages_per_day, last_activity, register_date, age FROM users"
         params = []
 
@@ -81,7 +73,20 @@ class UserRepository:
             term = f"%{search_term}%"
             params.extend([term, term])
 
-        query += " ORDER BY register_date ASC"
+        # POPRAWKA SORTOWANIA: Konwersja tekstowego ID na liczbę w SQL
+        allowed_cols = {
+            "id": "CAST(id AS INTEGER)", 
+            "name": "name", 
+            "register_date": "register_date",
+            "pages_per_day": "pages_per_day"
+        }
+        sort_column = allowed_cols.get(sort_by, "CAST(id AS INTEGER)")
+        safe_order = "DESC" if order.upper() == "DESC" else "ASC"
+
+        query += f" ORDER BY {sort_column} {safe_order}"
+        query += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        
         users_data = cursor.execute(query, params).fetchall()
 
         def parse_date(date_str):
@@ -95,17 +100,17 @@ class UserRepository:
         for u in users_data:
             user_id = u[0]
 
-            # 2. Obliczanie liczby przeczytanych książek w danym okresie
+            # Obliczanie ukończonych książek w wybranym okresie
+            book_query = "SELECT COUNT(*) FROM books WHERE user_id = ? AND status = 'finished'"
+            book_params = [user_id]
             if since_str:
-                res_books = cursor.execute("""
-                    SELECT COUNT(*) FROM books
-                    WHERE user_id = ? AND status = 'finished' AND finish_date >= ?
-                """, (user_id, since_str)).fetchone()
-                books_read_count = res_books[0] if res_books else 0
-            else:
-                books_read_count = u[3]
+                book_query += " AND finish_date >= ?"
+                book_params.append(since_str)
+            
+            res_books = cursor.execute(book_query, book_params).fetchone()
+            books_read_count = res_books[0] if res_books else 0
 
-            # 3. Dynamiczne obliczanie pages_per_day
+            # Wyliczanie dynamicznego Pages/day z tabeli activity
             activity_sql = "SELECT SUM(pages_read), COUNT(DISTINCT date(timestamp)) FROM activity WHERE user_id = ?"
             act_params = [user_id]
             if since_str:
@@ -115,10 +120,9 @@ class UserRepository:
             res_act = cursor.execute(activity_sql, act_params).fetchone()
             total_pages = res_act[0] or 0
             reading_days = res_act[1] or 1 
-            
             dynamic_ppd = round(total_pages / reading_days, 1) if total_pages > 0 else 0.0
 
-            # 4. Mapowanie na model User (z uwzględnieniem wieku)
+            # Mapowanie na obiekt User
             users.append(User(
                 id=user_id,
                 name=u[1],
@@ -127,7 +131,7 @@ class UserRepository:
                 pages_per_day=dynamic_ppd,
                 last_activity=parse_date(u[5]),
                 register_date=parse_date(u[6]),
-                age=u[7], # Wiek pobrany z kolumny 'age' w bazie
+                age=u[7],
                 favorite_genres=self.get_favorite_genres(user_id)
             ))
             

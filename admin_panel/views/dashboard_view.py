@@ -1,6 +1,6 @@
-from PyQt6 import uic
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtCore import Signal, QFile
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from data.repositories.user_repo import UserRepository
 from data.repositories.book_repo import BookRepository
@@ -8,12 +8,20 @@ from data.repositories.challenge_repo import ChallengeRepository
 from charts.activity_chart import ActivityChart
 
 class DashboardView(QWidget):
-    statusMessage = pyqtSignal(str, str)
+    statusMessage = Signal(str, str)
 
     def __init__(self, conn):
         super().__init__()
-        uic.loadUi("views/ui/DashboardView.ui", self)
-        self.conn = conn
+        # Ładowanie interfejsu z pliku .ui
+        loader = QUiLoader()
+        ui_file = QFile("views/ui/DashboardView.ui")
+        ui_file.open(QFile.ReadOnly)
+        self.ui = loader.load(ui_file, self)
+        ui_file.close()
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.ui)
 
         # Repozytoria
         self.user_repo = UserRepository(conn)
@@ -24,34 +32,34 @@ class DashboardView(QWidget):
         self.setup_tooltips()
 
         # Inicjalizacja widoku
-        self.btn_refresh.clicked.connect(self.load_view)
+        self.ui.btn_refresh.clicked.connect(self.load_view)
         
         self.load_view()
 
     def setup_tooltips(self):
         """Dodaje podpowiedzi do KPIs po najechaniu kursorem"""
-        self.lbl_users.setToolTip(
+        self.ui.lbl_users.setToolTip(
             "Total registered users and growth (+X) within the last 30 days."
         )
-        self.lbl_books.setToolTip(
+        self.ui.lbl_books.setToolTip(
             "Number of books marked as 'finished' during the current month."
         )
-        self.lbl_pages.setToolTip(
+        self.ui.lbl_pages.setToolTip(
             "Average daily pages read per active user."
         )
-        self.lbl_challenges.setToolTip(
+        self.ui.lbl_challenges.setToolTip(
             "Number of reading challenges currently in progress (status: active)."
         )
 
     def setup_chart(self):
         """Inicjalizuje widget wykresu wewnątrz ramki z UI."""
-        if self.verticalLayout_3.count() > 0:
-            item = self.verticalLayout_3.takeAt(0)
+        if self.ui.verticalLayout_3.count() > 0:
+            item = self.ui.verticalLayout_3.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
                 
-        self.canvas = ActivityChart(self.frame_chart)
-        self.verticalLayout_3.addWidget(self.canvas)
+        self.canvas = ActivityChart(self.ui.frame_chart)
+        self.ui.verticalLayout_3.addWidget(self.canvas)
 
     def load_view(self):
         """Szybkie odświeżanie KPI i wykresu."""
@@ -61,10 +69,10 @@ class DashboardView(QWidget):
         active_challenges = self.challenge_repo.count_active()
 
         # Aktualizacja UI
-        self.lbl_users.setText(f"Users: {total_users or 0} (+{new_users or 0})")
-        self.lbl_books.setText(f"Books read: {books_month or 0}")
-        self.lbl_pages.setText(f"Pages / day: {round(avg_pages, 1) if avg_pages else 0}")
-        self.lbl_challenges.setText(f"Active challenges: {active_challenges or 0}")
+        self.ui.lbl_users.setText(f"Users: {total_users or 0} (+{new_users or 0})")
+        self.ui.lbl_books.setText(f"Books read: {books_month or 0}")
+        self.ui.lbl_pages.setText(f"Pages / day: {round(avg_pages, 1) if avg_pages else 0}")
+        self.ui.lbl_challenges.setText(f"Active challenges: {active_challenges or 0}")
 
         # Zarządzanie wykresem
         if not hasattr(self, 'canvas'):
@@ -80,6 +88,6 @@ class DashboardView(QWidget):
         else:
             # W przypadku braku danych, wyświetla komunikat w miejscu wykresu
             if hasattr(self, 'lbl_activity_chart'):
-                self.lbl_activity_chart.setText("No data over last month.")
+                self.ui.lbl_activity_chart.setText("No data over last month.")
 
         self.statusMessage.emit("Dashboard metrics and chart updated.", "info")

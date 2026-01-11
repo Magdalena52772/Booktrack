@@ -2,7 +2,6 @@ import random
 from datetime import datetime, timedelta
 from faker import Faker
 import sys
-import math
 from pathlib import Path
 import numpy as np
 
@@ -37,10 +36,10 @@ GENRE_WEIGHTS = [15, 15, 12, 12, 8, 8, 5, 5, 5, 10, 5]
 
 def weighted_age(min_age=12, max_age=75):
     """
-    Generuje wiek z gwarancją wystąpienia wszystkich grup:
-    - 70% to użytkownicy 'mainstream' (18-45 lat)
-    - 15% to seniorzy (60-75 lat)
-    - 15% to młodzież (12-17 lat)
+    Generuje użytkowników z wszystkich grup wiekowych:
+    - 70% - główni użytkownicy (18-45 lat)
+    - 15% - seniorzy (60-75 lat)
+    - 15% - młodzież (12-17 lat)
     """
     rand = random.random()
     
@@ -48,87 +47,71 @@ def weighted_age(min_age=12, max_age=75):
         # Rozkład normalny wokół 30-tki dla głównej grupy
         return int(np.random.normal(30, 7)) % (45 - 18) + 18
     elif rand < 0.85:
-        # Gwarantowani seniorzy (rozkład płaski)
+        # Seniorzy
         return random.randint(60, max_age)
     else:
-        # Gwarantowana młodzież
+        # Młodzież
         return random.randint(min_age, 17)
 
 # =============== USER GENERATOR ===================
 def generate_users(conn, count=50):
-    """
-    Tworzy użytkowników z realistycznym books_read i pages_per_day.
-    Gwarantuje obecność użytkowników nieaktywnych (cel: ~7%).
-    """
+    """Generuje użytkowników z zachowaniem chronologii i realistycznych statystyk stażu."""
     cursor = conn.cursor()
     users_to_insert = []
-
     now = datetime.now()
-    existing_external_ids = set()
-    existing_nicknames = set()
     
-    # Cel: 7% z count (dla 50 osób to ~3-4 osoby)
-    target_inactive = max(1, int(count * 0.07))
-    inactive_count = 0
+    existing_nicknames = set()
+    existing_ext_ids = set()
 
     for i in range(count):
-        # unikalny nickname
         while True:
             nickname = fake.user_name()
             if nickname not in existing_nicknames:
                 existing_nicknames.add(nickname)
                 break
-
-        # unikalny external_id
         while True:
-            external_id = random.randint(100000, 999999)
-            if external_id not in existing_external_ids:
-                existing_external_ids.add(external_id)
+            ext_id = random.randint(100000, 999999)
+            if ext_id not in existing_ext_ids:
+                existing_ext_ids.add(ext_id)
                 break
 
-        # Logika statusu: 7% szans LUB wymuszenie, jeśli jesteśmy pod koniec i wciąż jest 0
-        status = "active"
-        if random.random() < 0.07:
-            status = "inactive"
-            inactive_count += 1
+        status = "active" if random.random() > 0.07 else "inactive"
         
-        # Safety break: jeśli zbliżamy się do końca, a nieaktywnych brak, wymuś ich
-        if i > (count - (target_inactive - inactive_count)) and inactive_count < target_inactive:
-            status = "inactive"
-            inactive_count += 1
-
-        # wybiera czas rejestracji i aktywności
+        # Ustalanie daty rejestracji i aktywności
         if status == "inactive":
             register_date = fake.date_time_between(start_date='-2y', end_date='-6M')
             last_activity = fake.date_time_between(start_date=register_date, end_date='-6M')
         else:
-            register_date = fake.date_time_between(start_date='-2y', end_date='-1d')
-            last_activity = now
+            register_date = fake.date_time_between(start_date='-2y', end_date='now')
+            last_activity = fake.date_time_between(start_date=register_date, end_date='now')
 
         account_days = max(1, (now - register_date).days)
 
-        if status == "inactive":
-            books_read = max(1, int(random.uniform(0.1, 0.3) * account_days / 30))
-            pages_per_day = None
+        # Skalowanie liczby książek względem stażu konta
+        if account_days < 7:
+            books_read = random.randint(0, 1)
         else:
-            avg_books_per_month = random.choices([0.5,0.8,1,1.2,1.5,2], [0.05,0.1,0.35,0.2,0.2,0.1])[0]
-            books_read = max(1, min(31, int(avg_books_per_month*(account_days/30) + random.gauss(0,2))))
-            pages_per_day = round(random.uniform(15,50),1)
+            max_possible = max(1, account_days // 15)
+            books_read = random.randint(0, min(max_possible, 50))
+
+        # Potencjał stron na dzień dla aktywnych kont
+        potential_ppd = round(random.uniform(15.0, 45.0), 1) if status == "active" else 0.0
 
         users_to_insert.append({
             "name": nickname,
             "register_date": register_date,
             "status": status,
             "age": weighted_age(),
-            "external_id": external_id,
+            "external_id": ext_id,
             "last_activity": last_activity,
-            "pages_per_day": pages_per_day,
+            "pages_per_day": potential_ppd,
             "books_read": books_read,
             "favorite_genres": random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1,3))
         })
 
-    # Sortowanie i Insert (bez zmian)
+    # Sortowanie chronologiczne przed wstawieniem do bazy dla poprawnego ID
     users_to_insert.sort(key=lambda u: u['register_date'])
+    
     inserted_users = []
     for u in users_to_insert:
         cursor.execute("""
@@ -140,49 +123,47 @@ def generate_users(conn, count=50):
               u['pages_per_day'], u['books_read']))
         
         user_id = cursor.lastrowid
-        for genre in list(set(u['favorite_genres'])):
+        u['id'] = user_id
+        inserted_users.append(u)
+
+        for genre in set(u['favorite_genres']):
+            cursor.execute("INSERT OR IGNORE INTO genres (name) VALUES (?)", (genre,))
             cursor.execute("SELECT id FROM genres WHERE name = ?", (genre,))
-            row = cursor.fetchone()
-            genre_id = row[0] if row else cursor.execute("INSERT INTO genres (name) VALUES (?)", (genre,)).lastrowid
-            cursor.execute("INSERT OR IGNORE INTO user_favorite_genres (user_id, genre_id) VALUES (?, ?)", (user_id, genre_id))
-        
-        inserted_users.append({**u, "id": user_id})
+            g_id = cursor.fetchone()[0]
+            cursor.execute("INSERT OR IGNORE INTO user_favorite_genres (user_id, genre_id) VALUES (?, ?)", (user_id, g_id))
 
     conn.commit()
-    print(f"[INIT] Wygenerowano {count} użytkowników (w tym {inactive_count} nieaktywnych).")
     return inserted_users
 
 
 def generate_realtime_user(conn):
-    """
-    Generuje pojedynczego użytkownika w czasie rzeczywistym.
-    register_date: maksymalnie wczoraj/dzisiaj
-    last_activity: teraz
-    """
+    # Inicjalizacja kursora lokalnego dla funkcji
     cursor = conn.cursor()
     now = datetime.now()
 
-    # generowanie unikalnego nickname i external_id
+    # Zapewnienie unikalności nazwy użytkownika
     while True:
         nickname = fake.user_name()
         cursor.execute("SELECT 1 FROM users WHERE name = ?", (nickname,))
-        if not cursor.fetchone():
+        if not cursor.fetchone(): 
             break
 
+    # Zapewnienie unikalności identyfikatora zewnętrznego
     while True:
         external_id = random.randint(100000, 999999)
         cursor.execute("SELECT 1 FROM users WHERE external_id = ?", (external_id,))
-        if not cursor.fetchone():
+        if not cursor.fetchone(): 
             break
 
-    status = "active"
-    age = random.randint(12, 80)
-    register_date = fake.date_time_between(start_date='-1d', end_date='now')
-    last_activity = datetime.now()
+    # Losowanie parametrów profilu
+    age = weighted_age()
+    register_date = now - timedelta(hours=random.randint(1, 23))
+    
+    # Wyliczanie statystyk stron na dzień (zależne od liczby przeczytanych książek)
+    books_read_count = random.choices([0, 1], weights=[0.7, 0.3])[0]
+    pages_per_day = round(random.uniform(15.0, 35.0), 1) if books_read_count > 0 else 0.0
 
-    pages_per_day = round(random.uniform(10, 35), 1)
-    books_read = random.randint(1, 5)
-
+    # Wstawianie rekordu użytkownika do bazy danych
     cursor.execute("""
         INSERT INTO users (
             name, register_date, status, age,
@@ -190,30 +171,45 @@ def generate_realtime_user(conn):
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         nickname, register_date.strftime("%Y-%m-%d %H:%M:%S"),
-        status, age, external_id,
-        last_activity.strftime("%Y-%m-%d %H:%M:%S"),
-        pages_per_day, books_read
+        "active", age, external_id,
+        now.strftime("%Y-%m-%d %H:%M:%S"),
+        pages_per_day, books_read_count
     ))
-    conn.commit()
+    
     user_id = cursor.lastrowid
 
-    # ---------------- ulubione gatunki ----------------
-    weighted_choices = random.choices(GENRES, weights=GENRE_WEIGHTS, k=5)
-    favorite_genres = list(set(weighted_choices))[:random.randint(1, 3)]
-    for genre in favorite_genres:
+    # Generowanie powiązanych rekordów książek i aktywności dla statystyk
+    if books_read_count > 0:
+        total_p = random.randint(150, 400)
+        genre = random.choice(GENRES)
+        
+        cursor.execute("INSERT OR IGNORE INTO genres (name) VALUES (?)", (genre,))
         cursor.execute("SELECT id FROM genres WHERE name = ?", (genre,))
-        row = cursor.fetchone()
-        if row:
-            genre_id = row[0]
-        else:
-            cursor.execute("INSERT INTO genres (name) VALUES (?)", (genre,))
-            genre_id = cursor.lastrowid
-        cursor.execute("""
-            INSERT OR IGNORE INTO user_favorite_genres (user_id, genre_id)
-            VALUES (?, ?)
-        """, (user_id, genre_id))
+        genre_id = cursor.fetchone()[0]
 
-    print(f"[REALTIME] Added user {nickname} with id {user_id}")
+        # Wstawianie ukończonej książki
+        cursor.execute("""
+            INSERT INTO books (user_id, title, authors, genre_id, total_pages, current_page, status, finish_date, added_by_generator)
+            VALUES (?, ?, ?, ?, ?, ?, 'finished', ?, 1)
+        """, (user_id, f"The {fake.word().capitalize()}", f"{fake.first_name()} {fake.last_name()}", 
+              genre_id, total_p, total_p, now.strftime("%Y-%m-%d %H:%M:%S")))
+        
+        book_id = cursor.lastrowid
+
+        # Dodawanie wpisu do tabeli aktywności dla poprawnego wyliczania Pages/day
+        cursor.execute("""
+            INSERT INTO activity (user_id, book_id, timestamp, pages_read)
+            VALUES (?, ?, ?, ?)
+        """, (user_id, book_id, now.strftime("%Y-%m-%d %H:%M:%S"), random.randint(20, 50)))
+
+    # Przypisywanie ulubionych gatunków
+    for g_name in list(set(random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1, 2)))):
+        cursor.execute("SELECT id FROM genres WHERE name = ?", (g_name,))
+        res = cursor.fetchone()
+        if res:
+            cursor.execute("INSERT OR IGNORE INTO user_favorite_genres (user_id, genre_id) VALUES (?, ?)", (user_id, res[0]))
+
+    conn.commit()
     return user_id
 
 
@@ -278,7 +274,6 @@ def generate_books(conn, users):
     title_words = ["Shadow", "Forest", "Dream", "Fire", "Storm", "Heart", "Secret", "Moon", "Whisper", "Glass"]
 
     for user in users:
-        # ZABEZPIECZENIE: używamy .get(), aby uniknąć KeyError
         age = user.get("age", 25) 
         
         if age < 18:
@@ -448,13 +443,13 @@ def simulate_incremental_activity(conn, users, books, count=1):
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # USUNIĘTO activity_type ORAZ current_page Z INSERT INTO activity
+        # Usunięto activity_type ORAZ current_page Z INSERT INTO activity
         cursor.execute("""
             INSERT INTO activity (user_id, book_id, timestamp, pages_read)
             VALUES (?, ?, ?, ?)
         """, (user['id'], book['id'], timestamp, pages_read))
 
-        # AKTUALIZACJA książki pozostaje bez zmian
+        # Aktualizacja książki
         cursor.execute("UPDATE books SET current_page = ?, status = ? WHERE id = ?", 
                        (new_page, status, book['id']))
     
@@ -464,13 +459,20 @@ def simulate_incremental_activity(conn, users, books, count=1):
 # ===================== MAIN =====================
 if __name__ == "__main__":
     conn = get_connection()
-    users = generate_users(conn)
+    cursor = conn.cursor()
+
+    # Czyszczenie tabel oraz resetowanie liczników autoinkrementacji (sqlite_sequence)
+    tables = ['user_favorite_genres', 'activity', 'challenges', 'books', 'users', 'genres']
+    for table in tables:
+        cursor.execute(f"DELETE FROM {table}")
+        cursor.execute(f"DELETE FROM sqlite_sequence WHERE name='{table}'")
+    
+    conn.commit()
+
+    # Wywoływanie generatorów danych masowych
+    users = generate_users(conn, count=USER_COUNT)
     challenges = generate_challenges(conn, users)
     books = generate_books(conn, users)
     activity = generate_activity(conn, users, books)
     
     update_genre_stats(conn)
-
-    print(f"Generated {len(challenges)} challenges")
-    print(f"Generated {len(users)} users, {len(books)} books, {len(activity)} activity records")
-    print("Genre statistics updated successfully.")

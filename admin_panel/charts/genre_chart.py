@@ -4,7 +4,8 @@ from matplotlib.figure import Figure
 
 class GenreChart(FigureCanvas):
     def __init__(self, parent=None):
-        self.fig = Figure(figsize=(8.5, 3.8), dpi=100)
+        # Usunięto sztywne figsize, by layout Qt decydował o wielkości
+        self.fig = Figure(dpi=100)
         self.axes = self.fig.add_subplot(111)
         super().__init__(self.fig)
         self.setParent(parent)
@@ -29,5 +30,6 @@ class GenreChart(FigureCanvas):
         self.axes.spines['right'].set_visible(False)
         self.axes.set_yticks([])
         
+        # tight_layout zapewnia, że napisy nie zostaną ucięte przy zmianie rozmiaru okna
         self.fig.tight_layout()
         self.draw()
