@@ -1,64 +1,77 @@
-from PyQt6 import uic
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtCore import Signal, QFile
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 from views.dashboard_view import ActivityChart
 from data.repositories.activity_repo import ActivityRepository
 
 class ActivityView(QWidget):
-    statusMessage = pyqtSignal(str, str)
+    statusMessage = Signal(str, str)
 
     def __init__(self, conn):
         super().__init__()
-        self.conn = conn
-        self.repo = ActivityRepository(conn)
-        uic.loadUi("views/ui/ActivityView.ui", self)
+        # Ładowanie interfejsu z pliku .ui
+        loader = QUiLoader()
+        ui_file = QFile("views/ui/ActivityView.ui")
+        ui_file.open(QFile.ReadOnly)
+        self.ui = loader.load(ui_file, self)
+        ui_file.close()
+        
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.ui)
 
+        self.repo = ActivityRepository(conn)
+        
         # Inicjalizacja wykresu
-        self.canvas = ActivityChart(self.activity_chart)
+        self.canvas = ActivityChart(self.ui.activity_chart)
+        
         # Usunięcie placeholdera i dodanie wykresu do layoutu
-        self.verticalLayout_4.replaceWidget(self.lbl_chart_placeholder, self.canvas)
-        self.lbl_chart_placeholder.deleteLater()
+        self.ui.verticalLayout_4.replaceWidget(self.ui.lbl_chart_placeholder, self.canvas)
+        self.ui.lbl_chart_placeholder.deleteLater()
 
         # Konfiguracja Tooltipów dla KPI
         self.setup_tooltips()
 
         # Sygnały
-        self.btn_refresh_activity.clicked.connect(self.refresh_data)
-        self.cb_time_filter.currentTextChanged.connect(self.refresh_data)
+        self.ui.btn_refresh_activity.clicked.connect(self.refresh_data)
+        self.ui.cb_time_filter.currentTextChanged.connect(self.refresh_data)
 
         self.refresh_data()
 
     def setup_tooltips(self):
         """Dodaje podpowiedzi do KPIs po najechaniu kursorem"""
-        self.lbl_books_count.setToolTip(
+        self.ui.lbl_books_count.setToolTip(
             "Total number of pages read by all users in the selected period."
         )
-        self.lbl_active_days.setToolTip(
+        self.ui.lbl_active_days.setToolTip(
             "Number of days with at least one reading session recorded."
         )
-        self.lbl_challenges.setToolTip(
+        self.ui.lbl_challenges.setToolTip(
             "Average pages read per single session (reading intensity)."
         )
 
     def refresh_data(self):
         """Pełne odświeżenie widoku i wskaźników."""
-        time_filter = self.cb_time_filter.currentText()
+        time_filter = self.ui.cb_time_filter.currentText().lower() # Normalizacja do małych liter
         
-        # Pobranie KPI z nową logiką (Strony, Dni, Średnia)
+        # Pobranie KPI z bazy danych
         total_pages, active_days, avg_session = self.repo.get_activity_kpi(time_filter)
         
-        # Aktualizacja etykiet tekstowych
-        self.lbl_books_count.setText(f"Total Pages: {total_pages}")
-        self.lbl_active_days.setText(f"Active Days: {active_days}")
-        self.lbl_challenges.setText(f"Avg Session: {avg_session}")
+        # Aktualizacja etykiet
+        self.ui.lbl_books_count.setText(f"Total Pages: {total_pages}")
+        self.ui.lbl_active_days.setText(f"Active Days: {active_days}")
+        self.ui.lbl_challenges.setText(f"Avg Session: {avg_session}")
         
-        # Pobranie i odświeżenie złotego wykresu
-        trend_data = self.repo.get_activity_trend(time_filter)
+        # Pobranie danych trendu (wykres)
+        trend_data = self.repo.get_all_trend(time_filter) if hasattr(self.repo, 'get_all_trend') else self.repo.get_activity_trend(time_filter)
+        
         if trend_data:
             dates = [row[0] for row in trend_data]
             pages = [row[1] for row in trend_data]
-            # Przekazujemy time_filter, aby zoptymalizować oś X
+            # Przekazanie danych do kontrolki wykresu
             self.canvas.plot_data(dates, pages, time_filter=time_filter)
+        else:
+            # Jeśli brak danych, wyczyść wykres, aby nie pokazywał starej skali
+            self.canvas.plot_data([], [], time_filter=time_filter)
         
-        # Logowanie statusu
         self.statusMessage.emit(f"Activity analytics updated ({time_filter})", "info")

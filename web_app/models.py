@@ -1,7 +1,7 @@
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200))
+    password = db.Column(db.String(255))
     username = db.Column(db.String(50))
     books = db.relationship('UserBook', back_populates='user')
     

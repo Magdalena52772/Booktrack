@@ -7,7 +7,7 @@
 -- pages_per_day = średnia dzienna liczba stron czytanych przez aktywnego użytkownika.
 --                 Dla inactive użytkowników wartość może być NULL.
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     external_id INTEGER UNIQUE, -- publiczne ID
     name TEXT NOT NULL,
     age INTEGER,

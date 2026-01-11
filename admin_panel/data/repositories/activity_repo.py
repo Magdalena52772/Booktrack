@@ -1,45 +1,62 @@
 from data.utils.time_periods import period_start
-from datetime import datetime, timedelta
 import sqlite3
+from datetime import datetime, timedelta
 
 class ActivityRepository:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
 
     def get_activity_kpi(self, time_filter="week"):
+        # Pobieranie wskaźników KPI (Suma stron, Aktywne dni, Średnia sesja)
         cursor = self.conn.cursor()
-        start_dt = period_start(time_filter)
-        
-        # Obsługa przypadku "all" (start_dt is None)
         params = []
         date_clause = ""
-        if start_dt:
-            date_clause = "WHERE timestamp >= ?"
-            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
+        
+        f_type = time_filter.lower()
+        
+        # Całkowite pominięcie filtra daty dla opcji "all"
+        if f_type != "all":
+            if f_type == "week":
+                # Korekta zakresu do 7 dni (dzisiaj + 6 dni wstecz)
+                start_dt = datetime.now() - timedelta(days=6)
+                date_clause = "WHERE timestamp >= ?"
+                params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
+            else:
+                dt = period_start(time_filter)
+                if dt:
+                    date_clause = "WHERE timestamp >= ?"
+                    params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
 
-        # Statystyka książek
-        cursor.execute(f"SELECT COUNT(DISTINCT book_id) FROM activity {date_clause}", params)
-        books_count = cursor.fetchone()[0] or 0
+        # Pobieranie zsumowanych statystyk
+        cursor.execute(f"SELECT SUM(pages_read) FROM activity {date_clause}", params)
+        total_pages = cursor.fetchone()[0] or 0
 
-        # Statystyka aktywnych dni
         cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {date_clause}", params)
         active_days = cursor.fetchone()[0] or 0
 
-        # Wyzwania (niezależne od daty aktywności, tylko status)
-        cursor.execute("SELECT COUNT(*) FROM challenges WHERE status = 'active'")
-        challenges_count = cursor.fetchone()[0] or 0
+        cursor.execute(f"SELECT AVG(pages_read) FROM activity {date_clause}", params)
+        avg_session = cursor.fetchone()[0] or 0.0
 
-        return books_count, active_days, challenges_count
+        return total_pages, active_days, round(avg_session, 1)
 
     def get_activity_trend(self, time_filter="week"):
+        # Pobieranie danych do wykresu trendu dziennego
         cursor = self.conn.cursor()
-        start_dt = period_start(time_filter)
-        
         params = []
         date_clause = ""
-        if start_dt:
-            date_clause = "WHERE timestamp >= ?"
-            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
+        
+        f_type = time_filter.lower()
+        
+        if f_type != "all":
+            if f_type == "week":
+                start_dt = datetime.now() - timedelta(days=6)
+                date_clause = "WHERE timestamp >= ?"
+                params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
+            else:
+                dt = period_start(time_filter)
+                if dt:
+                    date_clause = "WHERE timestamp >= ?"
+                    params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
 
         query = f"""
             SELECT DATE(timestamp), SUM(pages_read)

@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,2,3">
    <item>
     <widget class="QLabel" name="lbl_title">
      <property name="text">
@@ -44,7 +44,7 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>350</height>
+          <height>250</height>
          </size>
         </property>
        </widget>
@@ -180,7 +180,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../assets/icons/refresh.svg</normaloff>../../assets/icons/refresh.svg</iconset>
+             <normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
            </property>
           </widget>
          </item>

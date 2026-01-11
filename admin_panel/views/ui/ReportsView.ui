@@ -87,7 +87,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../assets/icons/add.svg</normaloff>../../assets/icons/add.svg</iconset>
+             <normaloff>assets/icons/add.svg</normaloff>assets/icons/add.svg</iconset>
            </property>
            <property name="checkable">
             <bool>false</bool>
@@ -101,7 +101,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../assets/icons/export.svg</normaloff>../../assets/icons/export.svg</iconset>
+             <normaloff>assets/icons/export.svg</normaloff>assets/icons/export.svg</iconset>
            </property>
            <property name="checkable">
             <bool>false</bool>
