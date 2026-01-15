@@ -51,25 +51,38 @@ class ActivityView(QWidget):
         )
 
     def refresh_data(self):
-        """Pełne odświeżenie widoku i wskaźników."""
-        time_filter = self.ui.cb_time_filter.currentText().lower() # Normalizacja do małych liter
-        
-        # Pobranie KPI z bazy danych
-        total_pages, active_days, avg_session = self.repo.get_activity_kpi(time_filter)
-        
-        # Aktualizacja etykiet
-        self.ui.lbl_books_count.setText(f"Total Pages: {total_pages}")
-        self.ui.lbl_active_days.setText(f"Active Days: {active_days}")
-        self.ui.lbl_challenges.setText(f"Avg Session: {avg_session}")
-        
-        # Pobranie danych trendu (wykres)
-        trend_data = self.repo.get_activity_trend(time_filter)
-    
-        if trend_data:
-            dates = [row[0] for row in trend_data]
-            pages = [row[1] for row in trend_data]
+        """Pełne odświeżenie widoku z raportowaniem wybranego filtra."""
+        try:
+            # Pobranie tekstu filtra z ComboBox
+            selected_filter = self.ui.cb_time_filter.currentText()
+            time_filter_key = selected_filter.lower()
             
-            # Jeśli to widok "all", możemy zmienić tytuł osi lub info
-            self.canvas.plot_data(dates, pages, time_filter=time_filter)
-        
-        self.statusMessage.emit(f"Activity analytics updated ({time_filter})", "info")
+            # Pobranie statystyk KPI z repozytorium
+            total_pages, active_days, avg_session = self.repo.get_activity_kpi(time_filter_key)
+            
+            # Aktualizacja etykiet w interfejsie
+            self.ui.lbl_books_count.setText(f"Total Pages: {total_pages}")
+            self.ui.lbl_active_days.setText(f"Active Days: {active_days}")
+            self.ui.lbl_challenges.setText(f"Avg Session: {avg_session} pages")
+            
+            # Pobranie i rysowanie trendu na wykresie
+            trend_data = self.repo.get_activity_trend(time_filter_key)
+            if trend_data:
+                dates = [row[0] for row in trend_data]
+                pages = [row[1] for row in trend_data]
+                self.canvas.plot_data(dates, pages, time_filter=time_filter_key)
+
+            # --- SYSTEM STATUS MESSAGE ---
+            if total_pages == 0:
+                # Warning: filtr wybrany poprawnie, ale baza jest pusta dla tego okresu
+                msg = f"No activity recorded for filter: '{selected_filter}'"
+                self.statusMessage.emit(msg, "warning")
+            else:
+                # Info: sukces, dane załadowane dla konkretnego filtra
+                msg = f"Activity stats updated for: '{selected_filter}'"
+                self.statusMessage.emit(msg, "info")
+
+        except Exception as e:
+            # Error: błąd krytyczny
+            error_msg = f"Error updating activity for '{selected_filter}': {str(e)}"
+            self.statusMessage.emit(error_msg, "error")

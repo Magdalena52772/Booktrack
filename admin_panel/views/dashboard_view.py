@@ -61,33 +61,46 @@ class DashboardView(QWidget):
         self.canvas = ActivityChart(self.ui.frame_chart)
         self.ui.verticalLayout_3.addWidget(self.canvas)
 
+
     def load_view(self):
-        """Szybkie odświeżanie KPI i wykresu."""
-        # Pobranie KPI z bazy
-        total_users, new_users, avg_pages = self.user_repo.get_dashboard_metrics()
-        books_month = self.book_repo.count_books_read(period="month")
-        active_challenges = self.challenge_repo.count_active()
+        """Szybkie odświeżanie KPI i wykresu z raportowaniem stanu."""
+        try:
+            # Pobranie KPI z bazy danych
+            user_metrics = self.user_repo.get_dashboard_metrics()
+            total_users, new_users, avg_pages = user_metrics if user_metrics else (0, 0, 0)
+            
+            books_month = self.book_repo.count_books_read(period="month")
+            active_challenges = self.challenge_repo.count_active()
 
-        # Aktualizacja UI
-        self.ui.lbl_users.setText(f"Users: {total_users or 0} (+{new_users or 0})")
-        self.ui.lbl_books.setText(f"Books read: {books_month or 0}")
-        self.ui.lbl_pages.setText(f"Pages / day: {round(avg_pages, 1) if avg_pages else 0}")
-        self.ui.lbl_challenges.setText(f"Active challenges: {active_challenges or 0}")
+            # Aktualizacja UI
+            self.ui.lbl_users.setText(f"Users: {total_users} (+{new_users})")
+            self.ui.lbl_books.setText(f"Books read: {books_month or 0}")
+            self.ui.lbl_pages.setText(f"Pages / day: {round(avg_pages, 1) if avg_pages else 0}")
+            self.ui.lbl_challenges.setText(f"Active challenges: {active_challenges or 0}")
 
-        # Zarządzanie wykresem
-        if not hasattr(self, 'canvas'):
-            self.setup_chart()
+            # Zarządzanie wykresem
+            if not hasattr(self, 'canvas'):
+                self.setup_chart()
 
-        trend_data = self.book_repo.get_monthly_reading_trend()
-        
-        if trend_data:
-            dates = [row[0] for row in trend_data]
-            pages = [row[1] for row in trend_data]
-            # Użycie parametru time_filter="month" dla optymalizacji osi X
-            self.canvas.plot_data(dates, pages, time_filter="month")
-        else:
-            # W przypadku braku danych, wyświetla komunikat w miejscu wykresu
-            if hasattr(self, 'lbl_activity_chart'):
-                self.ui.lbl_activity_chart.setText("No data over last month.")
+            trend_data = self.book_repo.get_monthly_reading_trend()
+            
+            # --- LOGIKA STATUSÓW ---
+            if trend_data:
+                dates = [row[0] for row in trend_data]
+                pages = [row[1] for row in trend_data]
+                self.canvas.plot_data(dates, pages, time_filter="month")
+                
+                # Info: Wszystko załadowane poprawnie
+                self.statusMessage.emit("Dashboard updated: All metrics and trend data loaded.", "info")
+            else:
+                # Warning: KPI są, ale brak danych do wykresu
+                if hasattr(self.ui, 'lbl_activity_chart'):
+                    self.ui.lbl_activity_chart.setText("No data over last month.")
+                
+                msg = "Dashboard KPIs updated, but no trend data available for the current month."
+                self.statusMessage.emit(msg, "warning")
 
-        self.statusMessage.emit("Dashboard metrics and chart updated.", "info")
+        except Exception as e:
+            # Error: Błąd krytyczny podczas pobierania danych z repozytoriów
+            error_msg = f"Critical error during dashboard refresh: {str(e)}"
+            self.statusMessage.emit(error_msg, "error")

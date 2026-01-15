@@ -15,6 +15,7 @@ Moduł integrujący wszystkie komponenty systemu administracyjnego. Odpowiada za
 import sys
 import os
 import random
+from datetime import datetime
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer, Qt
@@ -59,8 +60,7 @@ def main():
     user_count = cursor.fetchone()[0]
 
     if user_count == 0:
-        # SCENARIUSZ A: PIERWSZE URUCHOMIENIE SYSTEMU
-        # Następuje generowanie pełnego zestawu danych syntetycznych (użytkownicy, książki, logi aktywności)
+        # SCENARIUSZ A: Pierwsze uruchomienie systemu i generowanie danych startowych
         users_list = generate_users(conn, count=USER_COUNT)
         books_list = generate_books(conn, users_list)
         generate_challenges(conn, users_list)
@@ -68,48 +68,61 @@ def main():
         
         all_users = users_list
         books = books_list
-        print(f"[INIT] System zainicjalizowany pomyślnie. Utworzono {len(all_users)} rekordów użytkowników.")
+        print(f"[INIT] Utworzono {len(all_users)} rekordów.")
     else:
-        # SCENARIUSZ B: URUCHOMIENIE PRZYROSTOWE
-        # Pobierane są dane o istniejących rekordach w celu przeprowadzenia symulacji rozwoju bazy
-        cursor.execute("SELECT id, status, age, name, external_id, books_read FROM users")
+        # SCENARIUSZ B: Uruchomienie przyrostowe i pobieranie danych z bazy
+        print(f"\n[DATABASE] System gotowy. Wykryto {user_count} rekordów.")
+        
+        cursor.execute("""
+            SELECT id, status, name, birth_date, register_date, books_read, pages_per_day, last_activity 
+            FROM users
+        """)
         existing_users = [
             {
-                "id": row[0], 
-                "status": row[1], 
-                "age": row[2], 
-                "name": row[3], 
-                "external_id": row[4],
-                "books_read": row[5]
-            }
-            for row in cursor.fetchall()
+                "id": r[0], "status": r[1], "name": r[2], 
+                "birth_date": r[3], "register_date": r[4],
+                "books_read": r[5],
+                "pages_per_day": r[6],
+                "last_activity": r[7]
+            } for r in cursor.fetchall()
         ]
 
-        # Symulacja dołączenia nowych użytkowników do systemu (zdarzenia losowe w czasie rzeczywistym)
+        # Dodawanie nowych użytkowników (Realtime Growth)
         new_users = []
-        for _ in range(random.randint(0, 3)):
-            new_user_id = generate_realtime_user(conn)
-            cursor.execute("SELECT id, status, name, books_read, age FROM users WHERE id = ?", (new_user_id,))
+        for _ in range(random.randint(0, 2)):
+            new_id = generate_realtime_user(conn)
+            cursor.execute("""
+                SELECT id, status, name, birth_date, register_date, books_read, pages_per_day, last_activity 
+                FROM users WHERE id = ?
+            """, (new_id,))
             row = cursor.fetchone()
             if row:
-                new_users.append({
-                    "id": row[0], 
-                    "status": row[1], 
-                    "name": row[2], 
-                    "books_read": row[3],
-                    "age": row[4]
-                })
+                u_data = {
+                    "id": row[0], "status": row[1], "name": row[2], 
+                    "birth_date": row[3], "register_date": row[4],
+                    "books_read": row[5],
+                    "pages_per_day": row[6],
+                    "last_activity": row[7]
+                }
+                new_users.append(u_data)
+                print(f"[GROWTH] {datetime.now().strftime('%H:%M:%S')} | Dodano: {u_data['name']} (ID: {new_id})")
 
+        if new_users:
+            generate_books(conn, new_users)
+            generate_challenges(conn, new_users)
+            print(f"[GROWTH] Wygenerowano książki i wyzwania dla nowych kont.")
+        
         all_users = existing_users + new_users
         
-        # Synchronizacja i weryfikacja rekordów książek przypisanych do użytkowników
-        books = generate_books(conn, all_users)
         
-        # Generowanie przyrostowych sesji czytelniczych odzwierciedlających aktywność między sesjami pracy panelu
-        active_users = [u for u in all_users if u["status"] == "active"]
-        simulate_incremental_activity(conn, active_users, books, count=random.randint(5, 15))
+        cursor.execute("SELECT id, user_id, status FROM books WHERE status = 'reading'")
+        books_in_progress = [{"id": r[0], "user_id": r[1], "status": r[2]} for r in cursor.fetchall()]
         
-        print(f"[GROWTH] Synchronizacja danych zakończona. Łączna liczba użytkowników: {len(all_users)}.")
+        if [u for u in all_users if u["status"] == "active"] and books_in_progress:
+            act_count = random.randint(3, 8)
+            simulate_incremental_activity(conn, [u for u in all_users if u["status"] == "active"], books_in_progress, count=act_count)
+            # Ponowna aktualizacja po aktywności startowej
+            print(f"[STARTUP] Aktywność startowa i wyzwania zaktualizowane ({act_count} akcji).")
 
     # Agregacja danych i aktualizacja statystyk gatunkowych przed inicjalizacją warstwy prezentacji
     update_genre_stats(conn)
@@ -131,24 +144,29 @@ def main():
         Odpowiada za symulację bieżącej aktywności czytelniczej użytkowników 
         i wymuszenie odświeżenia widoków interfejsu.
         """
+        nonlocal all_users
+        cursor.execute("SELECT id, user_id, status FROM books WHERE status = 'reading'")
+        current_books = [{"id": r[0], "user_id": r[1], "status": r[2]} for r in cursor.fetchall()]
+        
         active_list = [u for u in all_users if u.get("status") == "active"]
-        if active_list and books:
-            new_activity_count = random.randint(1, 4)
-            simulate_incremental_activity(conn, active_list, books, count=new_activity_count)
-            print(f"[LIVE UPDATE] Wygenerowano {new_activity_count} nowe aktywności czytelnicze.")
+        
+        if active_list and current_books:
+            new_act = random.randint(1, 4)
+            simulate_incremental_activity(conn, active_list, current_books, count=new_act)
             
-            # Pobierany jest aktualnie aktywny widok z MainWindow
-            # Wywoływana jest metoda load_view() dla aktualnie wyświetlanej strony
+            
+            now = datetime.now().strftime("%H:%M:%S")
+            print(f"[LIVE UPDATE] {now} | Wykonano {new_act} akcji czytania. Wyzwania przeliczone.")
+            
             if hasattr(window, 'ui') and hasattr(window.ui, 'ContentArea'):
-                current_container = window.ui.ContentArea.currentWidget()
-                # Przeszukiwanie mapy stron w celu znalezienia obiektu widoku
+                current_widget = window.ui.ContentArea.currentWidget()
                 for container, view in window.pages_map.values():
-                    if container == current_container:
+                    if container == current_widget:
                         if hasattr(view, "load_view"):
                             view.load_view()
-                            print(f"[LIVE UPDATE] Widok {view.__class__.__name__} został odświeżony.")
+                            print(f"[LIVE UPDATE] UI: Widok {view.__class__.__name__} odświeżony pomyślnie.")
                         break
-
+                    
     # Konfiguracja timera systemowego
     timer = QTimer()
     timer.timeout.connect(run_timer_update)

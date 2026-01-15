@@ -1,3 +1,4 @@
+# data/repositories/activity_repo.py
 from data.utils.time_periods import period_start
 import sqlite3
 from datetime import datetime, timedelta
@@ -7,17 +8,16 @@ class ActivityRepository:
         self.conn = conn
 
     def get_activity_kpi(self, time_filter="week"):
-        # Pobieranie wskaźników KPI (Suma stron, Aktywne dni, Średnia sesja)
+        """
+        Pobieranie wskaźników KPI
+        """
         cursor = self.conn.cursor()
         params = []
         date_clause = ""
-        
         f_type = time_filter.lower()
         
-        # Całkowite pominięcie filtra daty dla opcji "all"
         if f_type != "all":
             if f_type == "week":
-                # Korekta zakresu do 7 dni (dzisiaj + 6 dni wstecz)
                 start_dt = datetime.now() - timedelta(days=6)
                 date_clause = "WHERE timestamp >= ?"
                 params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
@@ -27,29 +27,30 @@ class ActivityRepository:
                     date_clause = "WHERE timestamp >= ?"
                     params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
 
-        # Pobieranie zsumowanych statystyk
-        cursor.execute(f"SELECT SUM(pages_read) FROM activity {date_clause}", params)
-        total_pages = cursor.fetchone()[0] or 0
+        # Zastosowanie COALESCE i IFNULL (stabilność danych)
+        cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {date_clause}", params)
+        total_pages = cursor.fetchone()[0]
 
         cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {date_clause}", params)
         active_days = cursor.fetchone()[0] or 0
 
-        cursor.execute(f"SELECT AVG(pages_read) FROM activity {date_clause}", params)
-        avg_session = cursor.fetchone()[0] or 0.0
+        cursor.execute(f"SELECT IFNULL(AVG(pages_read), 0.0) FROM activity {date_clause}", params)
+        avg_session = cursor.fetchone()[0]
 
-        return total_pages, active_days, round(avg_session, 1)
+        return int(total_pages), active_days, round(float(avg_session), 1)
 
     def get_activity_trend(self, time_filter="week"):
+        """
+        Pobieranie trendu aktywności
+        """
         cursor = self.conn.cursor()
         params = []
         date_clause = ""
         f_type = time_filter.lower()
         
-        # Logika grupowania - dni dla krótkich okresów, miesiące dla "all"
         group_by = "DATE(timestamp)"
         
         if f_type == "all":
-            # Dla widoku wszystkiego grupujemy po YYYY-MM dla lepszej czytelności
             group_by = "STRFTIME('%Y-%m', timestamp)"
         else:
             if f_type == "week":
@@ -63,11 +64,14 @@ class ActivityRepository:
                     params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
 
         query = f"""
-            SELECT {group_by}, SUM(pages_read)
+            SELECT {group_by} as period, SUM(pages_read) as daily_sum
             FROM activity
             {date_clause}
-            GROUP BY {group_by}
-            ORDER BY DATE(timestamp) ASC
+            GROUP BY period
+            ORDER BY period ASC
         """
         cursor.execute(query, params)
-        return cursor.fetchall()
+        results = cursor.fetchall()
+        
+        # Brak danych zwróci pustą listę
+        return results if results else []

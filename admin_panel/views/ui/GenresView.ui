@@ -22,6 +22,12 @@
   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,2,3">
    <item>
     <widget class="QLabel" name="lbl_title">
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
      <property name="text">
       <string>Genres</string>
      </property>
@@ -50,63 +56,36 @@
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="frame_metrics">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::Shape::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Shadow::Raised</enum>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QLabel" name="lbl_info">
-           <property name="text">
-            <string>Select age group:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="cb_age_group">
-           <item>
-            <property name="text">
-             <string>All</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Less than 18</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>18 - 25</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>26 - 40</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>41 - 60</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>60+</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <spacer name="spacer_left_1">
+          <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbl_info">
+          <property name="text"><string>Select age group:</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="cb_age_group">
+          <property name="minimumSize">
+           <size><width>150</width><height>30</height></size>
+          </property>
+          <item><property name="text"><string>All</string></property></item>
+          <item><property name="text"><string>Less than 18</string></property></item>
+          <item><property name="text"><string>18 - 25</string></property></item>
+          <item><property name="text"><string>26 - 40</string></property></item>
+          <item><property name="text"><string>41 - 60</string></property></item>
+          <item><property name="text"><string>60+</string></property></item>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacer_right_1">
+          <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+         </spacer>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -122,67 +101,40 @@
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <widget class="QTableWidget" name="table_genres">
-        <property name="editTriggers">
-         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-        </property>
-        <property name="alternatingRowColors">
-         <bool>true</bool>
-        </property>
-        <property name="selectionMode">
-         <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-        </property>
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-        </property>
-        <property name="sortingEnabled">
-         <bool>true</bool>
-        </property>
-        <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>150</number>
-        </attribute>
-        <attribute name="horizontalHeaderStretchLastSection">
-         <bool>true</bool>
-        </attribute>
-        <column>
-         <property name="text">
-          <string>Genre</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Readers</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Avg rating</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Books read</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>% of total reading time</string>
-         </property>
-        </column>
+        <property name="alternatingRowColors"><bool>true</bool></property>
+        <property name="selectionBehavior"><enum>QAbstractItemView::SelectionBehavior::SelectRows</enum></property>
+        <property name="sortingEnabled"><bool>true</bool></property>
+        <attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute>
+        <column><property name="text"><string>Genre</string></property></column>
+        <column><property name="text"><string>Readers</string></property></column>
+        <column><property name="text"><string>Avg rating</string></property></column>
+        <column><property name="text"><string>Books read</string></property></column>
+        <column><property name="text"><string>% of total reading time</string></property></column>
        </widget>
       </item>
       <item>
        <widget class="QWidget" name="container" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
+          <spacer name="spacer_left_2">
+           <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QPushButton" name="btn_refresh_genres">
-           <property name="text">
-            <string>Refresh</string>
+           <property name="minimumSize">
+            <size><width>150</width><height>35</height></size>
            </property>
+           <property name="text"><string>Refresh</string></property>
            <property name="icon">
-            <iconset>
-             <normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
+            <iconset><normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
            </property>
           </widget>
+         </item>
+         <item>
+          <spacer name="spacer_right_2">
+           <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+          </spacer>
          </item>
         </layout>
        </widget>
