@@ -1,6 +1,6 @@
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Signal, QFile
-from PySide6.QtWidgets import QWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QSizePolicy
+from PySide6.QtCore import Signal, QFile, Qt
+from PySide6.QtWidgets import QWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QSizePolicy, QProgressBar
 
 from data.repositories.genre_repo import GenresRepository
 from charts.genre_chart import GenreChart
@@ -46,34 +46,74 @@ class GenresView(QWidget):
     def load_view(self):
         """
         Metoda realizująca aktualizację widoku danych.
-        Ustawia wyśrodkowany, panoramiczny wykres o niskim profilu.
-        """
-        
+        Aktualizuje wykres popularności oraz tabelę szczegółową dla wybranej grupy wiekowej."""
         try:
-            self.statusMessage.emit("Updating statistics...", "info")
+            BURGUNDY = "#630D16"
             
             age_group = self.ui.cb_age_group.currentText()
             genres = self.repo.get_all(age_group=age_group)
             
-            # --- Wykres (Renderowanie bezpośrednie) ---
+            # Zapewnienie równej szerokości kolumn przy każdym odświeżeniu
+            header = self.ui.table_genres.horizontalHeader()
+            for i in range(self.ui.table_genres.columnCount()):
+                header.setSectionResizeMode(i, QHeaderView.Stretch)
+
+            if not genres:
+                self.ui.table_genres.setRowCount(0)
+                self.canvas.update_chart([], age_group)
+                return
+
             self.canvas.update_chart(genres, age_group)
 
-            # --- Tabela ---
             self.ui.table_genres.setSortingEnabled(False)
             self.ui.table_genres.setRowCount(len(genres))
-            for row_i, genre in enumerate(genres):
-                self.ui.table_genres.setItem(row_i, 0, QTableWidgetItem(genre.name))
-                self.ui.table_genres.setItem(row_i, 1, QTableWidgetItem(str(genre.readers)))
-                self.ui.table_genres.setItem(row_i, 2, QTableWidgetItem(f"⭐ {genre.avg_rating:.2f}"))
-                self.ui.table_genres.setItem(row_i, 3, QTableWidgetItem(str(genre.books_read)))
-                self.ui.table_genres.setItem(row_i, 4, QTableWidgetItem(f"{genre.percent_of_total_time:.1f}%"))
             
+            for row, genre in enumerate(genres):
+                # Mapowanie danych do komórek
+                self.ui.table_genres.setItem(row, 0, QTableWidgetItem(genre.name))
+                
+                readers_item = QTableWidgetItem(str(genre.readers))
+                readers_item.setTextAlignment(Qt.AlignCenter)
+                self.ui.table_genres.setItem(row, 1, readers_item)
+                
+                rating_item = QTableWidgetItem(f"⭐ {genre.avg_rating:.2f}")
+                rating_item.setTextAlignment(Qt.AlignCenter)
+                self.ui.table_genres.setItem(row, 2, rating_item)
+                
+                books_item = QTableWidgetItem(str(genre.books_read))
+                books_item.setTextAlignment(Qt.AlignCenter)
+                self.ui.table_genres.setItem(row, 3, books_item)
+                
+                # Implementacja paska postępu
+                progress = QProgressBar()
+                progress.setRange(0, 100)
+                val = int(genre.percent_of_total_time)
+                progress.setValue(val)
+                progress.setTextVisible(True)
+                progress.setFormat(f"{genre.percent_of_total_time}%")
+                
+                # Zastosowanie stylu paska postępu
+                progress.setStyleSheet(f"""
+                    QProgressBar {{
+                        border: 1px solid #D1D1D1;
+                        border-radius: 4px;
+                        background-color: #FDFDFD;
+                        text-align: center;
+                        color: black;
+                        font-weight: bold;
+                        height: 20px;
+                    }}
+                    QProgressBar::chunk {{
+                        background-color: {BURGUNDY};
+                        border-radius: 3px;
+                        border: none;
+                    }}
+                """)
+                
+                self.ui.table_genres.setCellWidget(row, 4, progress)
+
             self.ui.table_genres.setSortingEnabled(True)
-            
-            # Automatyczne rozciągnięcie kolumn do krawędzi
-            self.ui.table_genres.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-            
-            self.statusMessage.emit(f"Stats loaded for: {age_group}", "success")
-            
+            self.statusMessage.emit(f"View loaded for group: {age_group}", "success")
+
         except Exception as e:
             self.statusMessage.emit(f"Error: {str(e)}", "error")

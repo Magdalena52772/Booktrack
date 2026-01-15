@@ -38,6 +38,7 @@ class ReportsView(QWidget):
         # Domyślne załadowanie danych
         self.generate_report()
 
+
     def setup_ui_tooltips(self):
         """Ustawia tooltipy dla metryk"""
         self.ui.cb_report_type.setToolTip("Select the category of data for the report.")
@@ -45,75 +46,104 @@ class ReportsView(QWidget):
         self.ui.btn_generate.setToolTip("Click to process and display data in the table below.")
         self.ui.btn_export.setToolTip("Save the generated table to a CSV file.")
 
+
     def generate_report(self):
-        """Zbiera dane i generuje raport dla wybranych filtrów"""
-        report_type = self.ui.cb_report_type.currentText()
-        period = self.ui.cb_time.currentText()
-        
-        self.ui.table_reports.setRowCount(0)
-        rows = []
-
-        if report_type == "Activity":
-            # Pobranie danych: total_pages, active_days, avg_session
-            total_p, active_d, avg_s = self.act_repo.get_activity_kpi(period)
-            rows = [
-                ("Total Volume", f"{total_p} pages", "Dynamic", period, "Sum of all reading logs"),
-                ("User Retention", f"{active_d} active days", "Stable", period, "Unique dates with activity"),
-                ("Session Density", f"{avg_s} p/session", "Quality", period, "Average intensity per entry")
-            ]
+        """
+        Gromadzenie danych i generowanie raportu na podstawie wybranych filtrów. 
+        Analiza metryk pod kątem obecności rekordów w bazie danych.
+        """
+        try:
+            report_type = self.ui.cb_report_type.currentText()
+            period = self.ui.cb_time.currentText()
             
-        elif report_type == "Users":
-            total_u, growth_u, avg_day = self.user_repo.get_user_report_metrics(period)
-            
-            rows = [
-                ("Total Registered", str(total_u), "Cumulative", "Total", "Total accounts in DB"),
-                ("New Acquisitions", f"+{growth_u}", "Growth", period, f"New sign-ups in period: {period}"),
-                ("Global Performance", f"{avg_day} p/day", "Engagement", period, "Average pages per user")
-            ]
+            self.ui.table_reports.setRowCount(0)
+            rows = []
+            is_empty = True
 
-        elif report_type == "Genres":
-            # Statyczna analiza gatunków
-            rows = [
-                ("Top Performing Genre", "Fantasy", "Leader", period, "Based on total pages read"),
-                ("Genre Diversity", "12 active", "Stable", period, "Number of genres with activity")
-            ]
+            # Pobieranie danych z odpowiednich repozytoriów
+            if report_type == "Activity":
+                total_p, active_d, avg_s = self.act_repo.get_activity_kpi(period.lower())
+                rows = [
+                    ("Total Volume", f"{total_p} pages", "Dynamic", period, "Sum of all reading logs"),
+                    ("User Retention", f"{active_d} active days", "Stable", period, "Unique dates with activity"),
+                    ("Session Density", f"{avg_s} p/session", "Quality", period, "Average intensity per entry")
+                ]
+                is_empty = (total_p == 0)
+                
+            elif report_type == "Users":
+                total_u, growth_u, avg_day = self.user_repo.get_user_report_metrics(period.lower())
+                rows = [
+                    ("Total Registered", str(total_u), "Cumulative", "Total", "Total accounts in DB"),
+                    ("New Acquisitions", f"+{growth_u}", "Growth", period, f"New sign-ups in period: {period}"),
+                    ("Global Performance", f"{avg_day} p/day", "Engagement", period, "Average pages per user")
+                ]
+                is_empty = (total_u == 0)
 
-        # Wypełnianie tabeli wynikami
-        for row_idx, row_data in enumerate(rows):
-            self.ui.table_reports.insertRow(row_idx)
-            for col_idx, value in enumerate(row_data):
-                self.ui.table_reports.setItem(row_idx, col_idx, QTableWidgetItem(value))
+            elif report_type == "Genres":
+                if not hasattr(self, 'genre_repo'):
+                    from data.repositories.genre_repo import GenresRepository
+                    self.genre_repo = GenresRepository(self.user_repo.conn)
 
-        # Generowanie tekstowego podsumowania w QTextEdit
-        summary = f"REPORT SUMMARY\n{'='*20}\nType: {report_type}\nPeriod: {period}\n"
-        summary += f"Status: Success\nMetrics count: {len(rows)}\n"
-        self.ui.input_report_text.setPlainText(summary)
-        
-        self.statusMessage.emit(f"{report_type} report for {period} generated.", "info")
+                top_genre, genre_count = self.genre_repo.get_report_summary(period.lower())
+                rows = [
+                    ("Top Performing Genre", str(top_genre), "Leader", period, "Based on total pages read"),
+                    ("Genre Diversity", f"{genre_count} active", "Stable", period, "Unique genres in period")
+                ]
+                is_empty = (genre_count == 0)
+
+            # Weryfikacja statusu i wyświetlanie danych w interfejsie
+            if not rows or is_empty:
+                self.statusMessage.emit(f"Report '{report_type}' for {period} is empty.", "warning")
+            else:
+                for row_idx, row_data in enumerate(rows):
+                    self.ui.table_reports.insertRow(row_idx)
+                    for col_idx, value in enumerate(row_data):
+                        self.ui.table_reports.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
+                
+                self.statusMessage.emit(f"Report '{report_type}' generated successfully.", "success")
+
+            # Aktualizacja tekstowego obszaru podsumowania
+            summary = f"REPORT SUMMARY\n{'='*20}\nType: {report_type}\nPeriod: {period}\n"
+            summary += f"Status: {'Empty' if is_empty else 'Data Processed'}\nMetrics count: {len(rows)}\n"
+            self.ui.input_report_text.setPlainText(summary)
+
+        except Exception as e:
+            self.statusMessage.emit(f"Report error: {str(e)}", "error")
+
 
     def export_to_csv(self):
-        """Exports current table contents to a CSV file."""
+        """
+        Eksportowanie zawartości tabeli raportu do zewnętrznego pliku CSV.
+        Zapisywanie nagłówków oraz danych wierszowych z kodowaniem UTF-8.
+        """
         if self.ui.table_reports.rowCount() == 0:
-            self.statusMessage.emit("No data to export.", "warning")
+            self.statusMessage.emit("Nothing to export. Generate a report first.", "warning")
             return
 
         path, _ = QFileDialog.getSaveFileName(self, "Export Report", "", "CSV Files (*.csv)")
-        if path:
-            try:
-                with open(path, 'w', newline='', encoding='utf-8') as f:
-                    writer = csv.writer(f)
-                    # Nagłówki z tabeli
-                    headers = [self.ui.table_reports.horizontalHeaderItem(i).text() 
-                               for i in range(self.ui.table_reports.columnCount())]
-                    writer.writerow(headers)
-                    # Dane z wierszy
-                    for r in range(self.ui.table_reports.rowCount()):
-                        row_data = [self.ui.table_reports.item(r, c).text() for c in range(self.ui.table_reports.columnCount())]
-                        writer.writerow(row_data)
-                self.statusMessage.emit(f"Report saved to: {path}", "success")
-            except Exception as e:
-                self.statusMessage.emit(f"Error during export: {str(e)}", "error")
+        if not path:
+            self.statusMessage.emit("Export cancelled.", "info")
+            return
 
-    def load_view(self):
-        """Method called when switching to this view."""
-        self.generate_report()
+        try:
+            with open(path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                
+                # Pobieranie etykiet kolumn z nagłówka tabeli
+                headers = [self.ui.table_reports.horizontalHeaderItem(i).text() 
+                           for i in range(self.ui.table_reports.columnCount())]
+                writer.writerow(headers)
+                
+                # Iteracja po wszystkich komórkach tabeli i zapis do pliku
+                for r in range(self.ui.table_reports.rowCount()):
+                    row_data = []
+                    for c in range(self.ui.table_reports.columnCount()):
+                        item = self.ui.table_reports.item(r, c)
+                        row_data.append(item.text() if item else "")
+                    writer.writerow(row_data)
+            
+            # Potwierdzenie zapisu pliku z uwzględnieniem pełnej ścieżki docelowej
+            self.statusMessage.emit(f"Report exported to: {path}", "success")
+            
+        except Exception as e:
+            self.statusMessage.emit(f"Export failed: {str(e)}", "error")
