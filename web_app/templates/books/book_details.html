@@ -1,1 +1,12 @@
-
+{% extends "base.html" %}
+{% block content %}
+<div class="book-container">
+    <h2>{{ book.title }}</h2>
+    <p><strong>Autor:</strong> {{ book.author }}</p>
+    <div class="description">
+        {{ book.description }}
+    </div>
+    <hr>
+    <a href="{% url 'dashboard' %}" class="btn btn-primary">Powrót do panelu</a>
+</div>
+{% endblock %}

@@ -507,10 +507,14 @@ def simulate_incremental_activity(conn, users, books, count=1):
         is_weekend = now.weekday() >= 5  # Sobota = 5, Niedziela = 6
         
         if is_weekend:
-            # W weekendy użytkownicy czytają więcej (np. 15-40 stron)
-            pages_read = random.randint(15, min(40, pages_left))
+            # Określenie dolnej granicy (zabezpieczenie przed błędem randint gdy pages_left < 15)
+            lower_bound = min(15, pages_left)
+            # Określenie górnej granicy (maksymalnie 40 stron lub tyle, ile zostało do końca)
+            upper_bound = min(40, pages_left)
+            
+            pages_read = random.randint(lower_bound, upper_bound)
         else:
-            # W dni robocze czytają mniej (np. 1-15 stron)
+            # W dni robocze dolna granica to 1, co jest bezpieczne przy pages_left >= 1
             pages_read = random.randint(1, min(15, pages_left))
         
         new_page = current + pages_read

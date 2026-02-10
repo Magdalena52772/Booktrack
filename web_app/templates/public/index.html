@@ -1,5 +1,5 @@
-{% extends "base_public.html" %}{% block title %}Book Track - Monitoruj książki,
-które czytasz{% endblock %} {% block content %}
+{% extends "base_public.html" %} {% load static %} {% block title %}Book Track -
+Monitoruj książki, które czytasz{% endblock %} {% block content %}
 <main>
   <section class="main-content">
     <div class="main-content-l">
@@ -9,7 +9,7 @@ które czytasz{% endblock %} {% block content %}
       <ul class="benefits-list">
         <li>
           <img
-            src="{{ url_for('static', filename='icons/open_book.svg') }}"
+            src="{% static 'icons/open_book.svg' %}"
             alt="Monitoruj książki"
             class="benefit-icon"
           />
@@ -17,7 +17,7 @@ które czytasz{% endblock %} {% block content %}
         </li>
         <li>
           <img
-            src="{{ url_for('static', filename='icons/lightbulb.svg') }}"
+            src="{% static 'icons/lightbulb.svg' %}"
             alt="Sugestie książek"
             class="benefit-icon"
           />
@@ -25,7 +25,7 @@ które czytasz{% endblock %} {% block content %}
         </li>
         <li>
           <img
-            src="{{ url_for('static', filename='icons/workspace_premium.svg') }}"
+            src="{% static 'icons/workspace_premium.svg' %}"
             alt="Wyzwania czytelnicze"
             class="benefit-icon"
           />
@@ -33,7 +33,7 @@ które czytasz{% endblock %} {% block content %}
         </li>
         <li>
           <img
-            src="{{ url_for('static', filename='icons/notifications_active.svg') }}"
+            src="{% static 'icons/notifications_active.svg' %}"
             alt="Powiadomienia o nowościach"
             class="benefit-icon"
           />
@@ -46,7 +46,7 @@ które czytasz{% endblock %} {% block content %}
     </div>
     <div class="main-content-r">
       <img
-        src="/static/img/pexels-martabranco-23833967.jpg"
+        src="{% static 'img/pexels-martabranco-23833967.jpg' %}"
         alt="Stos książek"
       />
     </div>
