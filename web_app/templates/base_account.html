@@ -1,8 +1,5 @@
-{% extends "base.html" %} {% block head %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/account.css') }}"
-/>
+{% extends "base.html" %} {% load static %} {% block head %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}" />
 {% endblock %} {% block header %}
 <header
   class="navbar navbar-expand-lg mb-4"
@@ -47,7 +44,7 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="{{ url_for('user.dashboard') }}"
+            href="{% url 'dashboard' %}"
             style="color: var(--account-light-text)"
             >Dashboard</a
           >
@@ -55,7 +52,7 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="{{ url_for('user.reading_list') }}"
+            href="{% url 'reading_list' %}"
             style="color: var(--account-light-text)"
             >Czytane książki</a
           >
@@ -63,7 +60,7 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="{{ url_for('user.favourite_books') }}"
+            href="{% url 'favourite_books' %}"
             style="color: var(--account-light-text)"
             >Ulubione</a
           >
@@ -71,7 +68,7 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="{{ url_for('user.stats') }}"
+            href="{% url 'stats' %}"
             style="color: var(--account-light-text)"
             >Statystyki</a
           >
@@ -79,7 +76,7 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="{{ url_for('user.profile') }}"
+            href="{% url 'profile' %}"
             style="color: var(--account-light-text)"
             >Profil</a
           >
@@ -87,7 +84,7 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="{{ url_for('user.logout') }}"
+            href="{% url 'logout' %}"
             style="color: var(--account-light-text)"
             >Wyloguj</a
           >

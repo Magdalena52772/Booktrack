@@ -1,9 +1,6 @@
-{% extends "base.html"%} {% block head %}
+{% extends "base.html"%} {% load static %} {% block head %}
 
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/public.css') }}"
-/>
+<link rel="stylesheet" href="{% static 'css/public.css' %}" />
 {% endblock %} {% block header %}
 
 <nav
@@ -101,7 +98,7 @@
         />
         <button class="btn btn-outline-light search-btn" type="submit">
           <img
-            src="{{ url_for('static', filename='icons/search.svg') }}"
+            src="{% static 'icons/search.svg' %}"
             alt="Szukaj"
             class="search-icon"
           />

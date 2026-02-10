@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>🔥 Trendujące teraz</h1>
+    <ul>
+        {% for book in books %}
+            <li>#{{ book.rank }} - {{ book.title }} ({{ book.author }})</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

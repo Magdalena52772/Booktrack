@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+{% load static %}
+<!doctype html>
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
@@ -26,10 +27,7 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
     />
 
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/base.css') }}"
-    />
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
 
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
@@ -38,15 +36,16 @@
     <link
       rel="icon"
       type="image/svg+xml"
-      href="{{ url_for('static', filename='icons/open_book.svg') }}"
+      href="{% static 'icons/open_book.svg' %}"
     />
 
     {% block head %}{% endblock %}
   </head>
 
   <body>
-    {% block header %}{% endblock %} {% block content %}{% endblock %} {% block
-    footer %}
+    {% block header %}{% endblock %} 
+    {% block content %}{% endblock %} 
+    {% block footer %}
     <footer class="text-center py-3 small text-muted">
       &copy; 2025 Book Track – Projekt inżynierski by Magdalena Popczyk
     </footer>

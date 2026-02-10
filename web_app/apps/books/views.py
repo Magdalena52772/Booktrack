@@ -1,9 +1,8 @@
-from flask import Blueprint, render_template, abort
+from django.shortcuts import render
+from django.http import Http404
 
-books_bp = Blueprint("books", __name__)
-
-@books_bp.route("/genre/<genre_name>")
-def genre_page(genre_name):
+# Widok wyświetlający książki z konkretnego gatunku
+def genre_page(request, genre_name):
     valid_genres = {
         "drama": "Dramat", 
         "fiction": "Literatura piękna",
@@ -19,20 +18,20 @@ def genre_page(genre_name):
     }
     
     if genre_name not in valid_genres:
-        abort(404)
+        raise Http404("Gatunek nie istnieje")
     
     genre_label = valid_genres[genre_name]
 
+    # Lista książek (TODO: Wyświetl z bazy danych)
     books_in_genre = [
         {"title": "Wiedźmin", "author": "A. Sapkowski"},
         {"title": "Eragon", "author": "C. Paolini"},
     ]
     
-#search
+    context = {
+        "genre_name": genre_name,
+        "genre_label": genre_label,
+        "books": books_in_genre
+    }
 
-    return render_template(
-        "books/genre.html",
-        genre_name=genre_name,
-        genre_label=genre_label,
-        books=books_in_genre
-    )
+    return render(request, "books/genre.html", context)
