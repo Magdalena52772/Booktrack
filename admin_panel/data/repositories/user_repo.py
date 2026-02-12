@@ -8,6 +8,17 @@ class UserRepository:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
 
+    def parse_date(self, date_str):
+        """Konwertowanie ciągów znaków na obiekty datetime."""
+        if not date_str: 
+            return None
+        try:
+            if len(date_str) > 10:
+                return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            return datetime.strptime(date_str, "%Y-%m-%d")
+        except: 
+            return None
+
     def get_dashboard_metrics(self):
         """Pobieranie statystyk ogólnych dla panelu głównego."""
         cursor = self.conn.cursor()
@@ -59,41 +70,47 @@ class UserRepository:
         return [r[0] for r in rows]
 
     def get_all(self, period="all", search_term: str = None, limit: int = 50, offset: int = 0, sort_by="id", order="DESC") -> List[User]:
-        """Pobiera listę użytkowników z rygorystycznym wyliczaniem statystyk okresowych."""
+        """Pobieranie listy użytkowników z optymalizacją podzapytań dla uniknięcia pętli SQL."""
         cursor = self.conn.cursor()
         
-        # Wyznaczenie daty początkowej dla filtrów week, month, year
         since = None if period.lower() == "all" else period_start(period)
         since_str = since.strftime("%Y-%m-%d %H:%M:%S") if since else None
 
-        query = "SELECT id, name, status, books_read, pages_per_day, last_activity, register_date, birth_date FROM users"
-        conditions = []
-        params = []
+        # Definiowanie filtrów czasowych dla podzapytań agregujących
+        book_filter = "AND finish_date >= ?" if since_str else ""
+        act_filter = "AND timestamp >= ?" if since_str else ""
 
+        # Główne zapytanie pobierające dane podstawowe oraz statystyki okresowe jednym strzałem
+        query = f"""
+            SELECT 
+                u.id, u.name, u.status, u.last_activity, u.register_date, u.birth_date,
+                (SELECT COUNT(*) FROM books b WHERE b.user_id = u.id AND b.status = 'finished' {book_filter}) as books_count,
+                (SELECT SUM(pages_read) FROM activity a WHERE a.user_id = u.id {act_filter}) as total_pages,
+                (SELECT COUNT(DISTINCT date(timestamp)) FROM activity a WHERE a.user_id = u.id {act_filter}) as active_days
+            FROM users u
+        """
+        
+        params = []
+        # Powielenie parametru czasu dla trzech niezależnych podzapytań
+        if since_str:
+            params.extend([since_str, since_str, since_str])
+
+        # Dodawanie warunków wyszukiwania
         if search_term:
-            conditions.append("(name LIKE ? OR status LIKE ?)")
+            query += " WHERE (u.name LIKE ? OR u.status LIKE ?)"
             term = f"%{search_term}%"
             params.extend([term, term])
 
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-
-        allowed_cols = {
-            "id": "CAST(id AS INTEGER)", 
-            "name": "name", 
-            "register_date": "register_date",
-            "pages_per_day": "pages_per_day"
-        }
-        sort_column = allowed_cols.get(sort_by, "CAST(id AS INTEGER)")
-        safe_order = "DESC" if order.upper() == "DESC" else "ASC"
-
-        query += f" ORDER BY {sort_column} {safe_order} LIMIT ? OFFSET ?"
+        # Obsługa bezpiecznego sortowania i paginacji
+        allowed_cols = {"id": "u.id", "name": "u.name", "register_date": "u.register_date", "pages_per_day": "u.pages_per_day"}
+        sort_column = allowed_cols.get(sort_by, "u.id")
+        query += f" ORDER BY {sort_column} {order} LIMIT ? OFFSET ?"
         params.extend([limit, offset])
         
         users_data = cursor.execute(query, params).fetchall()
-        user_ids = [u[0] for u in users_data]
+        user_ids = [u['id'] for u in users_data]
 
-        # Pobranie wszystkich gatunków dla wylosowanych użytkowników jednym zapytaniem
+        # Pobieranie gatunków w jednym zapytaniu dla całej paczki użytkowników
         genres_map = {}
         if user_ids:
             placeholders = ', '.join(['?'] * len(user_ids))
@@ -109,59 +126,23 @@ class UserRepository:
                     genres_map[uid] = []
                 genres_map[uid].append(gname)
 
-        def parse_date(date_str):
-            if not date_str: return None
-            try:
-                if len(date_str) > 10:
-                    return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-                return datetime.strptime(date_str, "%Y-%m-%d")
-            except: return None
-
         users = []
         for u in users_data:
-            user_id = u[0]
-            user_status = u[2] # Status pobrany z bazy danych
+            # Obliczanie wskaźnika Pages Per Day na podstawie danych z podzapytań
+            total_p = u['total_pages'] or 0
+            a_days = u['active_days'] or 1
+            dynamic_ppd = round(total_p / a_days, 1) if u['status'] == 'active' else 0.0
 
-            # Obliczanie ukończonych książek ściśle dla wybranego okresu (week, month, year)
-            book_query = "SELECT COUNT(*) FROM books WHERE user_id = ? AND status = 'finished'"
-            book_params = [user_id]
-            if since_str:
-                book_query += " AND finish_date >= ?"
-                book_params.append(since_str)
-            
-            res_books = cursor.execute(book_query, book_params).fetchone()
-            books_read_count = res_books[0] if res_books else 0
-
-            # --- POPRAWKA: Obliczanie Pages/day tylko dla aktywnych użytkowników ---
-            dynamic_ppd = 0.0
-            
-            # Weryfikacja statusu przed wykonaniem obliczeń aktywności
-            if user_status == "active":
-                activity_sql = "SELECT SUM(pages_read), COUNT(DISTINCT date(timestamp)) FROM activity WHERE user_id = ?"
-                act_params = [user_id]
-                if since_str:
-                    activity_sql += " AND timestamp >= ?"
-                    act_params.append(since_str)
-                
-                res_act = cursor.execute(activity_sql, act_params).fetchone()
-                if res_act and res_act[0]:
-                    total_pages = res_act[0]
-                    reading_days = res_act[1] or 1 
-                    dynamic_ppd = round(total_pages / reading_days, 1)
-                # Wynik pozostaje 0.0, jeśli brak rekordów w tabeli activity
-            # Dla użytkowników o statusie innym niż 'active' (np. 'inactive'), dynamic_ppd pozostaje 0.0
-
-            # Tworzenie obiektu User z wyliczonymi statystykami
             users.append(User(
-                id=user_id,
-                name=u[1],
-                status=user_status,
-                birth_date=u[7], 
-                books_read=books_read_count,
+                id=u['id'],
+                name=u['name'],
+                status=u['status'],
+                birth_date=u['birth_date'], 
+                books_read=u['books_count'],
                 pages_per_day=dynamic_ppd,
-                last_activity=parse_date(u[5]),
-                register_date=parse_date(u[6]),
-                favorite_genres=genres_map.get(user_id, [])
+                last_activity=self.parse_date(u['last_activity']),
+                register_date=self.parse_date(u['register_date']),
+                favorite_genres=genres_map.get(u['id'], [])
             ))
             
         return users

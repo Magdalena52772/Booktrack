@@ -6,13 +6,13 @@ Author: Magdalena Popczyk
 /* GLOBAL */
 QMainWindow {
     background-color: #f5f3f1;
-    font-family: "Segoe UI", "Arial", "Helvetica";
+    font-family: "Segoe UI", "Arial", sans-serif;
 }
 
 /* SIDEBAR */
 QWidget#Sidebar {
     background-color: #4A2E2A;
-    padding: 12px 20px;
+    padding: 12px 10px;
     color: #fff;
     border-top-right-radius: 12px;
     border-bottom-right-radius: 12px;
@@ -23,6 +23,7 @@ QLabel#lbl_account_info {
     font-weight: 600;
     color: #faf6f4;
     margin-bottom: 14px;
+    padding: 0 10px;
 }
 
 QPushButton.sidebarButton {
@@ -31,7 +32,7 @@ QPushButton.sidebarButton {
     text-align: left;
     color: #fff;
     font-size: 12px;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 QPushButton.sidebarButton:hover {
@@ -40,9 +41,9 @@ QPushButton.sidebarButton:hover {
 }
 
 QPushButton.sidebarButton:checked {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: rgba(255, 255, 255, 0.2);
     border-left: 3px solid #e7c3a9;
-    font-weight: 600;
+    font-weight: 700;
     padding-left: 26px;
 }
 
@@ -53,11 +54,13 @@ QWidget#Topbar {
     border-bottom: 1px solid #e3dcd6;
 }
 
+/* Przycisk Logout */
 QPushButton#btn_logout {
     background-color: #6d3b2f;
-    padding: 6px 16px;
+    padding: 8px 20px; 
+    max-width: 120px;  
     color: #fff;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 600;
 }
 
@@ -68,7 +71,7 @@ QPushButton#btn_logout:hover {
 /* MAIN CONTENT */
 QFrame#MainContent {
     background-color: #ffffff;
-    border-radius: 10px;
+    border-radius: 15px;
     margin: 12px;
     padding: 22px;
     border: 1px solid #e9e2dc;
@@ -76,23 +79,24 @@ QFrame#MainContent {
 
 /* PAGE TITLE */
 QLabel#lbl_title {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 800;
     color: #4A2E2A;
     margin-bottom: 16px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid #d4c5b8;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9e2dc;
 }
 
-/* BUTTONS */
+/* PRZYCISKI */
 QPushButton {
     background-color: #6B2F2F;
     color: #fff;
     font-size: 12px;
-    padding: 7px 16px;
-    border-radius: 6px;
+    padding: 10px 25px;
+    max-width: 200px;
+    border-radius: 10px;
     border: none;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 QPushButton:hover {
@@ -106,26 +110,28 @@ QPushButton:pressed {
 /* INPUTS */
 QLineEdit, QComboBox, QTextEdit {
     border: 1px solid #cfc6c2;
-    border-radius: 6px;
+    border-radius: 8px;
     background-color: #fdfdfd;
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 12px;
 }
 
 QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
     border: 1px solid #b79578;
-    background-color: #fffaf6;
+    background-color: #ffffff;
 }
 
 /* FORM LABELS */
 QLabel#lbl_info, QLabel#lbl_info1, QLabel#lbl_desc, QLabel#lbl_desc1 {
-    font-size: 12px;
-    font-weight: 600;
-    color: #5a4a4a;
-    padding-left: 8px;
-    margin-top: 6px;
-    margin-bottom: 8px;
-    border-left: 3px solid rgba(107, 47, 47, 0.3);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #8c7e7a;
+    padding-left: 2px;
+    border: none;
+    margin-top: 10px;
+    margin-bottom: 4px;
 }
 
 /* TABLE */
@@ -133,37 +139,56 @@ QTableWidget {
     background-color: #ffffff;
     border: 1px solid #d7cfc9;
     border-radius: 8px;
-    gridline-color: #e5e1df;
+    gridline-color: #f0edea;
     font-size: 12px;
-    selection-background-color: #d8e6f9;
-    selection-color: #1e1e1e;
+    selection-background-color: #f2e9e4;
+    selection-color: #4A2E2A;
 }
 
 QHeaderView::section {
-    background-color: #f3efec;
-    color: #4a3b39;
-    font-weight: 600;
-    padding: 6px 4px;
-    border: 1px solid #dbd2cd;
-    border-radius: 4px;
+    background-color: transparent;
+    color: #8c7e7a;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 10px;
+    border: none;
+    border-bottom: 1px solid #dbd2cd;
 }
 
 /* METRICS */
 #frame_metrics QLabel {
-    background-color: #faf9f8;
-    border: 1px solid #cdc7c2;
-    padding: 10px 14px;
-    font-size: 11px;
-    border-radius: 10px;
-    min-width: 110px;
-    color: #3d3d3d;
-    text-align: center;
+    background-color: #ffffff;
+    border: 1px solid #e3dcd6;
+    qproperty-alignment: 'AlignCenter';
+    padding: 40px 20px;
+    margin: 0 30px; 
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+    font-weight: 600; 
+    color: #4A2E2A; 
+    border-radius: 16px;
+    
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, 
+                       stop:0 #ffffff, 
+                       stop:0.8 #ffffff, 
+                       stop:1.0 #fcf8f2);
 }
 
 #frame_metrics QLabel:hover {
-    background-color: #f1e9e2;
-    border-color: #bba28d;
-    font-weight: 600;
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, 
+                       stop:0 #ffffff, 
+                       stop:0.4 #ffffff, 
+                       stop:1.0 #efdfca); 
+    border-color: #d4a34d;
+}
+
+#frame_metrics QLabel[objectName^="lbl_val"] {
+    font-size: 22px;
+    font-weight: 800;
+    color: #d4a34d; 
+    background-color: transparent;
 }
 
 /* CHART DESCRIPTION */

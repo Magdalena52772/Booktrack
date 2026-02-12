@@ -127,18 +127,43 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btn_refresh">
-        <property name="text">
-         <string>Refresh</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_buttons">
+        <item>
+         <spacer name="spacer_left_dash">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_refresh">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Refresh</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg
+           </iconset>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacer_right_dash">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>

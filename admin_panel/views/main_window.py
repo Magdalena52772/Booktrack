@@ -1,7 +1,8 @@
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile
+from PySide6.QtCore import QFile, QTimer
 from PySide6.QtWidgets import QMainWindow, QMessageBox, QSizePolicy, QVBoxLayout
 from views import DashboardView, UsersView, ActivityView, GenresView, ReportsView
+from data.utils.status_manager import StatusMsg
 
 class MainWindow(QMainWindow):
     def __init__(self, conn):
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow):
             # Rejestracja zdarzenia kliknięcia przycisku
             btn.clicked.connect(lambda checked=False, c=container, v=view: self.switch_page(c, v))
             
+            # Podpięcie sygnałów statusu przed uruchomieniem widoków
             if hasattr(view, "statusMessage"):
                 view.statusMessage.connect(self.show_status_message)
 
@@ -64,10 +66,16 @@ class MainWindow(QMainWindow):
         self.ui.btn_logout.clicked.connect(self.handle_logout)
         self.status = self.statusBar()
 
-        # Konfiguracja parametrów startowych okna
+        # Konfiguracja parametrów startowych okna i sekwencja powitalna
         self.setMinimumSize(1100, 750)
         self.ui.btn_dashboard.setChecked(True)
-        self.switch_page(self.ui.page_dashboard, self.page_dashboard)
+        self.startup_sequence()
+
+    def startup_sequence(self):
+        """Sekwencja powitalna wyświetlana po uruchomieniu aplikacji"""
+        # Wyświetlenie komunikatu o zalogowaniu i opóźnione ładowanie dashboardu
+        self.show_status_message("Login success: Welcome, Admin!", StatusMsg.SUCCESS)
+        QTimer.singleShot(2000, lambda: self.switch_page(self.ui.page_dashboard, self.page_dashboard))
 
     def load_styles(self):
         """Wczytywanie definicji stylów QSS z pliku zewnętrznego."""
@@ -83,11 +91,13 @@ class MainWindow(QMainWindow):
         
         # Aktualizacja stanu wizualnego przycisków nawigacyjnych
         for btn in self.pages_map.keys():
-            is_active = (btn == self.sender() or self.pages_map[btn][0] == container)
+            is_active = (self.pages_map[btn][0] == container)
             btn.setChecked(is_active)
         
-        # Wywołanie procedur odświeżania danych w widoku
-        if hasattr(view, "load_view"):
+        # Wywołanie procedur odświeżania danych w widoku (zależnie od typu widoku)
+        if isinstance(view, ReportsView):
+            view.generate_report()
+        elif hasattr(view, "load_view"):
             view.load_view()
         
         view.updateGeometry()
@@ -102,8 +112,12 @@ class MainWindow(QMainWindow):
             self.close()
 
     def show_status_message(self, message: str, status_type: str = "info"):
-        """Wyświetlanie komunikatu na pasku stanu aplikacji."""
-        self.status.showMessage(message, 4000)
+        """Wyświetlanie kolorowego komunikatu na pasku stanu za pomocą stylów QSS."""
+        # Ustawienie właściwości statusType i odświeżenie stylu paska stanu
+        self.status.setProperty("statusType", status_type)
+        self.status.style().unpolish(self.status)
+        self.status.style().polish(self.status)
+        self.status.showMessage(message, 5000)
 
     def closeEvent(self, event):
         """Zwalnianie zasobów i zamykanie połączeń przy wyjściu z aplikacji."""

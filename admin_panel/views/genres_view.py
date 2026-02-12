@@ -2,6 +2,8 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Signal, QFile, Qt
 from PySide6.QtWidgets import QWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QSizePolicy, QProgressBar
 
+from data.utils.status_manager import StatusMsg
+
 from data.repositories.genre_repo import GenresRepository
 from charts.genre_chart import GenreChart
 
@@ -24,7 +26,6 @@ class GenresView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(self.ui)
         
-        # Wymuszenie na tabeli, by pożerała każde wolne miejsce
         self.ui.table_genres.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         self.repo = GenresRepository(conn)
@@ -47,10 +48,13 @@ class GenresView(QWidget):
         """
         Metoda realizująca aktualizację widoku danych.
         Aktualizuje wykres popularności oraz tabelę szczegółową dla wybranej grupy wiekowej."""
+        age_group = self.ui.cb_age_group.currentText()
+        
+        self.statusMessage.emit(*StatusMsg.get("LOAD_START", f"Genres ({age_group})"))
+        
         try:
             BURGUNDY = "#630D16"
             
-            age_group = self.ui.cb_age_group.currentText()
             genres = self.repo.get_all(age_group=age_group)
             
             # Zapewnienie równej szerokości kolumn przy każdym odświeżeniu
@@ -61,10 +65,10 @@ class GenresView(QWidget):
             if not genres:
                 self.ui.table_genres.setRowCount(0)
                 self.canvas.update_chart([], age_group)
+                self.statusMessage.emit(*StatusMsg.get("NO_DATA", age_group))
                 return
 
             self.canvas.update_chart(genres, age_group)
-
             self.ui.table_genres.setSortingEnabled(False)
             self.ui.table_genres.setRowCount(len(genres))
             
@@ -113,7 +117,7 @@ class GenresView(QWidget):
                 self.ui.table_genres.setCellWidget(row, 4, progress)
 
             self.ui.table_genres.setSortingEnabled(True)
-            self.statusMessage.emit(f"View loaded for group: {age_group}", "success")
+            self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", f"Genres for {age_group}"))
 
         except Exception as e:
-            self.statusMessage.emit(f"Error: {str(e)}", "error")
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
