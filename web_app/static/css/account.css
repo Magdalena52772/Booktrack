@@ -4,105 +4,101 @@
   --account-text: #2c1810;
   --account-accent: #774936;
   --account-highlight: #b08968;
-  --account-light-text: #ffffff;
+}
+
+.dashboard-root-container {
+  max-width: 900px !important;
+  margin: 0 auto !important;
 }
 
 /* --- OGÓLNE --- */
 body {
   background-color: var(--account-bg);
   color: var(--account-text);
-  min-height: 100vh;
-  font-family: "Roboto", sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
 
-/* --- HEADER --- */
-header {
-  background-color: var(--account-accent);
-  color: var(--account-light-text);
-  padding: 8px 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* ID Badge */
+.id-badge {
+  font-size: 0.75rem !important;
+  padding: 4px 10px !important;
+  background-color: #6c757d !important;
+  border-radius: 6px !important;
 }
 
-header h1 {
-  font-size: 1.8rem;
-}
-
-nav ul {
-  display: flex;
-  gap: 15px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-nav a {
-  color: var(--account-light-text);
-  font-weight: 500;
-  transition: opacity 0.3s ease;
-}
-
-nav a:hover {
-  opacity: 0.8;
-}
-
-/* --- MAIN --- */
-main {
-  background-color: var(--account-bg-secondary);
-  padding: 30px;
-  border-radius: 16px;
-  margin: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-/* --- DASHBOARD / CARDS --- */
-.dashboard {
+/* Siatka */
+.bento-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 25px;
-  margin-top: 30px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
+.card-main-stats, .card-reading-now {
+  grid-column: span 2;
+}
+
+/* Karty */
 .card {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: #fff !important;
+  border-radius: 20px !important;
+  border: none !important;
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
-}
-
-.card h3 {
+/* Statystyki */
+.huge-number {
+  font-size: 3rem;
   color: var(--account-accent);
-  margin-bottom: 10px;
+  line-height: 1;
 }
 
-.card p {
-  color: var(--account-text);
+/* PROGRESS BAR */
+.progress {
+  display: flex !important;
+  height: 14px !important;
+  overflow: hidden !important;
+  background-color: var(--account-bg-secondary) !important;
+  border-radius: 10px !important;
 }
 
-/* --- BUTTONS --- */
-button,
-.btn {
-  display: inline-block;
-  background-color: var(--account-accent);
-  color: var(--account-light-text);
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+.progress-bar {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  color: #fff !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  background-color: var(--account-accent) !important;
+  transition: width 0.6s ease !important;
+}
+
+.book-cover-placeholder {
+  background-color: var(--account-bg-secondary);
+  height: 60px;
+  width: 45px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.btn-accent {
+  background-color: var(--account-accent) !important;
+  color: white !important;
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
   text-align: center;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  text-decoration: none;
+  font-weight: 600;
 }
 
-button:hover,
-.btn:hover {
-  background-color: var(--account-highlight);
-  transform: translateY(-2px);
+.btn-minimal {
+  color: var(--account-accent) !important;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .bento-grid { grid-template-columns: 1fr; }
+  .card-main-stats, .card-reading-now { grid-column: span 1; }
 }

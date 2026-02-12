@@ -1,99 +1,37 @@
-{% extends "base.html" %} {% load static %} {% block head %}
+{% extends "base.html" %} 
+{% load static %} 
+
+{% block head %}
 <link rel="stylesheet" href="{% static 'css/account.css' %}" />
-{% endblock %} {% block header %}
-<header
-  class="navbar navbar-expand-lg mb-4"
-  style="background-color: var(--account-accent)"
->
-  <div
-    class="container-fluid d-flex justify-content-between align-items-center"
-  >
+{% endblock %} 
+
+{% block header %}
+<header class="navbar navbar-expand-lg mb-4" style="background-color: var(--account-accent)">
+  <div class="container-fluid d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
-      <a
-        class="navbar-brand me-3 text-light"
-        href="/"
-        style="color: var(--account-light-text)"
-        >Book Track</a
-      >
-      <a
-        class="navbar-brand me-3 text-light"
-        href="/user/dashboard"
-        style="color: var(--account-light-text)"
-        >Panel użytkownika</a
-      >
+      <a class="navbar-brand me-3 text-light" href="/" style="color: var(--account-light-text)">Book Track</a>
+      <a class="navbar-brand me-3 text-light" href="/user/dashboard" style="color: var(--account-light-text)">Panel użytkownika</a>
     </div>
-
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarUser"
-      aria-controls="navbarUser"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-      style="border-color: var(--account-light-text)"
-    >
-      <span
-        class="navbar-toggler-icon"
-        style="color: var(--account-light-text)"
-      ></span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUser">
+      <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="collapse navbar-collapse justify-content-end" id="navbarUser">
       <ul class="navbar-nav mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            href="{% url 'dashboard' %}"
-            style="color: var(--account-light-text)"
-            >Dashboard</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            href="{% url 'reading_list' %}"
-            style="color: var(--account-light-text)"
-            >Czytane książki</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            href="{% url 'favourite_books' %}"
-            style="color: var(--account-light-text)"
-            >Ulubione</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            href="{% url 'stats' %}"
-            style="color: var(--account-light-text)"
-            >Statystyki</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            href="{% url 'profile' %}"
-            style="color: var(--account-light-text)"
-            >Profil</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            href="{% url 'logout' %}"
-            style="color: var(--account-light-text)"
-            >Wyloguj</a
-          >
-        </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}" style="color: var(--account-light-text)">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'reading_list' %}" style="color: var(--account-light-text)">Czytane książki</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'favourite_books' %}" style="color: var(--account-light-text)">Ulubione</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'stats' %}" style="color: var(--account-light-text)">Statystyki</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}" style="color: var(--account-light-text)">Profil</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}" style="color: var(--account-light-text)">Wyloguj</a></li>
       </ul>
     </div>
   </div>
 </header>
+{% endblock %} 
 
-{% endblock %} {% block content %}
-<div class="container my-4">{% block account_content %} {% endblock %}</div>
+{% block content %}
+<div class="dashboard-root">
+    {% block account_content %} 
+    {% endblock %}
+</div>
 {% endblock %}
