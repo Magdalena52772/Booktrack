@@ -2,6 +2,8 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Signal, QFile
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
+from data.utils.status_manager import StatusMsg
+
 from data.repositories.user_repo import UserRepository
 from data.repositories.book_repo import BookRepository
 from data.repositories.challenge_repo import ChallengeRepository
@@ -90,17 +92,10 @@ class DashboardView(QWidget):
                 pages = [row[1] for row in trend_data]
                 self.canvas.plot_data(dates, pages, time_filter="month")
                 
-                # Info: Wszystko załadowane poprawnie
-                self.statusMessage.emit("Dashboard updated: All metrics and trend data loaded.", "info")
+                self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", "Dashboard"))
             else:
-                # Warning: KPI są, ale brak danych do wykresu
-                if hasattr(self.ui, 'lbl_activity_chart'):
-                    self.ui.lbl_activity_chart.setText("No data over last month.")
-                
-                msg = "Dashboard KPIs updated, but no trend data available for the current month."
-                self.statusMessage.emit(msg, "warning")
-
+                self.statusMessage.emit(*StatusMsg.get("NO_TREND_DATA", "current month"))
+              
         except Exception as e:
             # Error: Błąd krytyczny podczas pobierania danych z repozytoriów
-            error_msg = f"Critical error during dashboard refresh: {str(e)}"
-            self.statusMessage.emit(error_msg, "error")
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))

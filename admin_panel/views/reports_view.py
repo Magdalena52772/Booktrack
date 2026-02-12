@@ -2,6 +2,9 @@ import csv
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Signal, QFile
 from PySide6.QtWidgets import QWidget, QTableWidgetItem, QFileDialog, QVBoxLayout
+
+from data.utils.status_manager import StatusMsg
+
 from data.repositories.user_repo import UserRepository
 from data.repositories.activity_repo import ActivityRepository
 from data.repositories.book_repo import BookRepository
@@ -56,6 +59,8 @@ class ReportsView(QWidget):
             report_type = self.ui.cb_report_type.currentText()
             period = self.ui.cb_time.currentText()
             
+            self.statusMessage.emit(*StatusMsg.get("LOAD_START", f"{report_type} Report"))
+            
             self.ui.table_reports.setRowCount(0)
             rows = []
             is_empty = True
@@ -93,14 +98,14 @@ class ReportsView(QWidget):
 
             # Weryfikacja statusu i wyświetlanie danych w interfejsie
             if not rows or is_empty:
-                self.statusMessage.emit(f"Report '{report_type}' for {period} is empty.", "warning")
+                self.statusMessage.emit(*StatusMsg.get("NO_DATA", f"{report_type} ({period})"))
             else:
                 for row_idx, row_data in enumerate(rows):
                     self.ui.table_reports.insertRow(row_idx)
                     for col_idx, value in enumerate(row_data):
                         self.ui.table_reports.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
                 
-                self.statusMessage.emit(f"Report '{report_type}' generated successfully.", "success")
+                self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", f"{report_type} Report"))
 
             # Aktualizacja tekstowego obszaru podsumowania
             summary = f"REPORT SUMMARY\n{'='*20}\nType: {report_type}\nPeriod: {period}\n"
@@ -108,7 +113,7 @@ class ReportsView(QWidget):
             self.ui.input_report_text.setPlainText(summary)
 
         except Exception as e:
-            self.statusMessage.emit(f"Report error: {str(e)}", "error")
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
 
 
     def export_to_csv(self):
@@ -117,12 +122,12 @@ class ReportsView(QWidget):
         Zapisywanie nagłówków oraz danych wierszowych z kodowaniem UTF-8.
         """
         if self.ui.table_reports.rowCount() == 0:
-            self.statusMessage.emit("Nothing to export. Generate a report first.", "warning")
+            self.statusMessage.emit(*StatusMsg.get("NO_DATA", "Export target"), "warning")
             return
 
         path, _ = QFileDialog.getSaveFileName(self, "Export Report", "", "CSV Files (*.csv)")
         if not path:
-            self.statusMessage.emit("Export cancelled.", "info")
+            self.statusMessage.emit(*StatusMsg.get("EXPORT_CANCEL"))
             return
 
         try:
@@ -143,7 +148,7 @@ class ReportsView(QWidget):
                     writer.writerow(row_data)
             
             # Potwierdzenie zapisu pliku z uwzględnieniem pełnej ścieżki docelowej
-            self.statusMessage.emit(f"Report exported to: {path}", "success")
+            self.statusMessage.emit(*StatusMsg.get("EXPORT_SUCCESS", path))
             
         except Exception as e:
-            self.statusMessage.emit(f"Export failed: {str(e)}", "error")
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", f"Export: {str(e)}"))

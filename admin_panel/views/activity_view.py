@@ -1,6 +1,9 @@
+# views/activity_view.py
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Signal, QFile
 from PySide6.QtWidgets import QWidget, QVBoxLayout
+
+from data.utils.status_manager import StatusMsg
 from views.dashboard_view import ActivityChart
 from data.repositories.activity_repo import ActivityRepository
 
@@ -36,6 +39,9 @@ class ActivityView(QWidget):
         self.ui.btn_refresh_activity.clicked.connect(self.refresh_data)
         self.ui.cb_time_filter.currentTextChanged.connect(self.refresh_data)
 
+    def load_view(self):
+        """Metoda wywoływana przez MainWindow przy przełączaniu zakładki"""
+        # Wywołanie odświeżenia danych
         self.refresh_data()
 
     def setup_tooltips(self):
@@ -51,11 +57,14 @@ class ActivityView(QWidget):
         )
 
     def refresh_data(self):
-        """Pełne odświeżenie widoku z raportowaniem wybranego filtra."""
+        """Pełne odświeżenie widoku z jednym, połączonym komunikatem statusu."""
         try:
             # Pobranie tekstu filtra z ComboBox
             selected_filter = self.ui.cb_time_filter.currentText()
             time_filter_key = selected_filter.lower()
+            
+            # Emisja sygnału informującego o rozpoczęciu przetwarzania danych.
+            self.statusMessage.emit(*StatusMsg.get("LOAD_START", f"Activity ({selected_filter})"))
             
             # Pobranie statystyk KPI z repozytorium
             total_pages, active_days, avg_session = self.repo.get_activity_kpi(time_filter_key)
@@ -73,16 +82,13 @@ class ActivityView(QWidget):
                 self.canvas.plot_data(dates, pages, time_filter=time_filter_key)
 
             # --- SYSTEM STATUS MESSAGE ---
+            # Weryfikacja dostępności danych i wybór odpowiedniego szablonu komunikatu.
             if total_pages == 0:
-                # Warning: filtr wybrany poprawnie, ale baza jest pusta dla tego okresu
-                msg = f"No activity recorded for filter: '{selected_filter}'"
-                self.statusMessage.emit(msg, "warning")
+                self.statusMessage.emit(*StatusMsg.get("NO_DATA", selected_filter))
             else:
-                # Info: sukces, dane załadowane dla konkretnego filtra
-                msg = f"Activity stats updated for: '{selected_filter}'"
-                self.statusMessage.emit(msg, "info")
+                # wysłanie zbiorczego komunikatu o sukcesie z wykorzystaniem szablonu ACTIVITY_UPDATED.
+                self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", selected_filter, total_pages))
 
         except Exception as e:
-            # Error: błąd krytyczny
-            error_msg = f"Error updating activity for '{selected_filter}': {str(e)}"
-            self.statusMessage.emit(error_msg, "error")
+            # Obsługa ewentualnych wyjątków
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))

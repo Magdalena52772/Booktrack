@@ -4,6 +4,8 @@ from PySide6.QtGui import QColor, Qt
 from PySide6.QtCore import Signal, QFile
 from PySide6.QtWidgets import QWidget, QTableWidgetItem, QVBoxLayout, QFrame, QHeaderView
 
+from data.utils.status_manager import StatusMsg
+
 from data.repositories.user_repo import UserRepository
 
 class UsersView(QWidget):
@@ -31,7 +33,7 @@ class UsersView(QWidget):
         self.conn = conn
         self.repo = UserRepository(conn)
 
-        # Paginacja
+        # Parametry paginacji
         self.current_page = 1
         self.page_size = 50 
 
@@ -50,14 +52,20 @@ class UsersView(QWidget):
         super().mousePressEvent(event)
 
     def setup_table_ui(self):
-        """Konfiguruje wygląd tabeli."""
+        """Konfiguruje wygląd tabeli. Zoptymalizowano tryby zmiany rozmiaru kolumn."""
         table = self.ui.table_users
         table.setFrameShape(QFrame.Shape.NoFrame)
         header = table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)
+        
+        # Wymuszenie trybu Interactive dla wszystkich kolumn (usuwa ALERT testu diagnostycznego)
+        for i in range(header.count()):
+            header.setSectionResizeMode(i, QHeaderView.ResizeMode.Interactive)
+            
+        # Ustawienie rozciągania dla kluczowych kolumn tekstowych
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) # Name
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) # Genres
+        
+        # Wyłączenie automatycznego rozciągania ostatniej sekcji
         header.setStretchLastSection(False)
 
     def setup_connections(self):
@@ -89,48 +97,45 @@ class UsersView(QWidget):
         self.load_view()
 
     def load_view(self):
-        """Pobiera dane użytkowników i aktualizuje tabelę."""
+        """Pobiera dane użytkowników i aktualizuje tabelę w interfejsie."""
+        self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Users"))
+        
+        # Tymczasowe wyłączenie odświeżania tabeli w celu zwiększenia wydajności
+        self.ui.table_users.setUpdatesEnabled(False)
+        self.ui.table_users.setSortingEnabled(False)
+        self.ui.table_users.blockSignals(True)
+
         try:
-            period = self.ui.cb_time.currentText() 
+            period = self.ui.cb_time.currentText()
             search_term = self.ui.input_search_user.text().strip()
             offset = (self.current_page - 1) * self.page_size
 
             users = self.repo.get_all(
-                period=period, 
-                search_term=search_term, 
-                limit=self.page_size, 
+                period=period,
+                search_term=search_term,
+                limit=self.page_size,
                 offset=offset
             )
 
-            # --- STATUSY ---
-            if not users:
-                msg = f"No users found for: '{search_term}'" if search_term else "No users in this period."
-                self.statusMessage.emit(msg, "warning")
-            else:
-                self.statusMessage.emit(f"Loaded {len(users)} users (Page {self.current_page}).", "info")
+            self.ui.table_users.setRowCount(len(users))
 
-            table = self.ui.table_users
-            table.setSortingEnabled(False) 
-            table.setRowCount(len(users))
-
-            for row_i, user in enumerate(users):
-                # ID
+            for row_idx, user in enumerate(users):
                 id_item = QTableWidgetItem()
                 id_item.setData(Qt.ItemDataRole.DisplayRole, int(user.id))
-                table.setItem(row_i, 0, id_item)
                 
-                table.setItem(row_i, 1, QTableWidgetItem(user.name))
-                table.setItem(row_i, 2, QTableWidgetItem(str(user.age)))
-                table.setItem(row_i, 3, QTableWidgetItem(str(user.books_read)))
+                self.ui.table_users.setItem(row_idx, 0, id_item)
+                self.ui.table_users.setItem(row_idx, 1, QTableWidgetItem(user.name))
+                self.ui.table_users.setItem(row_idx, 2, QTableWidgetItem(str(user.age)))
+                self.ui.table_users.setItem(row_idx, 3, QTableWidgetItem(str(user.books_read)))
                 
                 genres_str = ", ".join(user.favorite_genres) if user.favorite_genres else "-"
-                table.setItem(row_i, 4, QTableWidgetItem(genres_str))
+                self.ui.table_users.setItem(row_idx, 4, QTableWidgetItem(genres_str))
 
                 pages = f"{user.pages_per_day:.1f}" if user.pages_per_day is not None else "0.0"
-                table.setItem(row_i, 5, QTableWidgetItem(pages))
+                self.ui.table_users.setItem(row_idx, 5, QTableWidgetItem(pages))
 
                 last_act = user.last_activity.strftime("%Y-%m-%d %H:%M") if user.last_activity else "-"
-                table.setItem(row_i, 6, QTableWidgetItem(last_act))
+                self.ui.table_users.setItem(row_idx, 6, QTableWidgetItem(last_act))
 
                 # Status konta
                 status_item = QTableWidgetItem(user.status)
@@ -140,25 +145,37 @@ class UsersView(QWidget):
                 else:
                     status_item.setBackground(QColor("#f8d7da")) 
                     status_item.setForeground(QColor("#721c24")) 
-                table.setItem(row_i, 7, status_item)
+                self.ui.table_users.setItem(row_idx, 7, status_item)
                 
                 reg_date = user.register_date.strftime("%Y-%m-%d") if user.register_date else "-"
-                table.setItem(row_i, 8, QTableWidgetItem(reg_date))
-
-            table.setSortingEnabled(True)
-            table.sortByColumn(8, Qt.SortOrder.DescendingOrder)
+                self.ui.table_users.setItem(row_idx, 8, QTableWidgetItem(reg_date))
 
             # Aktualizacja UI nawigacji
             self.ui.lbl_page_info.setText(f"Page: {self.current_page}")
             self.ui.btn_prev.setEnabled(self.current_page > 1)
             self.ui.btn_next.setEnabled(len(users) == self.page_size)
+            
+            filter_info = f"{period}" + (f", Search: {search_term}" if search_term else "")
+            display_text = f"Users, {len(users)} record(s) ({filter_info})"
+
+            if not users:
+                self.statusMessage.emit(*StatusMsg.get("NO_DATA", filter_info))
+            else:
+                self.statusMessage.emit(*StatusMsg.get("VIEW_LOADED_COUNT", display_text))
 
         except Exception as e:
-            self.statusMessage.emit(f"Error loading users: {str(e)}", "error")
-
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
+        
+        finally:
+            # Przywrócenie standardowego działania tabeli i odświeżenie widoku
+            self.ui.table_users.setSortingEnabled(True)
+            self.ui.table_users.blockSignals(False)
+            self.ui.table_users.setUpdatesEnabled(True)
+            self.ui.table_users.sortByColumn(8, Qt.SortOrder.DescendingOrder)
+            self.ui.table_users.viewport().update()
 
     def display_user_details(self):
-        """Pobiera i wyświetla rozszerzone dane o zaznaczonym użytkowniku na podstawie DDL."""
+        """Pobiera i wyświetla rozszerzone dane o zaznaczonym użytkowniku."""
         try:
             selected_items = self.ui.table_users.selectedItems()
             if not selected_items:
@@ -190,7 +207,7 @@ class UsersView(QWidget):
             avg_progress = cursor.fetchone()[0]
             progress_str = f"{int(avg_progress)}%" if avg_progress is not None else "0%"
 
-            # Pobranie danych profilu i Last Activity (z tabeli users)
+            # Pobranie danych profilu i Last Activity
             cursor.execute("""
                 SELECT external_id, birth_date, last_activity 
                 FROM users 
@@ -215,7 +232,7 @@ class UsersView(QWidget):
 
             # Logika LAST SEEN z kolorowaniem
             last_seen_text = "Never"
-            last_seen_color = "#95a5a6" # Szary
+            last_seen_color = "#95a5a6"
 
             if last_act_raw:
                 try:
@@ -231,11 +248,11 @@ class UsersView(QWidget):
                     
                     # Ramy czasowe
                     if days_ago <= 7:
-                        last_seen_color = "#2ecc71" # Zielony (Aktywny tydzień)
+                        last_seen_color = "#2ecc71"
                     elif days_ago <= 30:
-                        last_seen_color = "#f1c40f" # Żółty (Miesiąc)
+                        last_seen_color = "#f1c40f"
                     else:
-                        last_seen_color = "#e74c3c" # Czerwony (Ponad miesiąc)
+                        last_seen_color = "#e74c3c"
                 except:
                     last_seen_text = "Check Activity"
 
@@ -249,7 +266,7 @@ class UsersView(QWidget):
                 f"</div>"
             )
             self.ui.lbl_info.setText(info_text)
-            self.statusMessage.emit(f"Details loaded for: {user_name}", "info")
+            self.statusMessage.emit(*StatusMsg.get("USER_DETAILS", user_name))
                 
         except Exception as e:
-            self.statusMessage.emit(f"Error loading details: {str(e)}", "error")
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
