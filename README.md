@@ -25,8 +25,8 @@ The project consists of **four** interconnected modules to ensure a clean separa
 * **Reporting:** Automated export of analytical data to **CSV** and **PDF** formats.
 
 ## 🛠️ Tech Stack
-* **Backend:** Python (Django, ORM). *Note: Project involves a planned migration from an initial Flask prototype*.
-* **Frontend:** HTML5, CSS3 (**Modern Beige & Gold UI**), Chart.js.
+* **Backend:** Python (Django, ORM). Successfully migrated from an initial Flask prototype to leverage advanced security and scalability.
+* **Frontend:** HTML5, CSS3, Bootstrap 5 (**Customized Modern Beige & Gold UI**), Chart.js.
 * **Desktop Application:** PySide6 (Qt for Python).
 * **Data Science:** Pandas, Matplotlib, Faker (for data generation).
 * **External APIs:** Google Books API.
