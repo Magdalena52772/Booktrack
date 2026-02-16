@@ -69,6 +69,7 @@ class GenresView(QWidget):
                 return
 
             self.canvas.update_chart(genres, age_group)
+            
             self.ui.table_genres.setSortingEnabled(False)
             self.ui.table_genres.setRowCount(len(genres))
             
@@ -76,7 +77,8 @@ class GenresView(QWidget):
                 # Mapowanie danych do komórek
                 self.ui.table_genres.setItem(row, 0, QTableWidgetItem(genre.name))
                 
-                readers_item = QTableWidgetItem(str(genre.readers))
+                readers_item = QTableWidgetItem()
+                readers_item.setData(Qt.EditRole, int(genre.readers))
                 readers_item.setTextAlignment(Qt.AlignCenter)
                 self.ui.table_genres.setItem(row, 1, readers_item)
                 
@@ -84,7 +86,8 @@ class GenresView(QWidget):
                 rating_item.setTextAlignment(Qt.AlignCenter)
                 self.ui.table_genres.setItem(row, 2, rating_item)
                 
-                books_item = QTableWidgetItem(str(genre.books_read))
+                books_item = QTableWidgetItem()
+                books_item.setData(Qt.EditRole, int(genre.books_read))
                 books_item.setTextAlignment(Qt.AlignCenter)
                 self.ui.table_genres.setItem(row, 3, books_item)
                 
@@ -117,6 +120,8 @@ class GenresView(QWidget):
                 self.ui.table_genres.setCellWidget(row, 4, progress)
 
             self.ui.table_genres.setSortingEnabled(True)
+            self.ui.table_genres.sortByColumn(3, Qt.DescendingOrder)
+            
             self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", f"Genres for {age_group}"))
 
         except Exception as e:

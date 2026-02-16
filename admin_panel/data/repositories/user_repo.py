@@ -7,6 +7,7 @@ from data.utils.time_periods import period_start
 class UserRepository:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
+        self.conn.row_factory = sqlite3.Row 
 
     def parse_date(self, date_str):
         """Konwertowanie ciągów znaków na obiekty datetime."""
@@ -76,24 +77,33 @@ class UserRepository:
         since = None if period.lower() == "all" else period_start(period)
         since_str = since.strftime("%Y-%m-%d %H:%M:%S") if since else None
 
+        # --- Logika krocząca  ---
+        fixed_days = None
+        p_lower = period.lower()
+        if p_lower == "week":
+            fixed_days = 7
+        elif p_lower == "month":
+            fixed_days = 30
+        elif p_lower == "year":
+            fixed_days = 365
+
         # Definiowanie filtrów czasowych dla podzapytań agregujących
         book_filter = "AND finish_date >= ?" if since_str else ""
         act_filter = "AND timestamp >= ?" if since_str else ""
 
-        # Główne zapytanie pobierające dane podstawowe oraz statystyki okresowe jednym strzałem
+        # Główne zapytanie pobierające dane podstawowe oraz statystyki okresowe
         query = f"""
             SELECT 
                 u.id, u.name, u.status, u.last_activity, u.register_date, u.birth_date,
                 (SELECT COUNT(*) FROM books b WHERE b.user_id = u.id AND b.status = 'finished' {book_filter}) as books_count,
-                (SELECT SUM(pages_read) FROM activity a WHERE a.user_id = u.id {act_filter}) as total_pages,
-                (SELECT COUNT(DISTINCT date(timestamp)) FROM activity a WHERE a.user_id = u.id {act_filter}) as active_days
+                (SELECT SUM(pages_read) FROM activity a WHERE a.user_id = u.id {act_filter}) as total_pages
             FROM users u
         """
         
         params = []
-        # Powielenie parametru czasu dla trzech niezależnych podzapytań
+        # Powielenie parametru czasu dla dwóch niezależnych podzapytań
         if since_str:
-            params.extend([since_str, since_str, since_str])
+            params.extend([since_str, since_str])
 
         # Dodawanie warunków wyszukiwania
         if search_term:
@@ -110,7 +120,7 @@ class UserRepository:
         users_data = cursor.execute(query, params).fetchall()
         user_ids = [u['id'] for u in users_data]
 
-        # Pobieranie gatunków w jednym zapytaniu dla całej paczki użytkowników
+        # Pobieranie gatunków dla użytkowników
         genres_map = {}
         if user_ids:
             placeholders = ', '.join(['?'] * len(user_ids))
@@ -127,11 +137,25 @@ class UserRepository:
                 genres_map[uid].append(gname)
 
         users = []
+        now = datetime.now()
+
         for u in users_data:
-            # Obliczanie wskaźnika Pages Per Day na podstawie danych z podzapytań
+            # Obliczanie wskaźnika Pages Per Day na podstawie logiki kroczącej
             total_p = u['total_pages'] or 0
-            a_days = u['active_days'] or 1
-            dynamic_ppd = round(total_p / a_days, 1) if u['status'] == 'active' else 0.0
+            
+            if fixed_days:
+                # Jeśli wybrano Week/Month/Year, dzieli przez stałą liczbę dni
+                divisor = fixed_days
+            else:
+                # Jeśli wybrano "All", dzieli przez staż użytkownika (dni od rejestracji)
+                reg_date = self.parse_date(u['register_date'])
+                if reg_date:
+                    days_diff = (now - reg_date).days
+                    divisor = max(days_diff, 1)
+                else:
+                    divisor = 1
+
+            dynamic_ppd = round(total_p / divisor, 1)
 
             users.append(User(
                 id=u['id'],
@@ -146,3 +170,58 @@ class UserRepository:
             ))
             
         return users
+
+    def count_users(self, search_term: str = None) -> int:
+        """Zwraca całkowitą liczbę użytkowników (do paginacji)."""
+        cursor = self.conn.cursor()
+        query = "SELECT COUNT(*) FROM users"
+        params = []
+        if search_term:
+            query += " WHERE name LIKE ? OR status LIKE ?"
+            term = f"%{search_term}%"
+            params.extend([term, term])
+        
+        cursor.execute(query, params)
+        res = cursor.fetchone()
+        return res[0] if res else 0
+
+    def get_user_streak(self, user_id: int) -> int:
+        """Oblicza aktualny streak (dni z rzędu z aktywnością)."""
+        cursor = self.conn.cursor()
+        # Pobieramy unikalne daty aktywności użytkownika, posortowane malejąco
+        query = """
+            SELECT DISTINCT date(timestamp) as activity_date 
+            FROM activity 
+            WHERE user_id = ? 
+            ORDER BY activity_date DESC
+        """
+        rows = cursor.execute(query, (user_id,)).fetchall()
+        
+        if not rows:
+            return 0
+            
+        streak = 0
+        current_date = datetime.now().date()
+        
+        # Kiedy była ostatnia aktywność (dzisiaj/wczoraj)
+        last_act = datetime.strptime(rows[0][0], "%Y-%m-%d").date()
+        if (current_date - last_act).days > 1:
+            return 0  # Streak przerwany dawno temu
+            
+        expected_date = last_act
+        for row in rows:
+            act_date = datetime.strptime(row[0], "%Y-%m-%d").date()
+            if act_date == expected_date:
+                streak += 1
+                expected_date -= timedelta(days=1)
+            else:
+                break # Przerwa w datach
+        return streak
+
+    def get_global_avg_ppd(self) -> float:
+        """Pobiera globalną średnią stron dziennie dla wszystkich użytkowników."""
+        cursor = self.conn.cursor()
+        # Wykorzystuje istniejące w bazie pole pages_per_day lub z activity
+        cursor.execute("SELECT AVG(pages_per_day) FROM users")
+        val = cursor.fetchone()[0]
+        return round(val, 1) if val else 0.0

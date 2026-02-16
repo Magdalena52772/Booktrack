@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS activity (
     user_id INTEGER NOT NULL,
     book_id INTEGER NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Moment rejestracji sesji
-    pages_read INTEGER DEFAULT 0 CHECK(pages_read >= 0 AND pages_read <= 50),
+    pages_read INTEGER DEFAULT 0 CHECK(pages_read >= 0 AND pages_read <= 250),
     session_minutes INTEGER DEFAULT 0 CHECK(session_minutes >= 0),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE

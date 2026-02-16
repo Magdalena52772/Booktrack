@@ -50,11 +50,11 @@ class TestGeneratorLogic(unittest.TestCase):
         self.assertTrue(99.0 <= total_share <= 101.0)
 
     def test_pages_read_limit(self):
-        """Weryfikacja limitu stron na sesję. Żaden wpis w activity nie powinien przekraczać 50 stron."""
+        """Weryfikacja limitu stron na sesję. Żaden wpis w activity nie powinien przekraczać 300 stron."""
         self.cursor.execute("SELECT MAX(pages_read) FROM activity")
         max_p = self.cursor.fetchone()[0] or 0
         print(f"[SUCCESS] Session limits maintained. Maximum: {max_p} pages")
-        self.assertLessEqual(max_p, 50)
+        self.assertLessEqual(max_p, 300)
 
     def test_inactive_user_ratio(self):
         """Weryfikacja odsetka użytkowników nieaktywnych. Powinien mieścić się w przedziale 2-15%."""
