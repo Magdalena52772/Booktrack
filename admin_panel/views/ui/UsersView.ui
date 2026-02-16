@@ -158,68 +158,94 @@
       <item>
        <layout class="QHBoxLayout" name="pagination_layout">
         <item>
-         <spacer name="spacer1">
+          <spacer name="spacer1">
           <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
+            <size>
+            <width>40</width>
+            <height>20</height>
+            </size>
           </property>
-         </spacer>
+          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="btn_prev">
-          <property name="minimumSize">
-           <size>
-            <width>100</width>
-            <height>0</height>
-           </size>
-          </property>
+          <widget class="QPushButton" name="btn_first">
           <property name="text">
-           <string>Previous</string>
+            <string>« First</string>
           </property>
-         </widget>
+          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="lbl_page_info">
-          <property name="styleSheet">
-           <string notr="true">font-weight: bold; margin: 0 10px;</string>
-          </property>
+          <widget class="QPushButton" name="btn_prev">
           <property name="text">
-           <string>Page: 1</string>
+            <string>‹ Prev</string>
           </property>
-         </widget>
+          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="btn_next">
-          <property name="minimumSize">
-           <size>
-            <width>100</width>
-            <height>0</height>
-           </size>
+          <layout class="QHBoxLayout" name="page_input_layout">
+          <property name="spacing">
+            <number>5</number>
           </property>
+          <item>
+            <widget class="QLabel" name="lbl_page_prefix">
+            <property name="text">
+              <string>Page:</string>
+            </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QSpinBox" name="spin_page">
+            <property name="minimum">
+              <number>1</number>
+            </property>
+            <property name="maximum">
+              <number>9999</number>
+            </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QLabel" name="lbl_page_info">
+            <property name="styleSheet">
+              <string notr="true">font-weight: bold;</string>
+            </property>
+            <property name="text">
+              <string>of ...</string>
+            </property>
+            </widget>
+          </item>
+          </layout>
+        </item>
+        <item>
+          <widget class="QPushButton" name="btn_next">
           <property name="text">
-           <string>Next</string>
+            <string>Next ›</string>
           </property>
-         </widget>
+          </widget>
         </item>
         <item>
-         <spacer name="spacer2">
+          <widget class="QPushButton" name="btn_last">
+          <property name="text">
+            <string>Last »</string>
+          </property>
+          </widget>
+        </item>
+        <item>
+          <spacer name="spacer2">
           <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
+            <size>
+            <width>40</width>
+            <height>20</height>
+            </size>
           </property>
-         </spacer>
+          </spacer>
         </item>
-       </layout>
+        </layout>
       </item>
       <item>
        <widget class="QFrame" name="frame_user_details">

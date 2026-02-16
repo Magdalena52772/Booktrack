@@ -36,7 +36,7 @@ from data.data_generator.generator import (
 
 # Konfiguracja systemowa w celu poprawnego skalowania interfejsu użytkownika
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-# Poprawia renderowanie na monitorach o wysokiej rozdzielczości (DPI)
+# Poprawienie enderowania na monitorach o wysokiej rozdzielczości (DPI)
 if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
@@ -140,42 +140,57 @@ def main():
     # ===================== SYMULACJA AKTYWNOŚCI CIĄGŁEJ (TIMED UPDATE) =====================
     def run_timer_update():
         """
-        Funkcja wywoływana cyklicznie przez mechanizm QTimer. 
-        Odpowiada za symulację bieżącej aktywności czytelniczej użytkowników 
-        i wymuszenie odświeżenia widoków interfejsu.
+        Inteligentna symulacja aktywności z dynamicznym odświeżaniem UI.
         """
         nonlocal all_users
+        
+        # Natężenie ruchu na podstawie godziny Wieczorem (18-23) więcej niż rano
+        current_hour = datetime.now().hour
+        if 18 <= current_hour <= 23:
+            base_activity = random.randint(10, 25) # Szczyt
+        elif 0 <= current_hour <= 6:
+            base_activity = random.randint(1, 5)   # Noc
+        else:
+            base_activity = random.randint(5, 12)  # Dzień
+
+        # Pobieranie danych do symulacji
         cursor.execute("SELECT id, user_id, status FROM books WHERE status = 'reading'")
         current_books = [{"id": r[0], "user_id": r[1], "status": r[2]} for r in cursor.fetchall()]
-        
         active_list = [u for u in all_users if u.get("status") == "active"]
         
         if active_list and current_books:
-            new_act = random.randint(1, 4)
-            simulate_incremental_activity(conn, active_list, current_books, count=new_act)
-            
+            # Wykonanie symulacji w bazie
+            simulate_incremental_activity(conn, active_list, current_books, count=base_activity)
             
             now = datetime.now().strftime("%H:%M:%S")
-            print(f"[LIVE UPDATE] {now} | Wykonano {new_act} akcji czytania. Wyzwania przeliczone.")
+            print(f"[LIVE UPDATE] {now} | Aktywność: {base_activity} akcji | Baza zaktualizowana.")
             
+            # Odświeżanie widoku interfejsu
             if hasattr(window, 'ui') and hasattr(window.ui, 'ContentArea'):
                 current_widget = window.ui.ContentArea.currentWidget()
+                
                 for container, view in window.pages_map.values():
                     if container == current_widget:
                         if hasattr(view, "load_view"):
-                            view.load_view()
-                            print(f"[LIVE UPDATE] UI: Widok {view.__class__.__name__} odświeżony pomyślnie.")
+                            should_skip = False
+                            if hasattr(view, "ui") and hasattr(view.ui, "table_users"):
+                                if view.ui.table_users.selectedItems():
+                                    should_skip = True
+                            
+                            if not should_skip:
+                                view.load_view()
+                                print(f"[LIVE UPDATE] UI: Widok {view.__class__.__name__} odświeżony.")
+                            else:
+                                print(f"[LIVE UPDATE] UI: Odświeżanie wstrzymane (użytkownik pracuje na danych).")
                         break
-                    
-    # Konfiguracja timera systemowego
+                        
     timer = QTimer()
     timer.timeout.connect(run_timer_update)
-    timer.start(60000)
+    timer.start(15000) 
 
-    # Uruchomienie głównej pętli zdarzeń środowiska PySide6
     exit_code = app.exec() 
 
-    # Bezpieczne zamykanie połączenia z bazą danych
+    # Zamykanie połączenia z bazą danych
     conn.close()
     print("[EXIT] Database connection closed. Goodbye!")
     

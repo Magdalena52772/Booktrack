@@ -11,27 +11,35 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR.parent))
 from data.database import get_connection
 
-fake = Faker("pl_PL") # generuje polskich użytkowników
-
 # ============== SEED ==============
 # Zapewnia powtarzalność wyników
+fake = Faker("pl_PL") # generuje polskich użytkowników
 SEED = 52772
 random.seed(SEED)
 fake.seed_instance(SEED)
 
-# ============ CONFIG =============
+# ============ CONFIG & CONSTANTS =============
 GENRES = [
     "Fantasy", "Sci-Fi", "Romance", "Thriller", "Historical fiction",
     "Crime", "Biography", "Young Adult", "Drama", "Fiction", "Childrens literature"
 ]
 
-USER_COUNT = 50
+USER_COUNT = 1000
 BOOK_COUNT = 80
 ACTIVITY_COUNT = 200
 INACTIVE_PROBABILITY = 0.07  # 7% użytkowników nieaktywnych
+SIX_MONTHS_INACTIVITY = 180
 
 # waga gatunków dla ulubionych
 GENRE_WEIGHTS = [15, 15, 12, 12, 8, 8, 5, 5, 5, 10, 5]
+
+# Definicja archetypów czytelniczych
+ARCHETYPES = {
+    "casual": {"prob": 0.15, "pages": (5, 15), "annual_limit": (1, 6)},
+    "regular": {"prob": 0.35, "pages": (15, 25), "annual_limit": (7, 15)},
+    "avid": {"prob": 0.60, "pages": (25, 45), "annual_limit": (16, 35)},
+    "power": {"prob": 0.85, "pages": (40, 70), "annual_limit": (36, 60)}
+    }
 
 
 def generate_birth_date():
@@ -56,121 +64,126 @@ def generate_birth_date():
 
 
 # =============== USER GENERATOR ===================
-def generate_users(conn, count=50):
-    """Generowanie bazy użytkowników z podziałem na grupy aktywności."""
-    
+def generate_users(conn, count=1000):
     cursor = conn.cursor()
-    users_to_insert = []
     now = datetime.now()
     
-    # Obliczenie liczby osób nieaktywnych (7%)
+    # --- ZAPEWNIENIE GATUNKÓW ---
+    for g in GENRES:
+        cursor.execute("INSERT OR IGNORE INTO genres (name) VALUES (?)", (g,))
+    conn.commit()
+
+    # Pobieranie mapy (id -> name)
+    cursor.execute("SELECT name, id FROM genres")
+    genre_map = {name: gid for name, gid in cursor.fetchall()}
+
+    # Logika statusów
     num_inactive = int(count * INACTIVE_PROBABILITY)
     statuses = ["inactive"] * num_inactive + ["active"] * (count - num_inactive)
     random.shuffle(statuses)
 
-    existing_nicknames = set()
-    existing_ext_ids = set()
-
+    temp_users_data = [] 
+    
     for i in range(count):
-        while True:
-            nickname = fake.user_name()
-            if nickname not in existing_nicknames:
-                existing_nicknames.add(nickname)
-                break
-        
-        while True:
-            ext_id = random.randint(100000, 999999)
-            if ext_id not in existing_ext_ids:
-                existing_ext_ids.add(ext_id)
-                break
-
+        nickname = f"{fake.user_name()}_{i}"
+        ext_id = 100000 + i
         status = statuses[i]
         register_date = fake.date_time_between(start_date='-2y', end_date='now')
+        days_on_platform = (now - register_date).days
         
-        # Rozdzielenie logiki parametrów
+        # Wylicza staż w latach
+        account_years = max(0.1, days_on_platform / 365.25)
+        
+        # --- LOGIKA BIBLIOTEKI UŻYTKOWNIKA ---
         if status == "inactive":
-            # Dane dla konta nieaktywnego
-            last_activity = fake.date_time_between(start_date=register_date, end_date='-6M')
-            pages_per_day = 0.0  # zero na pages/day
-            books_read = random.randint(0, 3) # Minimalny historyczny dorobek
-        else:
-            # Dane dla konta aktywnego
-            last_activity = fake.date_time_between(start_date='-7d', end_date='now')
-            pages_per_day = round(random.uniform(10.0, 45.0), 1)
+            if days_on_platform > SIX_MONTHS_INACTIVITY:
+                last_activity = fake.date_time_between(
+                    start_date=register_date, 
+                    end_date=now - timedelta(days=SIX_MONTHS_INACTIVITY)
+                )
+                active_years = max(0.1, (last_activity - register_date).days / 365.25)
+                
+                r_tier = random.uniform(0, 0.5) 
+                reader_type, annual_limit = ("casual", random.randint(3, 8)) if r_tier < 0.25 else ("regular", random.randint(9, 15))
+                
+                pages_per_day = 0.0
+                books_read = max(1, int(active_years * annual_limit))
+            else:
+                status = "active"
+                last_activity = now
+        
+        if status == "active":
+            activity_start_limit = max(register_date, now - timedelta(days=7))
+            last_activity = fake.date_time_between(start_date=activity_start_limit, end_date='now')
             
-            # Wyliczanie realnego dorobku na podstawie stażu i tieru
-            days_diff = (now - register_date).days
-            account_years = max(0.1, days_diff / 365.25)
-            
-            # Podział na 4 segmenty intensywności czytania
             r_tier = random.random()
             
-            if r_tier < 0.25:    
-                # Casual (Czyta sporadycznie, mniej niż 1/miesiąc)
-                reader_type = "casual"
-                annual_limit = random.randint(1, 11)
-                
-            elif r_tier < 0.50:  
-                # Regular (Czyta ok. 1-2 książki miesięcznie)
-                reader_type = "regular"
-                annual_limit = random.randint(12, 24)
-                
-            elif r_tier < 0.75:  
-                # Avid (Zapalony czytelnik, prawie 1 tygodniowo)
-                reader_type = "avid"
-                annual_limit = random.randint(25, 51)
-                
-            else:                
-                # Power (Mol książkowy, ponad 52 książki rocznie)
-                reader_type = "power"
-                annual_limit = random.randint(52, 60)
+            # Dobieranie parametry archetypu
+            if r_tier < 0.25:
+                reader_type, annual_limit, dp_min, dp_max = "casual", random.randint(3, 11), 2.0, 12.0
+            elif r_tier < 0.50:
+                reader_type, annual_limit, dp_min, dp_max = "regular", random.randint(12, 24), 12.0, 20.0
+            elif r_tier < 0.75:
+                reader_type, annual_limit, dp_min, dp_max = "avid", random.randint(25, 51), 20.0, 35.0
+            else:
+                reader_type, annual_limit, dp_min, dp_max = "power", random.randint(52, 65), 35.0, 50.0
 
-            # Wyliczenie książek na podstawie stażu konta i wylosowanego typu czytelnika
-            books_read = int(account_years * annual_limit)
+            # Dynamiczne obliczanie książek na podstawie stażu i limitu archetypu
+            books_read = max(1, int(account_years * annual_limit))
+            pages_per_day = round(random.uniform(dp_min, dp_max), 1)
 
-        users_to_insert.append({
-            "name": nickname,
-            "register_date": register_date,
-            "status": status,
-            "birth_date": generate_birth_date(),
-            "external_id": ext_id,
-            "last_activity": last_activity,
-            "pages_per_day": pages_per_day,
-            "books_read": books_read,
-            "favorite_genres": random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1,3))
+        temp_users_data.append({
+            "db_tuple": (
+                nickname, register_date.strftime("%Y-%m-%d %H:%M:%S"), status, 
+                generate_birth_date().strftime("%Y-%m-%d"), ext_id, 
+                last_activity.strftime("%Y-%m-%d %H:%M:%S"), pages_per_day, books_read
+            ),
+            "fav_genres": list(set(random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1,3)))),
+            "meta": {
+                "id_tier": r_tier, "r_tier": reader_type, "name": nickname, 
+                "register_date": register_date, "status": status, "books_read": books_read,
+                "birth_date": None, "last_activity": last_activity 
+            }
         })
 
-    # Sortowanie i zapis do bazy
-    users_to_insert.sort(key=lambda u: u['register_date'])
-    inserted_users = []
+    # Zachowana logika sortowania i insertów
+    temp_users_data.sort(key=lambda u: u['meta']['register_date'])
 
-    for u in users_to_insert:
-        cursor.execute("""
-            INSERT INTO users (name, register_date, status, birth_date,
-                               external_id, last_activity, pages_per_day, books_read)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            u['name'], 
-            u['register_date'].strftime("%Y-%m-%d %H:%M:%S"), 
-            u['status'],
-            u['birth_date'].strftime("%Y-%m-%d"), 
-            u['external_id'], 
-            u['last_activity'].strftime("%Y-%m-%d %H:%M:%S"),
-            u['pages_per_day'], 
-            u['books_read']
-        ))
-        u['id'] = cursor.lastrowid
-        inserted_users.append(u)
+    cursor.executemany("""
+        INSERT INTO users (name, register_date, status, birth_date,
+                           external_id, last_activity, pages_per_day, books_read)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, [u['db_tuple'] for u in temp_users_data])
+
+    # --- POBIERANIE ID DLA RELACJI ---
+    cursor.execute("SELECT id, name FROM users ORDER BY id DESC LIMIT ?", (count,))
+    db_users = {name: uid for uid, name in cursor.fetchall()}
+    
+    favorite_genres_tuples = []
+    inserted_users_meta = []
+
+    for u in temp_users_data:
+        u_name = u['meta']['name']
+        user_id = db_users.get(u_name)
+        if not user_id: continue
         
-        for genre in set(u['favorite_genres']):
-            cursor.execute("INSERT OR IGNORE INTO genres (name) VALUES (?)", (genre,))
-            cursor.execute("SELECT id FROM genres WHERE name = ?", (genre,))
-            g_id = cursor.fetchone()[0]
-            cursor.execute("INSERT OR IGNORE INTO user_favorite_genres (user_id, genre_id) VALUES (?, ?)", 
-                           (u['id'], g_id))
+        u['meta']['id'] = user_id
+        u['meta']['birth_date'] = u['db_tuple'][3]
+        inserted_users_meta.append(u['meta'])
+
+        for g_name in u['fav_genres']:
+            g_id = genre_map.get(g_name)
+            if g_id:
+                favorite_genres_tuples.append((user_id, g_id))
+
+    cursor.executemany("""
+        INSERT OR IGNORE INTO user_favorite_genres (user_id, genre_id) 
+        VALUES (?, ?)
+    """, favorite_genres_tuples)
 
     conn.commit()
-    return inserted_users
+    print(f"SUCCESS: Inserted {len(inserted_users_meta)} users and {len(favorite_genres_tuples)} favorite genre relations.")
+    return inserted_users_meta
 
 
 def generate_realtime_user(conn):
@@ -193,7 +206,7 @@ def generate_realtime_user(conn):
     register_date = now - timedelta(hours=random.randint(1, 23))
     
     # Parametry startowe profilu
-    books_read_count = random.choices([0, 1, 2], weights=[0.5, 0.4, 0.1])[0]
+    books_read_count = random.choices([1, 2], weights=[0.5, 0.5])[0]
     pages_per_day = round(random.uniform(15.0, 35.0), 1)
 
     # Wstawienie rekordu użytkownika
@@ -207,7 +220,7 @@ def generate_realtime_user(conn):
     
     user_id = cursor.lastrowid
 
-    # Przypisanie gatunków - Losowanie 1-3 gatunków zgodnie z wagami zdefiniowanymi w CONFIG
+    # Przypisanie gatunków - Losowanie 1-3 gatunków
     selected_genres = random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1, 3))
     
     for genre in set(selected_genres):
@@ -280,22 +293,33 @@ AGE_BASED_GENRES = {
 
 # =================== BOOKS GENERATOR ===================
 def generate_books(conn, users):
-    """Generowanie biblioteki z zachowaniem korelacji wiekowej dla gatunków."""
+    """Generowanie biblioteki z użyciem executemany dla optymalizacji wydajności."""
     cursor = conn.cursor()
-    all_books = []
+    all_books_data = [] # Lista krotek do executemany
+    book_metadata = []   # Pomocnicza lista do zwrócenia wyników
+    
     title_words = ["Shadow", "Forest", "Dream", "Fire", "Storm", "Heart", "Secret", "Moon", "Whisper", "Glass"]
+    now = datetime.now()
+
+    cursor.execute("SELECT name, id FROM genres")
+    genre_map = {name: gid for name, gid in cursor.fetchall()}
 
     for user in users:
         bd = user['birth_date']
         if isinstance(bd, str):
             bd = datetime.strptime(bd, "%Y-%m-%d")
         
-        # Wyznaczenie kategorii wiekowej dla dopasowania gatunku
-        age = (datetime.now().year - bd.year)
+        age = (now.year - bd.year)
         cat = "junior" if age < 18 else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
         pref_list = AGE_BASED_GENRES.get(cat, GENRES)
 
-        # Generowanie książek zgodnie z dorobkiem zapisanym w profilu
+        reg_date = user['register_date']
+        if isinstance(reg_date, str):
+            reg_date = datetime.strptime(reg_date.split('.')[0], "%Y-%m-%d %H:%M:%S")
+        
+        days_on_platform = (now - reg_date).days
+        import_ratio = max(0.2, 1.0 - (days_on_platform / 900))
+
         total_finished = user['books_read']
         currently_reading = random.randint(1, 2) if user['status'] == 'active' else 0
         
@@ -303,142 +327,214 @@ def generate_books(conn, users):
             is_finished = i < total_finished
             status = 'finished' if is_finished else 'reading'
             
-            # Wymuszenie korelacji gatunkowej (90% szans na gatunek zgodny z wiekiem)
             genre_name = random.choice(pref_list) if random.random() < 0.90 else random.choice(GENRES)
-            cursor.execute("SELECT id FROM genres WHERE name = ?", (genre_name,))
-            res = cursor.fetchone()
-            genre_id = res[0] if res else 1 # Fallback do ID 1 jeśli brak gatunku
+            genre_id = genre_map.get(genre_name, 1)
 
             total_pages = random.randint(150, 600)
-            current_page = total_pages if is_finished else random.randint(1, total_pages - 1)
-
-            # Zapis rekordu książki do bazy danych
-            cursor.execute("""
-                INSERT INTO books (user_id, title, authors, genre_id, total_pages, current_page, status, added_by_generator)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-            """, (user["id"], f"The {random.choice(title_words)} {random.choice(title_words)}", 
-                  f"{fake.first_name()} {fake.last_name()}", genre_id, total_pages, current_page, status))
             
-            all_books.append({
-                "id": cursor.lastrowid, 
+            if status == 'reading':
+                is_old_import = False
+            else:
+                is_old_import = random.random() < import_ratio
+            
+            if is_old_import:
+                current_page = total_pages
+                added_by_gen = 0
+            else:
+                current_page = total_pages if is_finished else random.randint(1, total_pages - 1)
+                added_by_gen = 1
+
+            # Przygotowanie danych do bazy
+            book_title = f"The {random.choice(title_words)} {random.choice(title_words)}"
+            author = f"{fake.first_name()} {fake.last_name()}"
+            
+            all_books_data.append((
+                user["id"], book_title, author, genre_id, 
+                total_pages, current_page, status, added_by_gen
+            ))
+
+            # Zachowanie metadanych
+            book_metadata.append({
                 "user_id": user["id"], 
                 "status": status, 
-                "reg_date": user["register_date"]
+                "total_pages": total_pages,
+                "reg_date": reg_date,
+                "added_by_generator": added_by_gen
             })
 
+    # BATCH INSERT
+    cursor.executemany("""
+        INSERT INTO books (user_id, title, authors, genre_id, total_pages, current_page, status, added_by_generator)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, all_books_data)
+
+    # POBRANIE ID
+    last_id = cursor.lastrowid
+    first_id = last_id - len(all_books_data) + 1
+    
+    for i, meta in enumerate(book_metadata):
+        meta["id"] = first_id + i
+
     conn.commit()
-    return all_books
+    print(f"SUCCESS: Inserted {len(all_books_data)} books using executemany.")
+    return book_metadata
 
 
 # =================== ACTIVITY GENERATOR ===================
 def generate_activity(conn, users, books):
+    """
+    Generuje realistyczną historię czytania dla książek oznaczonych do procesowania.
+    Uwzględnia archetypy, weekendy oraz sezonowość.
+    """
     cursor = conn.cursor()
-    
     user_map = {u['id']: u for u in users}
-    finished_books = [b for b in books if b["status"] == "finished"]
+    
+    # Filtruje książki, mają sesje zarejestrowane w aplikacji
+    active_books = [b for b in books if b['added_by_generator'] == 1]
+    
+    activity_data = []
+    book_updates = []
 
-    for book in finished_books:
-        user = user_map.get(book["user_id"])
-        registration_date = user['register_date']
+    # Mapowanie sezonowości (zima/jesień = więcej czytania, lato = mniej)
+    season_map = {
+        1: 1.6, 2: 1.5, 3: 1.1, 4: 0.8, 5: 0.7, 6: 0.6,
+        7: 0.8, 8: 0.9, 9: 1.1, 10: 1.3, 11: 1.5, 12: 1.7
+    }
+
+    for b in active_books:
+        user = user_map.get(b['user_id'])
+        if not user: continue
         
-        # Rozdzielenie zakresu dat na podstawie statusu użytkownika
-        if user['status'] == 'inactive':
-            # Aktywność wyłącznie w przeszłości (dawniej niż 6 miesięcy temu)
-            finish_date = fake.date_time_between(
-                start_date=registration_date, 
-                end_date='-6M'
+        # Pobiera parametry archetypu
+        arch = ARCHETYPES.get(user.get('r_tier', 'regular'), ARCHETYPES['regular'])
+        pages_min, pages_max = arch['pages']
+        
+        reg_dt = b['reg_date']
+        is_finished = b['status'] == 'finished'
+        is_inactive = user['status'] == 'inactive'
+        
+        # Wyznaczanie daty zakończenia (lub ostatniej aktywności dla 'reading')
+        if is_finished:
+            # Książka skończona w dowolnym momencie od rejestracji do dziś (lub do porzucenia appki)
+            end_limit = user['last_activity'] if is_inactive else datetime.now()
+            finish_dt = fake.date_time_between(
+                start_date=reg_dt + timedelta(minutes=60), 
+                end_date=end_limit
             )
         else:
-            # Aktywność w pełnym zakresie od rejestracji do teraz
-            finish_date = fake.date_time_between(
-                start_date=registration_date, 
-                end_date='now'
-            )
-        
-        # Kalkulacja parametrów sesji i wag dni tygodnia
-        wd = finish_date.weekday()
-        base_pages = random.randint(15, 30)
-        
-        if wd >= 5: 
-            multiplier = random.uniform(1.2, 1.4)
-        elif wd == 4: 
-            multiplier = random.uniform(1.1, 1.2)
-        else: 
-            multiplier = random.uniform(0.7, 1.0)
+            # Książka w trakcie - ostatnia sesja musi być blisko 'last_activity'
+            finish_dt = user['last_activity']
 
-        # Nałożenie limitu 50 stron i przygotowanie danych do zapisu
-        pages = min(int(base_pages * multiplier), 50)
-        session_time = random.randint(20, 60)
-        date_str = finish_date.strftime("%Y-%m-%d %H:%M:%S")
+        remaining = b['total_pages'] if is_finished else random.randint(1, b['total_pages'] - 1)
+        current_date = finish_dt
 
-        # Zapis rekordów do tabeli activity oraz aktualizacja tabeli books
-        cursor.execute("""
-            INSERT INTO activity (user_id, book_id, timestamp, pages_read, session_minutes)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user["id"], book["id"], date_str, pages, session_time))
+        # Generowanie sesji "wstecz" od daty zakończenia
+        while remaining > 0:
+            # Nie przed rejestracją
+            if current_date <= reg_dt:
+                break
 
-        cursor.execute("UPDATE books SET finish_date = ? WHERE id = ?", (date_str, book["id"]))
+            month = current_date.month
+            is_weekend = current_date.weekday() >= 5
+            
+            # Składowe tempa czytania
+            seasonal_factor = season_map.get(month, 1.0)
+            weekend_multiplier = random.uniform(1.3, 1.8) if is_weekend else 1.0
+            
+            # Bazowa liczba stron z archetypu
+            base_pages = random.randint(pages_min, pages_max)
+            pages_read = int(base_pages * seasonal_factor * weekend_multiplier)
+            
+            # Caps & safety
+            pages_read = max(1, min(pages_read, remaining))
+            session_min = max(5, int(pages_read * random.uniform(0.8, 1.5))) # ok. 1 min na stronę
 
+            activity_data.append((
+                user['id'], b['id'], 
+                current_date.strftime("%Y-%m-%d %H:%M:%S"), 
+                pages_read, session_min
+            ))
+
+            remaining -= pages_read
+            
+            # Przerwa między sesjami: archetypy 'power' czytają codziennie, 'casual' co kilka dni
+            if user.get('r_tier') == 'power':
+                gap = random.choice([1, 1, 1, 2])
+            else:
+                gap = random.randint(1, 4)
+                
+            current_date -= timedelta(days=gap)
+
+        if is_finished:
+            book_updates.append((finish_dt.strftime("%Y-%m-%d %H:%M:%S"), b['id']))
+
+    # Bulk insert dla wydajności
+    cursor.executemany("""
+        INSERT INTO activity (user_id, book_id, timestamp, pages_read, session_minutes)
+        VALUES (?, ?, ?, ?, ?)
+    """, activity_data)
+    
+    cursor.executemany("UPDATE books SET finish_date = ? WHERE id = ?", book_updates)
+    
     conn.commit()
-    print(f"Generated {len(finished_books)} records.")
+    print(f"SUCCESS: Generated {len(activity_data)} sessions for {len(active_books)} active books.")
 
 
 # =================== GENRE STATS UPDATER ===================
 def update_genre_stats(conn):
     """
     Realizuje obliczenia statystyk dla każdego gatunku.
-    Wygenerowane dane (oceny, udziały) mają charakter realistyczny.
+    Naprawia niespójność między liczbą książek a procentowym udziałem.
     """
     cursor = conn.cursor()
     
-    # Pobranie całkowitej liczby stron dla obliczeń procentowych
-    cursor.execute("SELECT SUM(pages_read) FROM activity")
-    total_pages = cursor.fetchone()[0] or 0
+    # Liczy całkowitą liczbę ukończonych książek w systemie (suma % wyniesie 100%)
+    cursor.execute("SELECT COUNT(*) FROM books WHERE status = 'finished'")
+    total_finished_books = cursor.fetchone()[0] or 1
 
     # Pobranie dostępnych gatunków
     cursor.execute("SELECT id, name FROM genres")
     genres = cursor.fetchall()
 
+    genre_stats = []
+
     for genre_id, genre_name in genres:
-        # Wyliczenie liczby unikalnych czytelników
-        cursor.execute("""
-            SELECT COUNT(DISTINCT a.user_id)
-            FROM activity a
-            JOIN books b ON a.book_id = b.id
-            WHERE b.genre_id = ?
-        """, (genre_id,))
+        # Liczba unikalnych czytelników
+        cursor.execute("SELECT COUNT(DISTINCT user_id) FROM books WHERE genre_id = ?", (genre_id,))
         readers = cursor.fetchone()[0] or 0
 
-        # Wygenerowanie realistycznej średniej oceny (zakres 3.7 - 4.9)
+        # Średnia ocena
         random.seed(genre_name) 
         avg_rating = round(random.uniform(3.7, 4.9), 2)
 
-        # Wyliczenie liczby zarejestrowanych aktywności dla gatunku
+        # Liczba przeczytanych książek w danym gatunku
         cursor.execute("""
-            SELECT COUNT(*)
-            FROM activity a
-            JOIN books b ON a.book_id = b.id
-            WHERE b.genre_id = ?
+            SELECT COUNT(*) FROM books 
+            WHERE genre_id = ? AND status = 'finished'
         """, (genre_id,))
-        books_read = cursor.fetchone()[0] or 0
+        books_finished_count = cursor.fetchone()[0] or 0
 
-        # Wyliczenie udziału procentowego w całkowitym czasie czytania
-        cursor.execute("""
-            SELECT SUM(a.pages_read)
-            FROM activity a
-            JOIN books b ON a.book_id = b.id
-            WHERE b.genre_id = ?
-        """, (genre_id,))
-        pages_genre = cursor.fetchone()[0] or 0
-        
-        pct_total_time = round((pages_genre / total_pages * 100), 2) if total_pages else 0
+        # UDZIAŁ: Liczy proporcjonalnie do liczby książek, 
+        pct_share = round((books_finished_count / total_finished_books * 100), 2)
 
-        # Aktualizacja rekordu w tabeli genres
+        genre_stats.append({
+            'id': genre_id,
+            'readers': readers,
+            'avg_rating': avg_rating,
+            'books_read': books_finished_count,
+            'share': pct_share
+        })
+
+    # Sortuje malejąco po liczbie przeczytanych książek
+    genre_stats.sort(key=lambda x: x['books_read'], reverse=True)
+
+    # Aktualizacja bazy danych
+    for stat in genre_stats:
         cursor.execute("""
             UPDATE genres
             SET readers = ?, avg_rating = ?, books_read = ?, reading_time_share = ?
             WHERE id = ?
-        """, (readers, avg_rating, books_read, pct_total_time, genre_id))
+        """, (stat['readers'], stat['avg_rating'], stat['books_read'], stat['share'], stat['id']))
 
     conn.commit()
     random.seed(datetime.now().timestamp())
@@ -495,48 +591,45 @@ def simulate_incremental_activity(conn, users, books, count=1):
         book = random.choice(user_books)
         
         cursor.execute("SELECT current_page, total_pages FROM books WHERE id = ?", (book['id'],))
-        current, total = cursor.fetchone()
+        result = cursor.fetchone()
+        if not result: continue
+        current, total = result
         
         # Obliczanie stron do końca
         pages_left = total - current
         if pages_left <= 0:
             continue
-
-        # Logika weekendowa:
+        
+        # Logika weekendowa
         now = datetime.now()
-        is_weekend = now.weekday() >= 5  # Sobota = 5, Niedziela = 6
+        is_weekend = now.weekday() >= 5 
         
         if is_weekend:
-            # Określenie dolnej granicy (zabezpieczenie przed błędem randint gdy pages_left < 15)
-            lower_bound = min(15, pages_left)
-            # Określenie górnej granicy (maksymalnie 40 stron lub tyle, ile zostało do końca)
-            upper_bound = min(40, pages_left)
-            
-            pages_read = random.randint(lower_bound, upper_bound)
+            pages_read = random.randint(min(15, pages_left), min(40, pages_left))
         else:
-            # W dni robocze dolna granica to 1, co jest bezpieczne przy pages_left >= 1
             pages_read = random.randint(1, min(15, pages_left))
         
+        # Oblicznie czasu sesji
+        session_min = max(2, int(pages_read * random.uniform(0.9, 1.4)))
+
         new_page = current + pages_read
         status = 'finished' if new_page >= total else 'reading'
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-        # Wstawienie nowej aktywności
         cursor.execute("""
-            INSERT INTO activity (user_id, book_id, timestamp, pages_read)
-            VALUES (?, ?, ?, ?)
-        """, (user['id'], book['id'], timestamp, pages_read))
+            INSERT INTO activity (user_id, book_id, timestamp, pages_read, session_minutes)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user['id'], book['id'], timestamp, pages_read, session_min))
 
-        # Aktualizacja statusu i strony w tabeli books
-        update_query = "UPDATE books SET current_page = ?, status = ? WHERE id = ?"
-        params = [new_page, status, book['id']]
-        
-        # Jeśli książka została skończona, dodaj datę zakończenia
+        # Aktualizacja statusu i strony
         if status == 'finished':
-            update_query = "UPDATE books SET current_page = ?, status = ?, finish_date = ? WHERE id = ?"
-            params = [new_page, status, timestamp, book['id']]
-
-        cursor.execute(update_query, tuple(params))
+            cursor.execute("""
+                UPDATE books SET current_page = ?, status = ?, finish_date = ? WHERE id = ?
+            """, (new_page, status, timestamp, book['id']))
+        else:
+            cursor.execute("""
+                UPDATE books SET current_page = ?, status = ? WHERE id = ?
+            """, (new_page, status, book['id']))
     
     conn.commit()
 
@@ -547,16 +640,16 @@ if __name__ == "__main__":
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Usunięcie danych z zachowaniem integralności
+        # Usunięcie danych
         tables = ['user_favorite_genres', 'activity', 'challenges', 'books', 'users', 'genres']
         for table in tables:
             cursor.execute(f"DELETE FROM {table}")
         
-        # Resetowanie liczników autoinkrementacji dla zachowania stałej struktury ID
-        cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('users', 'books', 'activity', 'genres')")
+        # Resetowanie sekwencji ID
+        cursor.execute("DELETE FROM sqlite_sequence")
         conn.commit()
         
-        # Wywołanie procesów generowania danych
+        # Proces generowania
         users = generate_users(conn, count=USER_COUNT)
         books = generate_books(conn, users)
         
@@ -569,6 +662,8 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"CRITICAL ERROR IN GENERATOR: {e}")
+        import traceback
+        traceback.print_exc()
         conn.rollback()
     finally:
         conn.close()

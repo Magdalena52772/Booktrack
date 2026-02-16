@@ -9,10 +9,8 @@ class GenresRepository:
     def get_all(self, age_group: str = "All") -> List[Genre]:
         cursor = self.conn.cursor()
         
-        # Wyliczenie wieku w locie: bieżący rok minus rok urodzenia
         sql_age = "(strftime('%Y', 'now') - strftime('%Y', u.birth_date))"
         
-        # Mapowanie grup wiekowych na warunki SQL oparte o birth_date
         age_conditions = {
             "Less than 18": f"AND {sql_age} < 18",
             "18 - 25": f"AND {sql_age} BETWEEN 18 AND 25",
@@ -23,26 +21,35 @@ class GenresRepository:
         
         condition = age_conditions.get(age_group, "")
 
-        # Zapytanie SQL łączące gatunki z książkami i użytkownikami
+        total_query = f"""
+            SELECT COUNT(b.id) 
+            FROM books b 
+            JOIN users u ON b.user_id = u.id 
+            WHERE 1=1 {condition}
+        """
+        cursor.execute(total_query)
+        total_books_for_group = cursor.fetchone()[0] or 1
+
         query = f"""
             SELECT 
                 g.name, 
                 COUNT(DISTINCT u.id) as readers, 
                 ROUND(g.avg_rating, 2) as avg_rating,
                 COUNT(b.id) as books_cnt,
-                g.reading_time_share
+                -- Dynamiczny udział: (liczba książek w gatunku / wszystkie książki grupy) * 100
+                ROUND(CAST(COUNT(b.id) AS FLOAT) / {total_books_for_group} * 100, 2) as dynamic_share
             FROM genres g
-            LEFT JOIN books b ON g.id = b.genre_id
-            LEFT JOIN users u ON b.user_id = u.id {condition}
-            GROUP BY g.id, g.name, g.avg_rating, g.reading_time_share
-            ORDER BY readers DESC
+            JOIN books b ON g.id = b.genre_id
+            JOIN users u ON b.user_id = u.id
+            WHERE 1=1 {condition}
+            GROUP BY g.id, g.name, g.avg_rating
+            ORDER BY readers DESC, books_cnt DESC
         """
         
         cursor.execute(query)
         rows = cursor.fetchall()
 
-        # Budowanie listy obiektów Genre
-        genres = [
+        return [
             Genre(
                 name=row[0],
                 readers=row[1],
@@ -52,7 +59,6 @@ class GenresRepository:
             )
             for row in rows
         ]
-        return genres
 
     def get_report_summary(self, period="all"):
         """Pobiera statystyki zbiorcze gatunków dla modułu raportów."""
