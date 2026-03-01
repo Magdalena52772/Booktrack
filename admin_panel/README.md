@@ -1,4 +1,4 @@
-# 📚 Book Track - Admin Analytics Panel
+# 📚 Book Track - Analityczny Panel Administracyjny
 
 ### 🌟 O projekcie
 Panel analityczny typu Dashboard to centralne narzędzie do monitorowania, symulowania i analizowania danych w ekosystemie aplikacji Booktrack. Projekt stanowi część pracy inżynierskiej i rozwiązuje problem braku czytelnego wglądu w dużą ilość danych generowanych przez systemy czytelnicze.
