@@ -74,13 +74,13 @@ def main():
         print(f"\n[DATABASE] System gotowy. Wykryto {user_count} rekordów.")
         
         cursor.execute("""
-            SELECT id, status, name, birth_date, register_date, books_read, pages_per_day, last_activity 
+            SELECT id, status, name, birth_date, date_joined, books_read, pages_per_day, last_activity 
             FROM users
         """)
         existing_users = [
             {
                 "id": r[0], "status": r[1], "name": r[2], 
-                "birth_date": r[3], "register_date": r[4],
+                "birth_date": r[3], "date_joined": r[4],
                 "books_read": r[5],
                 "pages_per_day": r[6],
                 "last_activity": r[7]
@@ -92,14 +92,14 @@ def main():
         for _ in range(random.randint(0, 2)):
             new_id = generate_realtime_user(conn)
             cursor.execute("""
-                SELECT id, status, name, birth_date, register_date, books_read, pages_per_day, last_activity 
+                SELECT id, status, name, birth_date, date_joined, books_read, pages_per_day, last_activity 
                 FROM users WHERE id = ?
             """, (new_id,))
             row = cursor.fetchone()
             if row:
                 u_data = {
                     "id": row[0], "status": row[1], "name": row[2], 
-                    "birth_date": row[3], "register_date": row[4],
+                    "birth_date": row[3], "date_joined": row[4],
                     "books_read": row[5],
                     "pages_per_day": row[6],
                     "last_activity": row[7]
