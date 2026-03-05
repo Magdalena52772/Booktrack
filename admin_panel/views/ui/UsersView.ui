@@ -120,7 +120,7 @@
         </column>
         <column>
          <property name="text">
-          <string>Age</string>
+          <string>E-mail</string>
          </property>
         </column>
         <column>

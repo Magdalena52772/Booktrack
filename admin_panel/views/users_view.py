@@ -52,19 +52,27 @@ class UsersView(QWidget):
         super().mousePressEvent(event)
 
     def setup_table_ui(self):
-        """Konfiguracja wygląd tabeli. Zoptymalizowane tryby zmiany rozmiaru kolumn."""
+        """Optymalizacja szerokości kolumn: liczby wąsko, tekst szeroko."""
         table = self.ui.table_users
         table.setFrameShape(QFrame.Shape.NoFrame)
         header = table.horizontalHeader()
         
-        for i in range(header.count()):
-            header.setSectionResizeMode(i, QHeaderView.ResizeMode.Interactive)
+        # Ustawienie trybu dopasowania do zawartości dla ID, Books, PPD i Statusu
+        for col in [0, 3, 5, 7]:
+            header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
             
-        # Ustawienie rozciągania dla kluczowych kolumn tekstowych
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) # Name
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) # Genres
+        # Rozsądne szerokości dla dat i gatunków
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Interactive) # Genres
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Interactive) # Last Act
+        header.setSectionResizeMode(8, QHeaderView.ResizeMode.Interactive) # Reg Date
+        table.setColumnWidth(4, 120)
+        table.setColumnWidth(6, 130)
+        table.setColumnWidth(8, 100)
+
+        # Rozciąganie dla Nazwy i Maila (podzielą się resztą miejsca)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) # Username
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) # Email
         
-        # Wyłączenie automatycznego rozciągania ostatniej sekcji
         header.setStretchLastSection(False)
 
     def setup_connections(self):
@@ -121,6 +129,10 @@ class UsersView(QWidget):
         """Pobieranie danych użytkowników i aktualizacja tabeli interfejsu."""
         self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Users"))
         
+        # INICJALIZACJA ZMIENNYCH
+        total_pages = 1
+        total_count = 0
+        
         # Blokada odświeżania interfejsu i sygnałów w celu optymalizacji wydajności
         self.ui.table_users.setUpdatesEnabled(False)
         self.ui.table_users.setSortingEnabled(False)
@@ -148,37 +160,52 @@ class UsersView(QWidget):
 
             # Iteracja po wynikach i wypełnianie komórek tabeli danymi
             for row_idx, user in enumerate(users):
-                # ID - ustawienie danych numerycznych dla poprawnego sortowania
+                # 0. ID
                 id_item = QTableWidgetItem()
                 id_item.setData(Qt.ItemDataRole.DisplayRole, int(user.id))
+                id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.ui.table_users.setItem(row_idx, 0, id_item)
                 
-                self.ui.table_users.setItem(row_idx, 1, QTableWidgetItem(user.name))
-                self.ui.table_users.setItem(row_idx, 2, QTableWidgetItem(str(user.age)))
-                self.ui.table_users.setItem(row_idx, 3, QTableWidgetItem(str(user.books_read)))
+                # 1. Nickname + Tooltip
+                nick_item = QTableWidgetItem(user.username)
+                nick_item.setData(Qt.ItemDataRole.UserRole, user.name)
+                nick_item.setToolTip(user.username)
+                self.ui.table_users.setItem(row_idx, 1, nick_item)
                 
-                # --- Kolumna gatunków z tooltipem ---
+                # 2. Email + Tooltip
+                email_raw = user.email if user.email else "-"
+                email_item = QTableWidgetItem(email_raw)
+                email_item.setForeground(QColor("#5d6d7e"))
+                email_item.setToolTip(email_raw)
+                self.ui.table_users.setItem(row_idx, 2, email_item)
+                
+                # 3. Books Read
+                books_item = QTableWidgetItem(str(user.books_read))
+                books_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.ui.table_users.setItem(row_idx, 3, books_item)
+                
+                # 4. Genres + Tooltip HTML
                 genres_list = user.favorite_genres if user.favorite_genres else []
                 genres_str = ", ".join(genres_list) if genres_list else "-"
-                
                 genres_item = QTableWidgetItem(genres_str)
                 if genres_list:
-                    # Formatowanie treści tooltipa przy użyciu znaczników HTML
                     tooltip_html = "<b>Favourite genres:</b><br>• " + "<br>• ".join(genres_list)
                     genres_item.setToolTip(tooltip_html)
-                else:
-                    genres_item.setToolTip("No genres")
-                
                 self.ui.table_users.setItem(row_idx, 4, genres_item)
 
-                # Formatowanie statystyk dziennych
+                # 5. Pages/day
                 pages = f"{user.pages_per_day:.1f}" if user.pages_per_day is not None else "0.0"
-                self.ui.table_users.setItem(row_idx, 5, QTableWidgetItem(pages))
+                pages_item = QTableWidgetItem(pages)
+                pages_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.ui.table_users.setItem(row_idx, 5, pages_item)
 
+                # 6. Last Activity + Tooltip
                 last_act = user.last_activity.strftime("%Y-%m-%d %H:%M") if user.last_activity else "-"
-                self.ui.table_users.setItem(row_idx, 6, QTableWidgetItem(last_act))
+                last_act_item = QTableWidgetItem(last_act)
+                last_act_item.setToolTip(last_act)
+                self.ui.table_users.setItem(row_idx, 6, last_act_item)
 
-                # Dynamiczne definiowanie kolorystyki komórki na podstawie statusu użytkownika
+                # 7. Status
                 status_item = QTableWidgetItem(user.status)
                 if user.status == "active":
                     status_item.setBackground(QColor("#d4edda")) 
@@ -186,10 +213,14 @@ class UsersView(QWidget):
                 else:
                     status_item.setBackground(QColor("#f8d7da")) 
                     status_item.setForeground(QColor("#721c24")) 
+                status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.ui.table_users.setItem(row_idx, 7, status_item)
                 
-                reg_date = user.register_date.strftime("%Y-%m-%d") if user.register_date else "-"
-                self.ui.table_users.setItem(row_idx, 8, QTableWidgetItem(reg_date))
+                # 8. Reg Date + Tooltip
+                reg_date = user.date_joined.strftime("%Y-%m-%d") if user.date_joined else "-"
+                reg_item = QTableWidgetItem(reg_date)
+                reg_item.setToolTip(reg_date)
+                self.ui.table_users.setItem(row_idx, 8, reg_item)
 
             # Aktualizacja liczników stron i stanu przycisków nawigacyjnych
             self.ui.lbl_page_info.setText(f"z {total_pages}")
@@ -224,94 +255,71 @@ class UsersView(QWidget):
                 self.ui.lbl_info.setText("💡 Click on a user to view details...")
                 return
 
-            # Pobranie indeksu i podstawowych danych z widoku tabeli
+            # Pobranie danych z widoku
             current_row = selected_items[0].row()
-            id_item = self.ui.table_users.item(current_row, 0)
-            name_item = self.ui.table_users.item(current_row, 1)
-            ppd_item = self.ui.table_users.item(current_row, 5)
+            user_id_raw = self.ui.table_users.item(current_row, 0).text()
+            user_id = int(user_id_raw)
+            nick_item = self.ui.table_users.item(current_row, 1)
+            full_name = nick_item.data(Qt.ItemDataRole.UserRole) or "Unknown"
             
-            if id_item is None or not name_item:
-                return
-
-            user_id = id_item.text()
-            user_name = name_item.text()
-            user_ppd = float(ppd_item.text()) if ppd_item else 0.0
-            
-            # Pobranie statystyk z repozytorium i bazy danych
-            streak = self.repo.get_user_streak(int(user_id))
+            # Pobranie statystyk bazowych
+            streak = self.repo.get_user_streak(user_id)
             global_avg = self.repo.get_global_avg_ppd()
-            
+            table_ppd = float(self.ui.table_users.item(current_row, 5).text())
+
+            # Zapytania dodatkowe
             cursor = self.conn.cursor()
             try:
-                # Zapytanie o aktualnie czytane pozycje
-                cursor.execute("""
-                    SELECT title FROM books 
-                    WHERE user_id = ? AND status = 'reading' 
-                    LIMIT 3
-                """, (user_id,))
+                # 1. Obecnie czytane
+                cursor.execute("SELECT title FROM books WHERE user_id = ? AND status = 'reading' LIMIT 3", (user_id,))
                 reading_now = [r[0] for r in cursor.fetchall()]
                 reading_str = ", ".join(reading_now) if reading_now else "None"
 
-                # Obliczenie średniego postępu w aktywnych wyzwaniach oraz pobranie danych profilowych
+                # Dane profilowe i suma stron
                 cursor.execute("""
                     SELECT 
-                        u.external_id, 
-                        u.birth_date, 
-                        u.last_activity,
+                        u.external_id, u.birth_date, u.last_activity, u.date_joined,
+                        (SELECT SUM(pages_read) FROM activity WHERE user_id = u.id) as total_pages,
                         AVG(CAST(c.progress_books AS FLOAT) / c.target_books * 100)
                     FROM users u
                     LEFT JOIN challenges c ON u.id = c.user_id AND c.status = 'active'
-                    WHERE u.id = ?
-                    GROUP BY u.id
+                    WHERE u.id = ? GROUP BY u.id
                 """, (user_id,))
                 u_data = cursor.fetchone()
-                
-                # Wyodrębnienie wyników z połączonego zapytania
-                ext_id = u_data[0] if u_data else "N/A"
-                birth_date_str = u_data[1] if u_data else None
-                last_act_raw = u_data[2] if u_data else None
-                avg_progress = u_data[3] if u_data else None
-                progress_str = f"{int(avg_progress)}%" if avg_progress is not None else "0%"
-
             finally:
-                # Zamknięcie kursora niezależnie od powodzenia zapytań
                 cursor.close()
-            
-            # Obliczenie wieku na podstawie daty urodzenia
+
+            if not u_data: return
+
+            ext_id, birth_date_str, last_act_raw, reg_date_raw, total_pages_sum, avg_progress = u_data
+            total_pages_sum = total_pages_sum or 0
+            progress_str = f"{int(avg_progress)}%" if avg_progress else "0%"
+
+            # --- OBLICZENIA POTENCJAŁU ---
+            real_active_days = self.repo.get_active_reading_days(user_id)
+            active_ppd = total_pages_sum / real_active_days
+
+            # Wiek i Last Seen
             age = "N/A"
             if birth_date_str:
                 try:
-                    b_date = datetime.strptime(birth_date_str, "%Y-%m-%d").date()
+                    b_date = datetime.strptime(birth_date_str[:10], "%Y-%m-%d").date()
                     today = date.today()
                     age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
                 except: pass
 
-            # Wyznaczanie statusu aktywności oraz przypisanie koloru
             last_seen_text, last_seen_color = "Never", "#95a5a6"
             if last_act_raw:
-                try:
-                    last_date_str = last_act_raw.split(" ")[0]
-                    last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
-                    days_ago = (date.today() - last_date).days
-                    last_seen_text = "Today" if days_ago == 0 else f"{days_ago} day(s) ago"
-                    last_seen_color = "#2ecc71" if days_ago <= 7 else "#f1c40f" if days_ago <= 30 else "#e74c3c"
-                except: last_seen_text = "Check Activity"
+                last_date = datetime.strptime(last_act_raw[:10], "%Y-%m-%d").date()
+                days_ago = (date.today() - last_date).days
+                last_seen_text = "Today" if days_ago == 0 else f"{days_ago} day(s) ago"
+                last_seen_color = "#2ecc71" if days_ago <= 7 else "#f1c40f" if days_ago <= 30 else "#e74c3c"
 
-            # Analiza porównawcza średniej dziennej liczby stron
-            diff = user_ppd - global_avg
-            abs_diff = abs(diff)
-            
-            if diff > 0:
-                ppd_status = "<b style='color: #27ae60;'>ABOVE AVERAGE</b>"
-                comparison_info = f"Reads {abs_diff:.1f} pages/day more than the average."
-            elif diff < 0:
-                ppd_status = "<b style='color: #e67e22;'>BELOW AVERAGE</b>"
-                comparison_info = f"Needs {abs_diff:.1f} more pages/day to reach the average."
-            else:
-                ppd_status = "<b style='color: #7f8c8d;'>AVERAGE</b>"
-                comparison_info = "Reading pace is exactly at the system average."
+            # Renderowanie statusu potencjału
+            diff = active_ppd - global_avg 
+            ppd_status = "<b style='color: #27ae60;'>ABOVE AVG</b>" if diff > 0 else "<b style='color: #e67e22;'>BELOW AVG</b>"
 
-            # Renderowanie sformatowanego profilu użytkownika w formacie HTML
+            # --- RENDEROWANIE FINALNEGO HTML ---
             streak_html = f"<span style='color: #e67e22;'>🔥 <b>{streak} days</b></span>" if streak > 0 else "<span style='color: #95a5a6;'>❄️ No streak</span>"
 
             info_text = (
@@ -322,18 +330,19 @@ class UsersView(QWidget):
                 f"      <span style='float: right; font-size: 12px;'>{streak_html}</span>"
                 f"  </div>"
                 f"  <div style='font-size: 12px; margin-bottom: 8px;'>"
+                f"      <b style='color: #2c3e50; font-size: 13px;'>{full_name.upper()}</b><br>"
                 f"      👤 <b>Age:</b> {age} &nbsp;|&nbsp; "
-                f"      🏆 <b>Challenge Progress:</b> <span style='color: #3498db;'><b>{progress_str}</b></span> &nbsp;|&nbsp; "
-                f"      🕒 <b>Last Activity:</b> <span style='color: {last_seen_color}; font-weight: bold;'>{last_seen_text.upper()}</span>"
+                f"      🏆 <b>Challenge:</b> <span style='color: #3498db;'>{progress_str}</span> &nbsp;|&nbsp; "
+                f"      🕒 <b>Seen:</b> <span style='color: {last_seen_color}; font-weight: bold;'>{last_seen_text.upper()}</span>"
                 f"  </div>"
-                f"  <div style='background-color: #f9f9f9; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 8px; font-size: 12px;'>"
+                f"  <div style='background-color: #f0f7ff; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 8px; font-size: 12px;'>"
                 f"      <div style='margin-bottom: 3px;'>"
-                f"          <b style='color: #2c3e50;'>PAGES PER DAY:</b> <span style='font-size: 14px;'><b>{user_ppd:.1f}</b></span>"
+                f"          <b style='color: #2c3e50;'>READING POTENTIAL:</b> <span style='font-size: 14px;'><b>{active_ppd:.1f}</b></span> <small>pg/day</small>"
                 f"          <span style='margin-left: 15px;'>{ppd_status}</span>"
                 f"      </div>"
                 f"      <div style='color: #555;'>"
-                f"          {comparison_info}<br>"
-                f"          <small style='color: #888;'>Global system average: {global_avg:.1f} pages/day</small>"
+                f"          <small>System Average (current filter): <b>{table_ppd:.1f}</b> | Global benchmark: {global_avg:.1f}</small><br>"
+                f"          <small style='color: #888;'>Potential is based only on days with recorded activity.</small>"
                 f"      </div>"
                 f"  </div>"
                 f"  <div style='font-size: 12px;'>📚 <b>Currently reading:</b> <span style='color: #2ecc71; font-weight: bold;'>{reading_str}</span></div>"
@@ -341,6 +350,6 @@ class UsersView(QWidget):
             )
             
             self.ui.lbl_info.setText(info_text)
-            self.statusMessage.emit(*StatusMsg.get("USER_DETAILS", user_name))
+            self.statusMessage.emit(*StatusMsg.get("USER_DETAILS", full_name))
         except Exception as e:
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
