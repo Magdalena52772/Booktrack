@@ -1,36 +1,32 @@
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Signal, QFile
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QWidget
 
 from data.utils.status_manager import StatusMsg
-
-from data.repositories.user_repo import UserRepository
 from data.repositories.book_repo import BookRepository
 from data.repositories.challenge_repo import ChallengeRepository
+from data.repositories.statistics_repo import StatsRepository
 from charts.activity_chart import ActivityChart
+from data.utils.ui_helpers import load_ui, apply_tooltips
 
 class DashboardView(QWidget):
     statusMessage = Signal(str, str)
 
     def __init__(self, conn):
         super().__init__()
-        # Ładowanie interfejsu z pliku .ui
-        loader = QUiLoader()
-        ui_file = QFile("views/ui/DashboardView.ui")
-        ui_file.open(QFile.ReadOnly)
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
         
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.ui)
+        # Ładowanie interfejsu z pliku .ui
+        self.ui = load_ui(self, "views/ui/DashboardView.ui")
+        
+        if not self.ui:
+            print("Błąd ładowania UI!")
+            return
 
         # Repozytoria
-        self.user_repo = UserRepository(conn)
+        self.stats_repo = StatsRepository(conn)
         self.book_repo = BookRepository(conn)
         self.challenge_repo = ChallengeRepository(conn)
 
-        # Konfiguracja podpowiedzi (tooltips)
+        # Konfiguracja podpowiedzi (tooltips) przy użyciu helpera
         self.setup_tooltips()
 
         # Inicjalizacja widoku
@@ -39,19 +35,17 @@ class DashboardView(QWidget):
         self.load_view()
 
     def setup_tooltips(self):
-        """Dodaje podpowiedzi do KPIs po najechaniu kursorem"""
-        self.ui.lbl_users.setToolTip(
-            "Total registered users and growth (+X) within the last 30 days."
-        )
-        self.ui.lbl_books.setToolTip(
-            "Number of books marked as 'finished' during the current month."
-        )
-        self.ui.lbl_pages.setToolTip(
-            "Average daily pages read per active user."
-        )
-        self.ui.lbl_challenges.setToolTip(
-            "Number of reading challenges currently in progress (status: active)."
-        )
+        """Dodaje podpowiedzi do KPIs po najechaniu kursorem (masowe przypisanie)"""
+        tooltips = {
+            "lbl_users": "Total registered users and growth (+X) within the last 30 days.",
+            "lbl_books": "Number of books marked as 'finished' during the current month.",
+            "lbl_pages": "Average daily pages read per active user.",
+            "lbl_challenges": "Number of reading challenges currently in progress (status: active).",
+            "btn_refresh": "Force refresh of all dashboard statistics and trend charts."
+        }
+        
+        # Wykorzystanie centralnego helpera
+        apply_tooltips(self.ui, tooltips)
 
     def setup_chart(self):
         """Inicjalizuje widget wykresu wewnątrz ramki z UI."""
@@ -63,12 +57,11 @@ class DashboardView(QWidget):
         self.canvas = ActivityChart(self.ui.frame_chart)
         self.ui.verticalLayout_3.addWidget(self.canvas)
 
-
     def load_view(self):
         """Szybkie odświeżanie KPI i wykresu z raportowaniem stanu."""
         try:
             # Pobranie KPI z bazy danych
-            user_metrics = self.user_repo.get_dashboard_metrics()
+            user_metrics = self.stats_repo.get_dashboard_metrics()
             total_users, new_users, avg_pages = user_metrics if user_metrics else (0, 0, 0)
             
             books_month = self.book_repo.count_books_read(period="month")

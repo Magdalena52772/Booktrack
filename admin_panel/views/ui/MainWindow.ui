@@ -169,6 +169,20 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btn_live_feed">
+         <property name="text">
+          <string>Live Feed</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>../../assets/icons/monitoring.svg</normaloff>../../assets/icons/monitoring.svg</iconset>
+         </property>
+         <property name="class" stdset="0">
+          <string>sidebarButton</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btn_reports">
          <property name="mouseTracking">
           <bool>true</bool>
@@ -225,14 +239,14 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-            <widget class="QWidget" name="spacer" native="true">
-              <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-              </sizepolicy>
-              </property>
-            </widget>
+           <widget class="QWidget" name="spacer" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="btn_logout">

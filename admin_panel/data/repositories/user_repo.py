@@ -3,110 +3,13 @@ from datetime import datetime, timedelta
 from typing import List
 from data.models.user import User
 from data.utils.time_periods import period_start
+from data.utils.date_helpers import DateHelper
 
 class UserRepository:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
         self.conn.row_factory = sqlite3.Row 
 
-    def parse_date(self, date_str):
-        """
-        Normalizacja formatu daty z bazy SQLite. 
-        Obsługuje formaty pełne (z czasem) oraz skrócone (sama data), 
-        eliminując błędy wynikające z różnej precyzji zapisu milisekund.
-        """
-        if not date_str: 
-            return None
-        try:
-            # Ucina mikrosekundy/milisekundy, jeśli występują
-            clean_date = date_str.split(".")[0]
-            if len(clean_date) > 10:
-                return datetime.strptime(clean_date, "%Y-%m-%d %H:%M:%S")
-            return datetime.strptime(clean_date, "%Y-%m-%d")
-        except: 
-            return None
-
-    def get_dashboard_metrics(self):
-        """Pobieranie statystyk ogólnych dla panelu głównego z ostatnich 30 dni."""
-        cursor = self.conn.cursor()
-        # Definicja progu czasowego dla analizy aktywności i nowych rejestracji
-        thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
-        
-        query = """
-            SELECT 
-                -- Całkowita liczba użytkowników w systemie
-                (SELECT COUNT(id) FROM users),
-                
-                -- Liczba kont zarejestrowanych w ciągu ostatnich 30 dni
-                (SELECT COUNT(id) FROM users WHERE date_joined >= ?),
-                
-                -- Globalne PPD z ostatnich 30 dni:
-                -- Suma stron przeczytanych przez WSZYSTKICH użytkowników w tym okresie
-                -- podzielona przez liczbę wszystkich kont i okres 30 dni.
-                (SELECT 
-                    ROUND(
-                        CAST(SUM(pages_read) AS FLOAT) / 
-                        (MAX(1, (SELECT COUNT(id) FROM users)) * 30.0), 
-                    1)
-                 FROM activity 
-                 WHERE timestamp >= ?)
-        """
-        
-        cursor.execute(query, (thirty_days_ago, thirty_days_ago))
-        return cursor.fetchone()
-    
-    def get_user_report_metrics(self, period="year"):
-        """
-        Pobieranie statystyk zbiorczych dla modułu raportów.
-        Oblicza zaangażowanie na podstawie realnej aktywności wszystkich użytkowników.
-        """
-        cursor = self.conn.cursor()
-        
-        # Określenie ramy czasowej i mianownika dla średniej
-        p_lower = period.lower()
-        start_dt = None if p_lower == "all" else period_start(period)
-        
-        if p_lower == "week":
-            days = 7.0
-        elif p_lower == "month":
-            days = 30.0
-        elif p_lower == "year":
-            days = 365.0
-        else: # all
-            # Dla całego okresu mianownikiem jest średni staż wszystkich kont
-            cursor.execute("SELECT AVG(julianday('now') - julianday(date_joined)) FROM users")
-            days = cursor.fetchone()[0] or 1.0
-
-        # Całkowita liczba użytkowników (stan na dziś)
-        cursor.execute("SELECT COUNT(id) FROM users")
-        total_users = cursor.fetchone()[0] or 0
-
-        # Liczba nowych użytkowników w wybranym okresie
-        new_users = 0
-        if start_dt:
-            cursor.execute("SELECT COUNT(id) FROM users WHERE date_joined >= ?", 
-                          (start_dt.strftime("%Y-%m-%d %H:%M:%S"),))
-            new_users = cursor.fetchone()[0] or 0
-        else:
-            new_users = total_users
-
-        # Średnie zaangażowanie (PPD) w wybranym okresie
-        # Liczone jako: Suma stron wszystkich użytkowników / (Liczba użytkowników * Liczba dni)
-        params = []
-        act_where = ""
-        if start_dt:
-            act_where = "WHERE timestamp >= ?"
-            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
-
-        query_avg = f"""
-            SELECT 
-                CAST(SUM(pages_read) AS FLOAT) / (MAX(1, {total_users}) * {days})
-            FROM activity {act_where}
-        """
-        cursor.execute(query_avg, params)
-        avg_engagement = cursor.fetchone()[0] or 0.0
-
-        return total_users, new_users, round(avg_engagement, 1)
 
     def get_favorite_genres(self, user_id: int) -> List[str]:
         """Pobieranie listy ulubionych gatunków dla konkretnego użytkownika."""
@@ -156,9 +59,9 @@ class UserRepository:
 
         # Dodawanie warunków wyszukiwania
         if search_term:
-            query += " WHERE (u.username LIKE ? OR u.status LIKE ?)"
+            query += " WHERE (u.username LIKE ? OR u.name LIKE ? OR u.status LIKE ?)"
             term = f"%{search_term}%"
-            params.extend([term, term])
+            params.extend([term, term, term])
 
         allowed_cols = {"id": "u.id", "name": "u.name", "register_date": "u.date_joined"}
         sort_column = allowed_cols.get(sort_by, "u.id")
@@ -187,28 +90,26 @@ class UserRepository:
         now = datetime.now()
 
         for u in users_data:
-            # Strony przeczytane W WYBRANYM OKRESIE (zwrócone przez SQL)
+            # Strony przeczytane w wybranym okresie (zwrócone przez SQL)
+            reg_date = DateHelper.to_datetime(u['date_joined'])
+            last_act = DateHelper.to_datetime(u['last_activity'])
+            
             total_p = u['total_pages'] or 0
-            reg_date = self.parse_date(u['date_joined'])
             
             # Oblicza całkowity staż konta (dni od rejestracji do dzisiaj)
             days_since_reg = (now - reg_date).days if reg_date else 1
             days_since_reg = max(days_since_reg, 1)
 
-            # --- LOGIKA DZIELNIKA (Sprawiedliwość statystyczna) ---
+            # --- LOGIKA DZIELNIKA (Retencja i staż) ---
             # Wybór mianownika do obliczenia wskaźnika PPD.
             if p_lower == "all":
-                # ŚREDNIA ŻYCIOWA: Obliczana jako iloraz sumy stron z całej historii aktywności
-                # Wskaźnik reprezentuje historyczną wydajność użytkownika.
+                # ŚREDNIA ŻYCIOWA: Dzieli przez całkowity staż konta
                 divisor = days_since_reg
             else:
-                # ŚREDNIA KROCZĄCA: Obliczana jako iloraz sumy stron z wybranego przedziału oraz 
-                # liczby dni dla tego okresu (np. 7, 30, 365).
+                # ŚREDNIA KROCZĄCA: Dzieli przez wybrany przedział czasu (7, 30, 365, all).
                 divisor = fixed_days
 
-            # --- OBLICZENIE KOŃCOWE ---
-            # Wyznaczenie wartości PPD z zabezpieczeniem przed dzieleniem przez zero
-            # oraz normalizacja wyniku do jednego miejsca po przecinku.
+            
             rolling_ppd = round(total_p / max(divisor, 1), 1)
 
             users.append(User(
@@ -217,10 +118,10 @@ class UserRepository:
                 name=u['name'],
                 email=u["email"],
                 status=u['status'],
-                birth_date=u['birth_date'], 
+                birth_date=DateHelper.to_datetime(u['birth_date']), 
                 books_read=u['books_count'],
                 pages_per_day=rolling_ppd,
-                last_activity=self.parse_date(u['last_activity']),
+                last_activity=last_act,
                 date_joined=reg_date,
                 r_tier=u['r_tier'],
                 favorite_genres=genres_map.get(u['id'], [])
@@ -242,13 +143,65 @@ class UserRepository:
         query = "SELECT COUNT(*) FROM users"
         params = []
         if search_term:
-            query += " WHERE name LIKE ? OR status LIKE ?"
+            query += " WHERE (name LIKE ? OR username LIKE ? OR status LIKE ?)"
             term = f"%{search_term}%"
-            params.extend([term, term])
+            params.extend([term, term, term])
         
         cursor.execute(query, params)
         res = cursor.fetchone()
         return res[0] if res else 0
+    
+    def get_detailed_user_profile(self, user_id: int):
+        """
+        Pobiera i oblicza kompletny profil użytkownika w jednym miejscu.
+        Bezpiecznie obsługuje daty i wiek.
+        """
+        cursor = self.conn.cursor()
+        try:
+            # Pobieranie aktualnie czytanych książek
+            cursor.execute("SELECT title FROM books WHERE user_id = ? AND status = 'reading' LIMIT 3", (user_id,))
+            reading_now = [r[0] for r in cursor.fetchall()]
+
+            # Pobieranie danych bazowych
+            cursor.execute("""
+                SELECT 
+                    u.external_id, u.birth_date, u.last_activity, u.date_joined,
+                    (SELECT SUM(pages_read) FROM activity WHERE user_id = u.id) as total_pages,
+                    AVG(CAST(c.current_value AS FLOAT) / c.target_value * 100) as avg_progress
+                FROM users u
+                LEFT JOIN challenges c ON u.id = c.user_id AND c.status = 'active'
+                WHERE u.id = ? GROUP BY u.id
+            """, (user_id,))
+            u_data = cursor.fetchone()
+
+            if not u_data:
+                return None
+
+            # Rozpakowanie danych
+            ext_id, birth_date_raw, last_act_raw, reg_date_raw, total_pages_sum, avg_progress = u_data
+            total_pages_sum = total_pages_sum or 0
+            
+            # Statystyki aktywności
+            streak = self.get_user_streak(user_id)
+            real_active_days = self.get_active_reading_days(user_id)
+            active_ppd = total_pages_sum / max(1, real_active_days)
+
+            # Obliczanie wieku przy użyciu Helpera
+            age = DateHelper.calculate_age(birth_date_raw)
+
+            return {
+                "ext_id": ext_id,
+                "reading_now": reading_now,
+                "total_pages": total_pages_sum,
+                "avg_progress": int(avg_progress) if avg_progress else 0,
+                "streak": streak,
+                "active_ppd": active_ppd,
+                "age": age,
+                "last_activity": last_act_raw,
+                "date_joined": reg_date_raw
+            }
+        finally:
+            cursor.close()
     
     def get_active_reading_days(self, user_id: int) -> int:
         """Liczy ile unikalnych dni użytkownik faktycznie czytał (miał wpis w activity)."""
@@ -292,3 +245,17 @@ class UserRepository:
             else:
                 break # Przerwa w datach
         return streak
+    
+    def update_all_streaks(self):
+        """Aktualizuje kolumnę current_streak dla wszystkich użytkowników na podstawie aktywności."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE is_active = 1")
+        user_ids = [row[0] for row in cursor.fetchall()]
+
+        for uid in user_ids:
+            actual_streak = self.get_user_streak(uid)
+            cursor.execute(
+                "UPDATE users SET current_streak = ? WHERE id = ?",
+                (actual_streak, uid)
+            )
+        self.conn.commit()
