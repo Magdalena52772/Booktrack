@@ -1,30 +1,29 @@
 import csv
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Signal, QFile
-from PySide6.QtWidgets import QWidget, QTableWidgetItem, QFileDialog, QVBoxLayout
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QWidget, QTableWidgetItem, QFileDialog
 
 from data.utils.status_manager import StatusMsg
-
+from data.repositories.statistics_repo import StatsRepository
 from data.repositories.user_repo import UserRepository
 from data.repositories.activity_repo import ActivityRepository
 from data.repositories.book_repo import BookRepository
+from data.utils.ui_helpers import load_ui, apply_tooltips
 
 class ReportsView(QWidget):
+    """
+    Widok odpowiedzialny za generowanie raportów i eksport danych.
+    """
     statusMessage = Signal(str, str)
 
     def __init__(self, conn):
         super().__init__()
         
         # Ładowanie interfejsu z pliku .ui
-        loader = QUiLoader()
-        ui_file = QFile("views/ui/ReportsView.ui")
-        ui_file.open(QFile.ReadOnly)
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
+        self.ui = load_ui(self, "views/ui/ReportsView.ui")
         
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(self.ui)
+        if not self.ui:
+            print("Błąd ładowania UI!")
+            return
         
         # Inicjalizacja repozytoriów
         self.user_repo = UserRepository(conn)
@@ -35,20 +34,25 @@ class ReportsView(QWidget):
         self.ui.btn_generate.clicked.connect(self.generate_report)
         self.ui.btn_export.clicked.connect(self.export_to_csv)
         
-        # Tooltipy
+        # Tooltipy (zmienione na system słownikowy)
         self.setup_ui_tooltips()
         
         # Domyślne załadowanie danych
         self.generate_report()
 
-
     def setup_ui_tooltips(self):
-        """Ustawia tooltipy dla metryk"""
-        self.ui.cb_report_type.setToolTip("Select the category of data for the report.")
-        self.ui.cb_time.setToolTip("Select the time range (week, month, or year).")
-        self.ui.btn_generate.setToolTip("Click to process and display data in the table below.")
-        self.ui.btn_export.setToolTip("Save the generated table to a CSV file.")
-
+        """Konfiguracja opisów pomocniczych przy użyciu helpera."""
+        tooltips = {
+            "cb_report_type": "Select the category of data for the report (Activity, Users, Genres).",
+            "cb_time": "Select the time range (week, month, or year) for data aggregation.",
+            "btn_generate": "Click to process and display data in the table below.",
+            "btn_export": "Save the generated table to a CSV file for external analysis.",
+            "table_reports": "Detailed metrics breakdown based on selected filters.",
+            "input_report_text": "Textual summary of the currently processed report."
+        }
+        
+        # Masowe przypisanie podpowiedzi
+        apply_tooltips(self.ui, tooltips)
 
     def generate_report(self):
         """
@@ -86,8 +90,7 @@ class ReportsView(QWidget):
 
             elif report_type == "Genres":
                 if not hasattr(self, 'genre_repo'):
-                    from data.repositories.genre_repo import GenresRepository
-                    self.genre_repo = GenresRepository(self.user_repo.conn)
+                    self.genre_repo = StatsRepository(self.user_repo.conn)
 
                 top_genre, genre_count = self.genre_repo.get_report_summary(period.lower())
                 rows = [
@@ -114,7 +117,6 @@ class ReportsView(QWidget):
 
         except Exception as e:
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
-
 
     def export_to_csv(self):
         """

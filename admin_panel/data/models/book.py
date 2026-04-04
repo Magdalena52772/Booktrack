@@ -11,6 +11,7 @@ class Book:
     total_pages: int
     current_page: int
     status: str                     # "reading" / "finished"
+    rating: Optional[int]
     start_date: Optional[datetime]
     finish_date: Optional[datetime]
     added_by_generator: bool

@@ -56,3 +56,22 @@ class BookRepository:
         """
         cursor.execute(query, (limit,))
         return cursor.fetchall()
+    
+    def get_average_rating(self):
+        """Zwraca średnią ocenę wszystkich ocenionych książek."""
+        cursor = self.conn.cursor()
+        query = "SELECT AVG(rating) FROM books WHERE rating IS NOT NULL"
+        cursor.execute(query)
+        result = cursor.fetchone()[0]
+        return round(result, 2) if result else 0.0
+
+    def get_highest_rated_books(self, limit=5):
+        """Pobiera najlepiej oceniane książki."""
+        cursor = self.conn.cursor()
+        query = """
+            SELECT title, rating FROM books 
+            WHERE rating IS NOT NULL 
+            ORDER BY rating DESC LIMIT ?
+        """
+        cursor.execute(query, (limit,))
+        return cursor.fetchall()

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LiveFeedView</class>
+ <widget class="QWidget" name="LiveFeedView">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>850</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QLabel" name="lbl_title">
+     <property name="font">
+      <font><pointsize>16</pointsize><bold>true</bold></font>
+     </property>
+     <property name="text">
+      <string>LIVE ACTIVITY FEED</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame_streaks">
+     <property name="minimumSize"><size><width>0</width><height>120</height></size></property>
+     <property name="frameShape"><enum>QFrame::Shape::StyledPanel</enum></property>
+     <layout class="QHBoxLayout" name="layout_streaks">
+      <item>
+       <widget class="QFrame" name="card_streak_1">
+        <layout class="QVBoxLayout" name="v1">
+         <item><widget class="QLabel" name="lbl_streak_1_val"><property name="text"><string>🔥 --</string></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+         <item><widget class="QLabel" name="lbl_streak_1_user"><property name="text"><string>Loading...</string></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="card_streak_2">
+        <layout class="QVBoxLayout" name="v2">
+         <item><widget class="QLabel" name="lbl_streak_2_val"><property name="text"><string>🔥 --</string></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+         <item><widget class="QLabel" name="lbl_streak_2_user"><property name="text"><string>Loading...</string></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="card_streak_3">
+        <layout class="QVBoxLayout" name="v3">
+         <item><widget class="QLabel" name="lbl_streak_3_val"><property name="text"><string>🔥 --</string></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+         <item><widget class="QLabel" name="lbl_streak_3_user"><property name="text"><string>Loading...</string></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="contentLayout">
+     <item>
+      <widget class="QFrame" name="frame_clusters">
+       <property name="frameShape"><enum>QFrame::Shape::StyledPanel</enum></property>
+       <layout class="QVBoxLayout" name="v4">
+        <item><widget class="QLabel" name="lbl_cluster_title"><property name="text"><string>&lt;b&gt;AI CLUSTERING&lt;/b&gt;</string></property></widget></item>
+        <item><widget class="QLabel" name="lbl_cluster_info"><property name="text"><string>Waiting for data points...</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+        <item><spacer name="s1"><property name="orientation"><enum>Qt::Vertical</enum></property></spacer></item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="frame_events">
+       <property name="frameShape"><enum>QFrame::Shape::StyledPanel</enum></property>
+       <layout class="QVBoxLayout" name="v5">
+        <item><widget class="QLabel" name="lbl_log_title"><property name="text"><string>&lt;b&gt;SYSTEM EVENT LOG&lt;/b&gt;</string></property></widget></item>
+        <item><widget class="QListWidget" name="list_events"><property name="alternatingRowColors"><bool>true</bool></property></widget></item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item><spacer name="s2"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+     <item>
+      <widget class="QPushButton" name="btn_refresh_live">
+       <property name="minimumSize"><size><width>150</width><height>35</height></size></property>
+       <property name="text"><string>Refresh Feed</string></property>
+      </widget>
+     </item>
+     <item><spacer name="s3"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

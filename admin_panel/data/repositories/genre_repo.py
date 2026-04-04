@@ -1,6 +1,7 @@
 import sqlite3
 from typing import List
 from data.models.genre import Genre
+from data.utils.time_periods import period_start
 
 class GenresRepository:
     def __init__(self, conn: sqlite3.Connection):
@@ -34,15 +35,14 @@ class GenresRepository:
             SELECT 
                 g.name, 
                 COUNT(DISTINCT u.id) as readers, 
-                ROUND(g.avg_rating, 2) as avg_rating,
+                ROUND(AVG(CAST(b.rating AS FLOAT)), 2) as dynamic_avg_rating, -- Dynamiczne liczenie
                 COUNT(b.id) as books_cnt,
-                -- Dynamiczny udział: (liczba książek w gatunku / wszystkie książki grupy) * 100
                 ROUND(CAST(COUNT(b.id) AS FLOAT) / {total_books_for_group} * 100, 2) as dynamic_share
             FROM genres g
             JOIN books b ON g.id = b.genre_id
             JOIN users u ON b.user_id = u.id
             WHERE 1=1 {condition}
-            GROUP BY g.id, g.name, g.avg_rating
+            GROUP BY g.id, g.name
             ORDER BY readers DESC, books_cnt DESC
         """
         
@@ -59,45 +59,3 @@ class GenresRepository:
             )
             for row in rows
         ]
-
-    def get_report_summary(self, period="all"):
-        """Pobiera statystyki zbiorcze gatunków dla modułu raportów."""
-        cursor = self.conn.cursor()
-        
-        from data.utils.time_periods import period_start
-        start_dt = None if period.lower() == "all" else period_start(period)
-        
-        params = []
-        where_clause = ""
-        if start_dt:
-            where_clause = "WHERE a.timestamp >= ?"
-            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
-
-        query_top = f"""
-            SELECT g.name, SUM(a.pages_read) as total_pages
-            FROM genres g
-            JOIN books b ON b.genre_id = g.id
-            JOIN activity a ON a.book_id = b.id
-            {where_clause}
-            GROUP BY g.id
-            ORDER BY total_pages DESC
-            LIMIT 1
-        """
-        
-        query_count = f"""
-            SELECT COUNT(DISTINCT g.id)
-            FROM genres g
-            JOIN books b ON b.genre_id = g.id
-            JOIN activity a ON a.book_id = b.id
-            {where_clause}
-        """
-
-        cursor.execute(query_top, params)
-        top_res = cursor.fetchone()
-        top_genre = top_res[0] if top_res else "None"
-
-        cursor.execute(query_count, params)
-        count_res = cursor.fetchone()
-        active_count = count_res[0] if count_res else 0
-
-        return top_genre, active_count

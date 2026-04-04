@@ -163,9 +163,9 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="lbl_challenges">
+             <widget class="QLabel" name="lbl_streaks">
               <property name="text">
-               <string>Challenges: 10</string>
+               <string>Streaks: x</string>
               </property>
              </widget>
             </item>
