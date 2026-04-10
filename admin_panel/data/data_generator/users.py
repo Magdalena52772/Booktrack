@@ -1,8 +1,10 @@
 import random
 from datetime import datetime, timedelta
-from data.config import *
+from data.config import GENRES, GENRE_WEIGHTS, ARCHETYPE_SETTINGS, SIX_MONTHS_INACTIVITY, DJANGO_HASHED_PWD
+from data.config.generator import INACTIVE_PROBABILITY
+from data.config.seed import get_fake
 from data.utils.generator_helpers import generate_birth_date
-from data.utils.identity_providers import get_archetype_name, get_user_identity
+from data.utils.user_service import get_archetype_name, get_user_identity
 
 # =============== GENEROWANIE UŻYTKOWNIKÓW ===================
 
@@ -29,7 +31,7 @@ def generate_users(conn, count=1000):
     
     for i in range(count):
         # Pobieranie danych tożsamości
-        identity = get_user_identity(fake, index=i)
+        identity = get_user_identity(get_fake(), index=i)
         nickname = identity["nickname"]
         full_name = identity["full_name"]
         email = identity["email"]
@@ -37,7 +39,7 @@ def generate_users(conn, count=1000):
         status = statuses[i]
         
         # Obliczanie stażu konta
-        register_date = fake.date_time_between(start_date='-2y', end_date='now')
+        register_date = get_fake().date_time_between(start_date='-2y', end_date='now')
         days_on_platform = (now - register_date).days
         account_years = max(0.1, days_on_platform / 365.25)
         
@@ -61,7 +63,7 @@ def generate_users(conn, count=1000):
             
             if days_on_platform > SIX_MONTHS_INACTIVITY:
                 # Symulacja porzucenia aplikacji po pewnym czasie
-                last_activity = fake.date_time_between(
+                last_activity = get_fake().date_time_between(
                     start_date=register_date, 
                     end_date=now - timedelta(days=SIX_MONTHS_INACTIVITY)
                 )
@@ -83,18 +85,18 @@ def generate_users(conn, count=1000):
                 last_activity = now
                 reader_type = arch_name
                 books_read = max(1, int(account_years * random.randint(*arch_cfg["annual_limit"])))
-                pages_per_day = round(random.uniform(*arch_cfg["pages_range"]), 1)
+                pages_per_day = 0.0
         
         # Logika dla użytkowników aktywnych
         if status == "active":
             # Ostatnia aktywność w ciągu ostatnich 7 dni
             act_start = max(register_date, now - timedelta(days=7))
-            last_activity = fake.date_time_between(start_date=act_start, end_date='now')
+            last_activity = get_fake().date_time_between(start_date=act_start, end_date='now')
             reader_type = arch_name
             
             # Wyznaczanie statystyk na podstawie parametrów archetypu
             books_read = max(1, int(account_years * random.randint(*arch_cfg["annual_limit"])))
-            pages_per_day = round(random.uniform(*arch_cfg["pages_range"]), 1)
+            pages_per_day = 0.0
 
         birth_date_obj = generate_birth_date()
         
@@ -166,7 +168,7 @@ def generate_realtime_user(conn):
     
     # Zapewnienie unikalności nazwy użytkownika
     while True:
-        identity = get_user_identity(fake)
+        identity = get_user_identity(get_fake())
         if not cursor.execute("SELECT 1 FROM users WHERE username = ?", (identity["nickname"],)).fetchone():
             break
 
@@ -174,7 +176,7 @@ def generate_realtime_user(conn):
     arch_name = get_archetype_name()
     arch_cfg = ARCHETYPE_SETTINGS[arch_name]
     
-    pages_per_day = round(random.uniform(*arch_cfg["pages_range"]), 1)
+    pages_per_day = 0.0
     books_read_count = random.randint(1, 2)
     register_date = now - timedelta(minutes=random.randint(5, 60))
     

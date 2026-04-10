@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_active INTEGER NOT NULL DEFAULT 1,
     date_joined TIMESTAMP NOT NULL,      -- Data dołączenia
     external_id INTEGER UNIQUE,          -- Publiczne ID (np. dla API)
-    birth_date DATE,                     -- Data urodzenia (YYYY-MM-DD) do wyliczania wieku
+    birth_date DATE NOT NULL CHECK(birth_date < CURRENT_DATE),     -- Data urodzenia (YYYY-MM-DD) do wyliczania wieku
     status TEXT NOT NULL CHECK(status IN ('active','inactive')) DEFAULT 'active',
     last_activity TIMESTAMP,             -- Ostatnia znana aktywność (logowanie lub sesja)
     r_tier TEXT DEFAULT 'regular',
@@ -120,3 +120,13 @@ CREATE TABLE IF NOT EXISTS achievements (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(user_id, achievement_type) -- Zapobiega dublowaniu tej samej odznaki
 );
+
+-- Optymalizacja zapytań agregujących
+-- Indeks na książki: przyspiesza COUNT(DISTINCT b.id) przy filtrowaniu po statusie
+CREATE INDEX IF NOT EXISTS idx_books_user_status ON books(user_id, status);
+
+-- Indeks na aktywność: kluczowy dla SUM(a.pages_read) i filtrowania po dacie
+CREATE INDEX IF NOT EXISTS idx_activity_user_timestamp ON activity(user_id, timestamp);
+
+-- Indeks na użytkowników: przyspiesza wyszukiwanie po nicku i mailu
+CREATE INDEX IF NOT EXISTS idx_users_search ON users(username, email, name);

@@ -19,7 +19,10 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,2,3">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="stretch">
+    <string>0,1,2</string>
+   </property>
    <item>
     <widget class="QLabel" name="lbl_title">
      <property name="font">
@@ -29,7 +32,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Genres</string>
+      <string>User Preferences (Declared) vs. Real Activity</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -44,7 +47,10 @@
      <property name="frameShadow">
       <enum>QFrame::Shadow::Raised</enum>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QHBoxLayout" name="horizontalLayout_top">
+      <property name="stretch">
+       <string>2,1</string>
+      </property>
       <item>
        <widget class="QWidget" name="chart_genres_popularity" native="true">
         <property name="minimumSize">
@@ -56,15 +62,13 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <spacer name="spacer_left_1">
-          <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
-         </spacer>
-        </item>
+       <layout class="QVBoxLayout" name="verticalLayout_controls">
         <item>
          <widget class="QLabel" name="lbl_info">
-          <property name="text"><string>Select age group:</string></property>
+          <property name="font"><font><bold>true</bold></font></property>
+          <property name="text">
+           <string>FILTER BY AGE:</string>
+          </property>
          </widget>
         </item>
         <item>
@@ -72,7 +76,7 @@
           <property name="minimumSize">
            <size><width>150</width><height>30</height></size>
           </property>
-          <item><property name="text"><string>All</string></property></item>
+          <item><property name="text"><string>All Users</string></property></item>
           <item><property name="text"><string>Less than 18</string></property></item>
           <item><property name="text"><string>18 - 25</string></property></item>
           <item><property name="text"><string>26 - 40</string></property></item>
@@ -81,13 +85,63 @@
          </widget>
         </item>
         <item>
-         <spacer name="spacer_right_1">
-          <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+         <spacer name="spacer_v1">
+          <property name="orientation"><enum>Qt::Orientation::Vertical</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QFrame" name="frame_stats_box">
+          <property name="styleSheet">
+           <string>QFrame { background-color: #fcfcfc; border: 1px solid #dcdcdc; border-radius: 4px; }</string>
+          </property>
+          <layout class="QVBoxLayout" name="vbox_stats">
+           <item>
+            <widget class="QLabel" name="lbl_stat_header">
+             <property name="font"><font><pointsize>9</pointsize><bold>true</bold></font></property>
+             <property name="text"><string>DECLARED AS FAVOURITE</string></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="lbl_total_declarations">
+             <property name="text"><string>Total picks: --</string></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="lbl_most_declared">
+             <property name="text"><string>Top trend: --</string></property>
+             <property name="wordWrap"><bool>true</bool></property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacer_v2">
+          <property name="orientation"><enum>Qt::Orientation::Vertical</enum></property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_refresh_genres">
+          <property name="minimumSize">
+           <size><width>150</width><height>35</height></size>
+          </property>
+          <property name="text"><string>Refresh Data</string></property>
+          <property name="icon">
+           <iconset><normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_separator">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
     </widget>
    </item>
    <item>
@@ -100,6 +154,14 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
+       <widget class="QLabel" name="lbl_table_header">
+        <property name="font"><font><bold>true</bold></font></property>
+        <property name="text">
+         <string>Real Reading Activity (Based on logs)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QTableWidget" name="table_genres">
         <property name="alternatingRowColors"><bool>true</bool></property>
         <property name="selectionBehavior"><enum>QAbstractItemView::SelectionBehavior::SelectRows</enum></property>
@@ -110,33 +172,6 @@
         <column><property name="text"><string>Avg rating</string></property></column>
         <column><property name="text"><string>Books read</string></property></column>
         <column><property name="text"><string>% of total reading time</string></property></column>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="container" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <spacer name="spacer_left_2">
-           <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btn_refresh_genres">
-           <property name="minimumSize">
-            <size><width>150</width><height>35</height></size>
-           </property>
-           <property name="text"><string>Refresh</string></property>
-           <property name="icon">
-            <iconset><normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="spacer_right_2">
-           <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
-          </spacer>
-         </item>
-        </layout>
        </widget>
       </item>
      </layout>

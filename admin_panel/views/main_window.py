@@ -2,7 +2,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QMainWindow, QMessageBox, QSizePolicy, QVBoxLayout
-from views import DashboardView, UsersView, ActivityView, GenresView, ReportsView
+from views import DashboardView, UsersView, ActivityView, GenresView, ReportsView, LiveFeedView
 from data.utils.status_manager import StatusMsg
 
 class MainWindow(QMainWindow):
@@ -31,7 +31,8 @@ class MainWindow(QMainWindow):
             self.ui.btn_users:     {"class": UsersView,     "container": self.ui.page_users,     "instance": None},
             self.ui.btn_genres:    {"class": GenresView,    "container": self.ui.page_genres,    "instance": None},
             self.ui.btn_activity:  {"class": ActivityView,  "container": self.ui.page_activity,  "instance": None},
-            self.ui.btn_reports:   {"class": ReportsView,   "container": self.ui.page_reports,   "instance": None}
+            self.ui.btn_reports:   {"class": ReportsView,   "container": self.ui.page_reports,   "instance": None},
+            self.ui.btn_live_feed: {"class": LiveFeedView, "container": self.ui.page_live_feed, "instance": None}
         }
 
         # Rejestracja zdarzeń dla przycisków nawigacyjnych

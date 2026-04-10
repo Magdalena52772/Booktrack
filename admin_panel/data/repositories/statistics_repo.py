@@ -2,28 +2,32 @@ from datetime import datetime, timedelta
 from data.utils.time_periods import period_start
 
 class StatsRepository:
+    """
+    Repozytorium odpowiedzialne za obliczenia statystyczne i analitykę danych.
+    Zapewnia dostęp do zagregowanych wskaźników aktywności oraz raportów systemowych.
+    """
     def __init__(self, conn):
         self.conn = conn
 
     def get_system_wide_ppd(self, period: str = "all") -> float:
         """
-        Liczy średnią PPD identycznie jak w Dashboardzie, 
-        ale z uwzględnieniem filtra (period).
+        Oblicza średnią liczbę stron przeczytanych dziennie przez użytkownika (PPD).
+        Wykorzystuje grupowanie po identyfikatorze użytkownika i dacie dla analityki.
         """
         cursor = self.conn.cursor()
         start_dt = period_start(period.lower())
         
-        where_clause = ""
         params = []
+        where_clause = ""
         if start_dt:
             where_clause = "WHERE timestamp >= ?"
             params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
 
-        # Logika z Dashboardu: Średnia z dziennych sum każdego użytkownika
+        # Optymalizacja wydajnościowa poprzez wstępne filtrowanie danych w podzapytaniu
         query = f"""
-            SELECT IFNULL(AVG(daily_total), 0.0)
+            SELECT IFNULL(AVG(daily_sum), 0.0)
             FROM (
-                SELECT SUM(pages_read) as daily_total
+                SELECT SUM(pages_read) as daily_sum
                 FROM activity
                 {where_clause}
                 GROUP BY user_id, DATE(timestamp)
@@ -31,53 +35,34 @@ class StatsRepository:
         """
         cursor.execute(query, params)
         res = cursor.fetchone()
-        
-        # Zwracamy zaokrąglony wynik (np. 23.9)
-        return round(float(res[0]), 1) if res and res[0] else 0.0
-    
-    def get_engagement_stats(self, period="all"):
-        """Pobiera dane o streakach (ranking)."""
-        cursor = self.conn.cursor()
-        # Przykładowy SQL (dostosuj do nazw kolumn w swojej tabeli users)
-        query = "SELECT username, current_streak FROM users WHERE current_streak > 0 ORDER BY current_streak DESC LIMIT 3"
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        return {'top_streaks': rows}
+        return round(float(res[0]), 1) if res else 0.0
 
-#========== REPORTS LOGIC ==========
     def get_dashboard_metrics(self):
-        """Pobieranie statystyk ogólnych dla panelu głównego z ostatnich 30 dni."""
+        """
+        Pobiera kluczowe metryki dla panelu głównego (Dashboard).
+        Zwraca: całkowitą liczbę użytkowników, nowe konta (30 dni) oraz średnie PPD.
+        """
         cursor = self.conn.cursor()
         # Definicja progu czasowego dla analizy aktywności i nowych rejestracji
         thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
         
-        # Wyznaczanie liczby wszystkich użytkowników oraz nowych rejestracji
-        cursor.execute("SELECT COUNT(id) FROM users")
+        # Pobieranie ogólnej liczby rekordów w tabeli użytkowników
+        cursor.execute("SELECT COUNT(*) FROM users")
         total_users = cursor.fetchone()[0] or 0
 
-        cursor.execute("SELECT COUNT(id) FROM users WHERE date_joined >= ?", (thirty_days_ago,))
+        # Wyznaczanie liczby nowych rejestracji w ostatnim cyklu 30-dniowym
+        cursor.execute("SELECT COUNT(*) FROM users WHERE date_joined >= ?", (thirty_days_ago,))
         new_users = cursor.fetchone()[0] or 0
 
-        # Średnia dzienna stron na użytkownika (tylko dni aktywne)
-        # Sumuje strony dla każdego usera w każdym dniu, a potem wyciąga średnią z tych sum.
-        avg_query = """
-            SELECT IFNULL(AVG(daily_total), 0.0)
-            FROM (
-                SELECT SUM(pages_read) as daily_total
-                FROM activity
-                WHERE timestamp >= ?
-                GROUP BY user_id, DATE(timestamp)
-            )
-        """
-        cursor.execute(avg_query, (thirty_days_ago,))
-        avg_pages = cursor.fetchone()[0] or 0.0
+        # Wykorzystanie zoptymalizowanej metody PPD dla zakresu miesięcznego
+        avg_pages = self.get_system_wide_ppd("month")
 
-        return total_users, new_users, round(float(avg_pages), 1)
+        return total_users, new_users, avg_pages
     
     def get_user_report_metrics(self, period="year"):
         """
-        Pobieranie statystyk zbiorczych dla modułu raportów.
-        Oblicza zaangażowanie na podstawie realnej aktywności (średnia dzienna).
+        Generuje dane statystyczne na potrzeby modułu raportów użytkowników.
+        Analizuje liczebność bazy oraz zaangażowanie w wybranym przedziale czasowym.
         """
         cursor = self.conn.cursor()
         
@@ -85,45 +70,30 @@ class StatsRepository:
         p_lower = period.lower()
         start_dt = None if p_lower == "all" else period_start(period)
         
-        # Pobieranie podstawowych liczników użytkowników
-        cursor.execute("SELECT COUNT(id) FROM users")
+        # Pobieranie stanu liczbowego wszystkich kont
+        cursor.execute("SELECT COUNT(*) FROM users")
         total_users = cursor.fetchone()[0] or 0
 
-        # Liczba nowych użytkowników w wybranym okresie
+        # Wyznaczanie liczby kont utworzonych w zadanym okresie
         new_users = 0
         if start_dt:
-            cursor.execute("SELECT COUNT(id) FROM users WHERE date_joined >= ?", 
+            cursor.execute("SELECT COUNT(*) FROM users WHERE date_joined >= ?", 
                           (start_dt.strftime("%Y-%m-%d %H:%M:%S"),))
             new_users = cursor.fetchone()[0] or 0
         else:
             new_users = total_users
 
-        # Średnie zaangażowanie (PPD) w wybranym okresie
-        params = []
-        act_where = ""
-        if start_dt:
-            act_where = "WHERE timestamp >= ?"
-            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
+        # Obliczanie średniego PPD z uwzględnieniem przekazanego okresu
+        avg_engagement = self.get_system_wide_ppd(period)
 
-        query_avg = f"""
-            SELECT IFNULL(AVG(daily_total), 0.0)
-            FROM (
-                SELECT SUM(pages_read) as daily_total
-                FROM activity 
-                {act_where}
-                GROUP BY user_id, DATE(timestamp)
-            )
-        """
-        cursor.execute(query_avg, params)
-        avg_engagement = cursor.fetchone()[0] or 0.0
-
-        return total_users, new_users, round(float(avg_engagement), 1)
-    
+        return total_users, new_users, avg_engagement
     
     def get_report_summary(self, period="all"):
-        """Pobiera statystyki zbiorcze gatunków dla modułu raportów."""
+        """
+        Pobiera podsumowanie aktywności w podziale na gatunki literackie.
+        Identyfikuje najpopularniejszy gatunek oraz zlicza unikalne gatunki aktywne.
+        """
         cursor = self.conn.cursor()
-        
         start_dt = None if period.lower() == "all" else period_start(period)
         
         params = []
@@ -132,6 +102,7 @@ class StatsRepository:
             where_clause = "WHERE a.timestamp >= ?"
             params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
 
+        # Identyfikacja gatunku o najwyższej sumie przeczytanych stron
         query_top = f"""
             SELECT g.name, SUM(a.pages_read) as total_pages
             FROM genres g
@@ -143,6 +114,7 @@ class StatsRepository:
             LIMIT 1
         """
         
+        # Wyznaczanie liczby gatunków, w których odnotowano jakąkolwiek aktywność
         query_count = f"""
             SELECT COUNT(DISTINCT g.id)
             FROM genres g

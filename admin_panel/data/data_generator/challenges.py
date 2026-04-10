@@ -1,10 +1,10 @@
 import random
 from datetime import datetime
-from data.config import fake 
+from data.config import get_fake
 
 # =================== GENEROWANIE WYZWAŃ ===================
 
-def generate_challenges(conn, users, count_per_user=3):
+def generate_challenges(conn, users, count_per_user=2):
     """
     Generuje losowe wyzwania czytelnicze ograniczone ramami roku kalendarzowego.
     
@@ -40,7 +40,7 @@ def generate_challenges(conn, users, count_per_user=3):
             
             # --- LOGIKA CZASOWA (ROK KALENDARZOWY) ---
             # Losuje start z ostatnich 6 miesięcy, ale nie poza bieżący rok
-            start_date_raw = fake.date_time_between(start_date='-6M', end_date='now')
+            start_date_raw = get_fake().date_time_between(start_date='-6M', end_date='now')
             
             # Ustawia start na wylosowany dzień, ale wymusza ten sam rok dla całego wyzwania
             if start_date_raw.year < now.year:
@@ -53,7 +53,7 @@ def generate_challenges(conn, users, count_per_user=3):
 
             # --- KREACJA TYTUŁU ---
             # Tytuł zawiera rok i losowe słowo dla unikalności
-            title = f"{start_date.year} {fake.word().capitalize()} Challenge"
+            title = f"{start_date.year} {get_fake().word().capitalize()} Challenge"
             
             # --- DETERMINACJA STATUSU ---
             # Czy cel został osiągnięty?

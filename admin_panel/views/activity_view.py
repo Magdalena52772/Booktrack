@@ -1,128 +1,132 @@
+import traceback
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget
 
 from data.utils.status_manager import StatusMsg
 from data.utils.ui_helpers import apply_tooltips, load_ui
-from views.dashboard_view import ActivityChart
+from charts.activity_charts import ActivityChart
 from data.repositories.activity_repo import ActivityRepository
-from data.repositories.statistics_repo import StatsRepository
+from data.repositories.challenge_repo import ChallengeRepository
 
 class ActivityView(QWidget):
-    """
-    Widok sekcji Activity. 
-    Odpowiada za wizualizację trendów czytelniczych, statystyk KPI 
-    oraz rankingu najdłuższych serii (streaks).
-    """
+    """Widok analityczny z wykresem trendu i kluczowymi wskaźnikami aktywności."""
     statusMessage = Signal(str, str)
 
     def __init__(self, conn):
         super().__init__()
-        
-        # Ładowanie interfejsu z pliku .ui
+        # Inicjalizacja interfejsu użytkownika
         self.ui = load_ui(self, "views/ui/ActivityView.ui")
-        
-        if not self.ui:
-            print("Błąd ładowania UI!")
-            return
+        if not self.ui: return
 
-        # Inicjalizacja warstwy danych
+        # Inicjalizacja repozytoriów danych
         self.repo = ActivityRepository(conn)
-        self.stats = StatsRepository(conn)
+        self.challenge_repo = ChallengeRepository(conn)
         
-        # Konfiguracja komponentu wykresu
+        # Konfiguracja i osadzenie wykresu aktywności
         self.canvas = ActivityChart(self.ui.activity_chart)
-        
-        # Podmiana placeholdera w layoutcie na aktywny wykres Matplotlib
-        self.ui.verticalLayout_4.replaceWidget(self.ui.lbl_chart_placeholder, self.canvas)
-        self.ui.lbl_chart_placeholder.deleteLater()
+        if hasattr(self.ui, 'lbl_chart_placeholder'):
+            self.ui.verticalLayout_4.replaceWidget(self.ui.lbl_chart_placeholder, self.canvas)
+            self.ui.lbl_chart_placeholder.deleteLater()
+        else:
+            self.ui.verticalLayout_4.addWidget(self.canvas)
 
-        # Definicja podpowiedzi systemowych (Tooltips)
-        self.setup_tooltips()
-
-        # Rejestracja zdarzeń i sygnałów interfejsu
+        # Podpięcie zdarzeń przycisków i filtrów
         self.ui.btn_refresh_activity.clicked.connect(self.refresh_data)
         self.ui.cb_time_filter.currentTextChanged.connect(self.refresh_data)
 
-    def setup_tooltips(self):
-        """Konfiguracja opisów pomocniczych przy użyciu helpera."""
-        tooltips = {
-            "lbl_books_count": "Total number of pages read by all users in the selected period.",
-            "lbl_active_days": "Number of days with at least one reading session recorded.",
-            "lbl_streaks": "Current top 3 users with the longest daily reading streaks.",
-            "btn_refresh_activity": "Manually refresh all activity statistics and charts.",
-            "cb_time_filter": "Select the timeframe for the displayed data."
-        }
-        
-        # Wywołanie funkcji pomocniczej (masowe przypisanie)
-        apply_tooltips(self.ui, tooltips)
-
-    def load_view(self):
-        """Metoda wywoływana przy aktywacji zakładki w oknie głównym."""
+        # Konfiguracja podpowiedzi i ładowanie danych
+        self.setup_tooltips()
         self.refresh_data()
 
-    def format_top_streaks_html(self, streaks):
-        """
-        Konwersja danych o rankingach na sformatowany blok HTML.
-        Zastosowanie znaczników <br> dla pionowego układu elementów podium.
-        """
-        if not streaks:
-            return "<span style='color: #888;'>No active streaks yet 🔥</span>"
-
-        icons = ["🥇", "🥈", "🥉"]
-        formatted_items = []
-        
-        # Przetwarzanie maksymalnie trzech najlepszych wyników
-        for i, (username, days) in enumerate(streaks[:3]):
-            icon = icons[i] if i < len(icons) else "🔥"
-            # Budowa elementu: Ikona, pod nią Nazwa, pod nią Dni
-            entry = (
-                f"<div style='text-align: center;'>"
-                f"<span style='font-size: 16px;'>{icon}</span><br>"
-                f"<b>{username}</b><br>"
-                f"<span style='color: #d35400;'>{days} DAYS</span>"
-                f"</div>"
-            )
-            formatted_items.append(entry)
-        
-        # Łączenie elementów w jeden wiersz z separatorem
-        separator = " &nbsp;&nbsp; | &nbsp;&nbsp; "
-        return separator.join(formatted_items)
-
     def refresh_data(self):
-        """
-        Główna procedura odświeżania danych. 
-        Pobiera parametry filtrów, wykonuje zapytania do bazy 
-        i aktualizuje komponenty graficzne.
-        """
+        """Odświeżanie danych i kluczowych wskaźników."""
         try:
-            # Odczyt aktualnego filtra czasowego
-            selected_filter = self.ui.cb_time_filter.currentText()
-            time_filter_key = selected_filter.lower()
+            # Pobranie parametrów filtra czasowego
+            selected_filter = self.ui.cb_time_filter.currentText().lower()
+            self.statusMessage.emit(*StatusMsg.get("LOAD_START", selected_filter))
             
-            # Powiadomienie o rozpoczęciu ładowania (angielski tekst statusu)
-            self.statusMessage.emit(*StatusMsg.get("LOAD_START", f"Activity ({selected_filter})"))
+            # Pozyskanie danych trendu historycznego
+            trend_data = self.repo.get_activity_trend(selected_filter)
             
-            # Pobranie danych agregowanych (KPI)
-            total_pages, active_days, _ = self.repo.get_activity_kpi(time_filter_key)
+            # Pobranie kluczowych wskaźników wydajności (KPI)
+            total_pages, real_active_days, _ = self.repo.get_activity_kpi(selected_filter)
+            unique_readers = self.repo.get_unique_active_users(selected_filter)
+            active_challenges = self.challenge_repo.count_active()
             
-            # Pobranie danych o zaangażowaniu (rankingi)
-            engagement = self.stats.get_engagement_stats(time_filter_key)
-            
-            # Aktualizacja etykiet tekstowych (zachowanie formatu angielskiego)
-            self.ui.lbl_books_count.setText(f"Total Pages: {total_pages}")
-            self.ui.lbl_active_days.setText(f"Active Days: {active_days}")
-            
-            # Generowanie i osadzanie rankingu Top 3 w formacie RichText
-            streaks_data = engagement.get('top_streaks', [])
-            self.ui.lbl_streaks.setText(self.format_top_streaks_html(streaks_data))
-            
-            # Aktualizacja przebiegu trendu na osi czasu
-            trend_data = self.repo.get_activity_trend(time_filter_key)
+            # Aktualizacja komponentów wizualnych
             if trend_data:
-                dates = [row[0] for row in trend_data]
-                values = [row[1] for row in trend_data]
-                self.canvas.plot_data(dates, values, time_filter=time_filter_key)
+                dates, values = zip(*trend_data)
+                self.canvas.plot_data(list(dates), list(values), time_filter=selected_filter)
+                
+                # Odświeżenie etykiet w panelu bocznym
+                self.ui.lbl_books_count.setText(f"Total pages:<br><b style='color:#daa520; font-size:14pt;'>{total_pages:,}</b>")
+                self.ui.lbl_active_days.setText(f"Active days:<br><b style='color:#daa520; font-size:14pt;'>{real_active_days}</b>")
+                self.ui.lbl_challenges.setText(f"Active challenges:<br><b style='color:#daa520; font-size:14pt;'>{active_challenges or 0}</b>")
+                
+                # Aktualizacja dolnego podsumowania
+                self._update_summary(trend_data, unique_readers)
+                
+                # Status sukcesu z użyciem Twojego helpera
+                self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", selected_filter, f"{total_pages:,} pages"))
+            else:
+                self._clear_view()
+                self.statusMessage.emit(*StatusMsg.get("NO_DATA", selected_filter))
 
         except Exception as e:
-            # Rejestracja błędu w pasku statusu aplikacji
+            # Obsługa błędów bazy danych
+            traceback.print_exc()
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
+
+    def _update_summary(self, trend_data, unique_readers):
+        """Podsumowanie kluczowych wskaźników w formie HTML."""
+        try:
+            # Pobranie wartości szczytowej
+            peak_data = self.repo.get_peak_activity(trend_data)
+            peak_val = peak_data[0] if isinstance(peak_data, (tuple, list)) else peak_data
+
+            accent_color = "#b8860b"
+
+            # Wymuszenie widoczności panelu podsumowania
+            self.ui.lbl_summary_placeholder.setMinimumHeight(100)
+
+            # Renderowanie HTML
+            summary_html = (
+                f"<div style='background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px;'>"
+                f"<table width='100%' style='font-family: Segoe UI, sans-serif;'>"
+                f"<tr>"
+                f"<td align='center' width='50%'>"
+                f"<span style='color: #666; font-size: 10pt; text-transform: uppercase;'>🏆 Peak Record</span><br>"
+                f"<span style='color: {accent_color}; font-size: 20pt; font-weight: bold;'>{peak_val:,}</span> "
+                f"<span style='color: {accent_color}; font-size: 12pt;'>pages</span>"
+                f"</td>"
+                f"<td width='1' style='background-color: #eee;'></td>"
+                f"<td align='center' width='50%'>"
+                f"<span style='color: #666; font-size: 10pt; text-transform: uppercase;'>👥 Unique Readers</span><br>"
+                f"<span style='color: {accent_color}; font-size: 20pt; font-weight: bold;'>{unique_readers:,}</span> "
+                f"<span style='color: {accent_color}; font-size: 12pt;'>users</span>"
+                f"</td>"
+                f"</tr>"
+                f"</table>"
+                f"</div>"
+            )
+            
+            self.ui.lbl_summary_placeholder.setText(summary_html)
+        except Exception as e:
+            print(f"Summary UI Error: {e}")
+
+    def _clear_view(self):
+        """Czyści wykres i etykiety w przypadku braku danych."""
+        self.canvas.axes.clear()
+        self.canvas.draw()
+        self.ui.lbl_summary_placeholder.setText("No activity found for this period.")
+
+    def setup_tooltips(self):
+        """Definicja podpowiedzi interfejsu."""
+        tooltips = {
+            "lbl_books_count": "Sum of all pages logged in this period.",
+            "lbl_active_days": "Number of unique days with activity in the database.",
+            "lbl_challenges": "Current community challenges count.",
+            "btn_refresh_activity": "Reload data from database.",
+            "lbl_summary_placeholder": "Key performance indicators for selected timeframe."
+        }
+        apply_tooltips(self.ui, tooltips)

@@ -59,18 +59,24 @@ def get_rating_color(rating):
     if rating >= 3.0: return "#2c3e50" # Standardowy
     return "#e67e22" # Pomarańczowy dla słabych ocen
 
+
 def clear_layout(layout):
-    """
-    Usuwa wszystkie widżety z layoutu i zwalnia ich pamięć.
-    Idealne do odświeżania kontenerów na wykresy.
-    """
-    if layout is None:
-        return
-        
-    while layout.count():
-        item = layout.takeAt(0)
-        widget = item.widget()
-        if widget is not None:
-            widget.deleteLater()
-        elif item.layout() is not None:
-            clear_layout(item.layout()) # Rekurencja dla zagnieżdżonych layoutów
+    """Czyści layout z widgetów, zapobiegając wyciekom pamięci i nakładaniu się elementów"""
+    if layout is not None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+            else:
+                clear_layout(item.layout())
+
+# Przykład użycia w generatorze z Batchingiem
+def batch_insert_books(conn, books_data):
+    """Szybki zapis dzięki transakcji i executemany"""
+    sql = "INSERT INTO books (user_id, title, authors, genre_id, status) VALUES (?, ?, ?, ?, ?)"
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA synchronous = OFF") # Maksymalna prędkość
+    cursor.execute("BEGIN TRANSACTION")
+    cursor.executemany(sql, books_data)
+    conn.commit()
