@@ -35,12 +35,22 @@ def generate_birth_date():
         # Główna grupa dorosłych (rozkład wokół 32 lat)
         age = int(np.random.normal(32, 8))
         age = max(18, min(55, age))
-    elif rand < 0.85: 
+    elif rand < 0.85:
         # Grupa seniorów
         age = random.randint(60, 80)
-    else: 
+    else:
         # Grupa młodzieży
         age = random.randint(12, 17)
-    
+
     # Zamiana wyliczonego wieku na obiekt daty przy użyciu Fakera
     return get_fake().date_of_birth(minimum_age=age, maximum_age=age)
+
+
+def get_genre_map(cursor):
+    """
+    Pobiera mapę gatunków (name -> id) z bazy danych.
+    Zamiast powtarzać tę samą query w każdym generatorze.
+    """
+    query = "SELECT name, id FROM genres"
+    cursor.execute(query)
+    return {name: gid for name, gid in cursor.fetchall()}

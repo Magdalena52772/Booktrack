@@ -1,7 +1,7 @@
 import random
 from datetime import datetime, timedelta
 from data.config import get_fake, ARCHETYPE_SETTINGS, SEASONAL_IMPACT, SIM_SETTINGS, AGE_BASED_GENRES, GENRES
-from data.utils.generator_helpers import calculate_session_details
+from data.utils.generator_helpers import calculate_session_details, get_genre_map
 from data.utils.maintenance_service import update_genre_stats
 from data.utils.user_service import update_user_ppd
 
@@ -126,8 +126,8 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
     month = now.month
     logs = []
 
-    cursor.execute("SELECT name, id FROM genres")
-    genre_map = {name: gid for name, gid in cursor.fetchall()}
+    # Pobranie mapy gatunków (DRY - z utility function)
+    genre_map = get_genre_map(cursor)
 
     active_users = [u for u in users_meta if u['status'] == 'active']
     if not active_users: return []
