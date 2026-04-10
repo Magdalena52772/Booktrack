@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 from data.config import GENRES, AGE_BASED_GENRES, RATING_SETTINGS, get_fake
 from data.utils.date_helpers import DateHelper
+from data.utils.generator_helpers import get_genre_map
 
 # =================== GENEROWANIE KSIĄŻEK ===================
 def generate_books(conn, users):
@@ -16,9 +17,8 @@ def generate_books(conn, users):
     title_words = ["Shadow", "Forest", "Dream", "Fire", "Storm", "Heart", "Secret", "Moon", "Whisper", "Glass"]
     now = datetime.now()
 
-    # Pobranie mapy gatunków przed pętlą, aby uniknąć wielokrotnych zapytań do bazy
-    cursor.execute("SELECT name, id FROM genres")
-    genre_map = {name: gid for name, gid in cursor.fetchall()}
+    # Pobranie mapy gatunków z utility function (DRY - unika duplikatów)
+    genre_map = get_genre_map(cursor)
 
     for user in users:
         bd_raw = user.get('birth_date', '1990-01-01')
