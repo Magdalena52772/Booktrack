@@ -9,7 +9,7 @@ def period_start(period: str) -> datetime:
     elif period == "year":
         return now - timedelta(days=365)
     elif period == "all":
-        # Zwracamy bardzo wczesną datę, by objąć całą historię (nawet sprzed 2 lat)
-        return datetime(2000, 1, 1) 
+        # Zwraca wczesną datę, by objąć całą historię
+        return datetime(2023, 1, 1) 
     else:
         return None

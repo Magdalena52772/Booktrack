@@ -1,7 +1,8 @@
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, QTimer
+from PySide6.QtCore import QFile
+from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QMainWindow, QMessageBox, QSizePolicy, QVBoxLayout
-from views import DashboardView, UsersView, ActivityView, GenresView, ReportsView
+from views import DashboardView, UsersView, ActivityView, GenresView, ReportsView, LiveFeedView
 from data.utils.status_manager import StatusMsg
 
 class MainWindow(QMainWindow):
@@ -9,118 +10,131 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.conn = conn
         
-        # Inicjalizacja ładowania interfejsu użytkownika
+        # Inicjalizacja ładowania głównego interfejsu użytkownika
         loader = QUiLoader()
         ui_file = QFile("views/ui/MainWindow.ui")
-        
         if not ui_file.open(QFile.ReadOnly):
             return
             
-        # Ładowanie interfejsu jako komponentu klasy nadrzędnej
         self.ui = loader.load(ui_file, self)
         ui_file.close()
 
-        # Osadzenie załadowanego widgetu centralnego w oknie głównym
+        # Konfiguracja głównego widgetu okna
         if hasattr(self.ui, 'centralwidget'):
             self.setCentralWidget(self.ui.centralwidget)
         else:
             self.setCentralWidget(self.ui)
 
-        # Inicjalizacja poszczególnych widoków aplikacyjnych
-        self.page_dashboard = DashboardView(self.conn)
-        self.page_users = UsersView(self.conn)
-        self.page_genres = GenresView(self.conn)
-        self.page_activity = ActivityView(self.conn)
-        self.page_reports = ReportsView(self.conn)
-
-        # Mapowanie przycisków na kontenery w QStackedWidget oraz obiekty widoków
-        self.pages_map = {
-            self.ui.btn_dashboard: (self.ui.page_dashboard, self.page_dashboard),
-            self.ui.btn_users: (self.ui.page_users, self.page_users),
-            self.ui.btn_genres: (self.ui.page_genres, self.page_genres),
-            self.ui.btn_activity: (self.ui.page_activity, self.page_activity),
-            self.ui.btn_reports: (self.ui.page_reports, self.page_reports)
+        # Konfiguracja mapowania nawigacji (Lazy Loading)
+        self.view_config = {
+            self.ui.btn_dashboard: {"class": DashboardView, "container": self.ui.page_dashboard, "instance": None},
+            self.ui.btn_users:     {"class": UsersView,     "container": self.ui.page_users,     "instance": None},
+            self.ui.btn_genres:    {"class": GenresView,    "container": self.ui.page_genres,    "instance": None},
+            self.ui.btn_activity:  {"class": ActivityView,  "container": self.ui.page_activity,  "instance": None},
+            self.ui.btn_reports:   {"class": ReportsView,   "container": self.ui.page_reports,   "instance": None},
+            self.ui.btn_live_feed: {"class": LiveFeedView, "container": self.ui.page_live_feed, "instance": None}
         }
 
-        # Konfiguracja layoutów kontenerów i połączeń sygnałów
-        for btn, (container, view) in self.pages_map.items():
-            # Zapewnienie obecności layoutu w kontenerze strony
+        # Rejestracja zdarzeń dla przycisków nawigacyjnych
+        for btn in self.view_config.keys():
+            btn.clicked.connect(self.handle_navigation)
+
+        self.load_styles()
+        self.ui.btn_logout.clicked.connect(self.handle_logout)
+        self.status = self.statusBar()
+
+        # Parametry startowe okna
+        self.setMinimumSize(1100, 750)
+        self.ui.btn_dashboard.setChecked(True)
+        self.startup_sequence()
+
+    def handle_navigation(self):
+        """Metoda pośrednicząca w obsłudze nawigacji."""
+        button = self.sender()
+        if config := self.view_config.get(button):
+            self.switch_page(config)
+
+    def switch_page(self, config):
+        """Zarządzanie przełączaniem stron i leniwą inicjalizacją widoków."""
+        container = config["container"]
+        
+        # Inicjalizacja widoku przy pierwszym wywołaniu
+        if config["instance"] is None:
+            view_class = config["class"]
+            
+            # Tworzenie obiektu widoku
+            view_instance = view_class(self.conn)
+            config["instance"] = view_instance
+            
+            # Konfiguracja układu graficznego w kontenerze docelowym
             if container.layout() is None:
                 layout = QVBoxLayout(container)
                 layout.setContentsMargins(0, 0, 0, 0)
                 layout.setSpacing(0)
             
-            # Integracja widoku z układem graficznym kontenera
-            view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            container.layout().addWidget(view)
+            view_instance.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            container.layout().addWidget(view_instance)
             
-            # Rejestracja zdarzenia kliknięcia przycisku
-            btn.clicked.connect(lambda checked=False, c=container, v=view: self.switch_page(c, v))
-            
-            # Podpięcie sygnałów statusu przed uruchomieniem widoków
-            if hasattr(view, "statusMessage"):
-                view.statusMessage.connect(self.show_status_message)
+            # Rejestracja sygnałów statusu
+            if hasattr(view_instance, "statusMessage"):
+                view_instance.statusMessage.connect(self.show_status_message)
 
-        # Wczytanie arkuszy stylów i konfiguracja paska stanu
-        self.load_styles()
-        self.ui.btn_logout.clicked.connect(self.handle_logout)
-        self.status = self.statusBar()
-
-        # Konfiguracja parametrów startowych okna i sekwencja powitalna
-        self.setMinimumSize(1100, 750)
-        self.ui.btn_dashboard.setChecked(True)
-        self.startup_sequence()
+        # Aktualizacja aktywnego widoku w obszarze ContentArea
+        self.ui.ContentArea.setCurrentWidget(container)
+        
+        # Aktualizacja stanu wizualnego przycisków (toggle effect)
+        for btn, cfg in self.view_config.items():
+            btn.setChecked(cfg["container"] == container)
+        
+        # Wywołanie metod odświeżania danych
+        active_view = config["instance"]
+        if isinstance(active_view, ReportsView):
+            active_view.generate_report()
+        elif hasattr(active_view, "load_view"):
+            active_view.load_view()
+        
+        active_view.updateGeometry()
 
     def startup_sequence(self):
-        """Sekwencja powitalna wyświetlana po uruchomieniu aplikacji"""
-        # Wyświetlenie komunikatu o zalogowaniu i opóźnione ładowanie dashboardu
+        """Sekwencja logowania i ładowania ekranu startowego"""
+        
+        # odświeżenie UI
+        self.show()
+        QApplication.processEvents()
+        
+        # Wywołanie standardowego przełączenia strony
+        dashboard_config = self.view_config[self.ui.btn_dashboard]
+        self.switch_page(dashboard_config)
+        
+        # Nadpisanie komunikatów ładowania napisem powitalnym
         self.show_status_message("Login success: Welcome, Admin!", StatusMsg.SUCCESS)
-        QTimer.singleShot(2000, lambda: self.switch_page(self.ui.page_dashboard, self.page_dashboard))
 
     def load_styles(self):
-        """Wczytywanie definicji stylów QSS z pliku zewnętrznego."""
+        """Wczytywanie arkuszy stylów QSS."""
         try:
             with open("assets/style.qss", "r") as f:
                 self.setStyleSheet(f.read())
         except FileNotFoundError:
             pass
 
-    def switch_page(self, container, view):
-        """Przełączanie aktywnego widoku wewnątrz QStackedWidget."""
-        self.ui.ContentArea.setCurrentWidget(container)
-        
-        # Aktualizacja stanu wizualnego przycisków nawigacyjnych
-        for btn in self.pages_map.keys():
-            is_active = (self.pages_map[btn][0] == container)
-            btn.setChecked(is_active)
-        
-        # Wywołanie procedur odświeżania danych w widoku (zależnie od typu widoku)
-        if isinstance(view, ReportsView):
-            view.generate_report()
-        elif hasattr(view, "load_view"):
-            view.load_view()
-        
-        view.updateGeometry()
-
     def handle_logout(self):
-        """Obsługa procedury wylogowania użytkownika."""
-        msg = QMessageBox.question(
+        """Obsługa zamknięcia aplikacji."""
+        confirm = QMessageBox.question(
             self, "Logout", "Are you sure you want to exit?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
-        if msg == QMessageBox.StandardButton.Yes:
+        if confirm == QMessageBox.StandardButton.Yes:
             self.close()
 
     def show_status_message(self, message: str, status_type: str = "info"):
-        """Wyświetlanie kolorowego komunikatu na pasku stanu za pomocą stylów QSS."""
-        # Ustawienie właściwości statusType i odświeżenie stylu paska stanu
+        """Wyświetlanie komunikatów na pasku stanu."""
         self.status.setProperty("statusType", status_type)
         self.status.style().unpolish(self.status)
         self.status.style().polish(self.status)
         self.status.showMessage(message, 5000)
 
     def closeEvent(self, event):
-        """Zwalnianie zasobów i zamykanie połączeń przy wyjściu z aplikacji."""
+        """Zamykanie połączeń bazodanowych przy wyjściu."""
         if self.conn:
             self.conn.close()
         event.accept()

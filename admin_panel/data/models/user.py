@@ -9,7 +9,7 @@ class User:
         name: str, 
         email: str,
         status: str, 
-        birth_date: str,
+        birth_date: datetime,
         books_read: int, 
         pages_per_day: float, 
         last_activity: Optional[datetime], 
@@ -33,15 +33,9 @@ class User:
     @property
     def age(self) -> int:
         """Dynamicznie oblicza wiek na podstawie birth_date."""
-        if not self.birth_date:
-            return 0
-        try:
-            # Obsługa formatu YYYY-MM-DD
-            b_date = datetime.strptime(self.birth_date, "%Y-%m-%d").date()
-            today = date.today()
-            return today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
-        except:
-            return 0
+        if not self.birth_date: return 0
+        today = date.today()
+        return today.year - self.birth_date.year - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
 
     def __repr__(self):
         return f"<User {self.name} (ID: {self.id})>"

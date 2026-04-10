@@ -2,9 +2,6 @@
 -- TABLE: USERS
 -- =============================
 -- Reprezentuje użytkowników aplikacji.
--- books_read = łączna liczba książek przeczytanych przez użytkownika.
---               Logika generatora ogranicza tę wartość do realistycznego 
---               poziomu (max 52/rok na każdy rok stażu konta).
 -- pages_per_day = średnia dzienna liczba stron czytanych przez aktywnego użytkownika.
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,15 +14,15 @@ CREATE TABLE IF NOT EXISTS users (
     is_staff INTEGER NOT NULL DEFAULT 0,
     is_active INTEGER NOT NULL DEFAULT 1,
     date_joined TIMESTAMP NOT NULL,      -- Data dołączenia
-    
     external_id INTEGER UNIQUE,          -- Publiczne ID (np. dla API)
-    birth_date DATE,                     -- Data urodzenia (YYYY-MM-DD) do wyliczania wieku
+    birth_date DATE NOT NULL CHECK(birth_date < CURRENT_DATE),     -- Data urodzenia (YYYY-MM-DD) do wyliczania wieku
     status TEXT NOT NULL CHECK(status IN ('active','inactive')) DEFAULT 'active',
     last_activity TIMESTAMP,             -- Ostatnia znana aktywność (logowanie lub sesja)
     r_tier TEXT DEFAULT 'regular',
     cluster_group INTEGER DEFAULT NULL,  -- Kolumna pod algorytm klasteryzacji
     books_read INTEGER DEFAULT 0,        -- Wartość sumaryczna
-    pages_per_day REAL DEFAULT 0         -- Potencjał czytelniczy
+    pages_per_day REAL DEFAULT 0,        -- Potencjał czytelniczy
+    current_streak INTEGER DEFAULT 0
 );
 
 -- =============================
@@ -36,7 +33,7 @@ CREATE TABLE IF NOT EXISTS genres (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     readers INTEGER DEFAULT 0,           -- Liczba unikalnych czytelników
-    avg_rating REAL DEFAULT 0,           -- Symulowana ocena satysfakcji (3.7 - 4.9)
+    avg_rating REAL DEFAULT 0,           -- ocena satysfakcji
     books_read INTEGER DEFAULT 0,        -- Liczba sesji/aktywności zarejestrowanych dla gatunku
     reading_time_share REAL DEFAULT 0    -- % udział w czasie czytania (dla pasków postępu w UI)
 );
@@ -67,6 +64,7 @@ CREATE TABLE IF NOT EXISTS books (
     total_pages INTEGER,
     current_page INTEGER DEFAULT 0 CHECK(current_page <= total_pages),
     status TEXT CHECK(status IN ('reading', 'finished')) DEFAULT 'reading',
+    rating INTEGER CHECK(rating >= 1 AND rating <= 5),
     start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     finish_date TIMESTAMP,                -- Data zakończenia lektury
     added_by_generator INTEGER DEFAULT 0 CHECK(added_by_generator IN (0,1)),
@@ -77,8 +75,8 @@ CREATE TABLE IF NOT EXISTS books (
 -- =============================
 -- TABLE: ACTIVITY
 -- =============================
--- Historia sesji czytelniczych (podstawa wykresów aktywności dziennej/tygodniowej).
--- pages_read <= 50 zapewnia realizm pojedynczego wpisu w historii.
+-- Historia sesji czytelniczych (podstawa wykresów aktywności dziennej/tygodniowej)
+-- pages_read <= 50 zapewnia realizm pojedynczego wpisu w historii
 CREATE TABLE IF NOT EXISTS activity (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
@@ -93,15 +91,42 @@ CREATE TABLE IF NOT EXISTS activity (
 -- =============================
 -- TABLE: CHALLENGES
 -- =============================
--- Wyzwania czytelnicze (cele) wyznaczone przez użytkowników.
+-- Wyzwania czytelnicze (cele) wyznaczone przez użytkowników
 CREATE TABLE IF NOT EXISTS challenges (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     title TEXT NOT NULL,
-    target_books INTEGER NOT NULL,
-    progress_books INTEGER DEFAULT 0,
-    start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    end_date TIMESTAMP NOT NULL,
+    type TEXT CHECK(type IN ('quantity', 'genre', 'streak')) NOT NULL,
+    target_value INTEGER NOT NULL,      -- liczba książek / liczba dni streaka
+    current_value INTEGER DEFAULT 0,    -- Aktualny postęp
+    genre_id INTEGER DEFAULT NULL,      -- Tylko dla wyzwań typu 'genre'
+    start_date DATE DEFAULT CURRENT_DATE,
+    end_date DATE NOT NULL,
     status TEXT CHECK(status IN ('active', 'finished', 'failed')) DEFAULT 'active',
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES genres(id)
 );
+
+
+-- =============================
+-- TABLE: ACHIEVEMENTS
+-- =============================
+CREATE TABLE IF NOT EXISTS achievements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    achievement_type TEXT NOT NULL, -- np. 'Collector', 'Sprint', 'Marathon'
+    awarded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_viewed INTEGER DEFAULT 0,    -- Obsługa "czerwonej kropki"
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, achievement_type) -- Zapobiega dublowaniu tej samej odznaki
+);
+
+-- Optymalizacja zapytań agregujących
+-- Indeks na książki: przyspiesza COUNT(DISTINCT b.id) przy filtrowaniu po statusie
+CREATE INDEX IF NOT EXISTS idx_books_user_status ON books(user_id, status);
+
+-- Indeks na aktywność: kluczowy dla SUM(a.pages_read) i filtrowania po dacie
+CREATE INDEX IF NOT EXISTS idx_activity_user_timestamp ON activity(user_id, timestamp);
+
+-- Indeks na użytkowników: przyspiesza wyszukiwanie po nicku i mailu
+CREATE INDEX IF NOT EXISTS idx_users_search ON users(username, email, name);

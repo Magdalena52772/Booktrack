@@ -63,39 +63,17 @@
          </item>
          <item>
           <widget class="QComboBox" name="cb_time_filter">
-           <item>
-            <property name="text">
-             <string>all</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>week</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>month</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>year</string>
-            </property>
-           </item>
+           <item><property name="text"><string>all</string></property></item>
+           <item><property name="text"><string>week</string></property></item>
+           <item><property name="text"><string>month</string></property></item>
+           <item><property name="text"><string>year</string></property></item>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="btn_refresh_activity">
-           <property name="text">
-            <string>Refresh</string>
-           </property>
+           <property name="text"><string>Refresh</string></property>
            <property name="icon">
-            <iconset>
-             <normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
-           </property>
-           <property name="checkable">
-            <bool>false</bool>
+            <iconset><normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
            </property>
           </widget>
          </item>
@@ -104,70 +82,90 @@
       </item>
       <item>
        <widget class="QFrame" name="frame_activity_main">
-        <property name="frameShape">
-         <enum>QFrame::Shape::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Shadow::Raised</enum>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="frameShape"><enum>QFrame::Shape::StyledPanel</enum></property>
+        <property name="frameShadow"><enum>QFrame::Shadow::Raised</enum></property>
+        <layout class="QHBoxLayout" name="horizontalLayout_main" stretch="4,1">
          <item>
-          <widget class="QFrame" name="activity_chart">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Shape::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Shadow::Raised</enum>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1">
-            <item>
-             <widget class="QLabel" name="lbl_chart_placeholder">
-              <property name="text">
-               <string>Chart will appear here</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignmentFlag::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+          <layout class="QVBoxLayout" name="verticalLayout_charts_group">
+           <item>
+            <widget class="QFrame" name="activity_chart">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="QLabel" name="lbl_chart_placeholder">
+                <property name="text"><string>Chart will appear here</string></property>
+                <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="summary_container">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>120</height>
+              </size>
+             </property>
+             <layout class="QVBoxLayout" name="layout_summary">
+              <property name="spacing"><number>0</number></property>
+              <property name="leftMargin"><number>10</number></property>
+              <property name="topMargin"><number>0</number></property>
+              <property name="rightMargin"><number>10</number></property>
+              <property name="bottomMargin"><number>5</number></property>
+              <item>
+               <widget class="QLabel" name="lbl_summary_placeholder">
+                <property name="text"><string></string></property>
+                <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <widget class="QFrame" name="frame_metrics">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1,1">
+           <property name="minimumSize"><size><width>180</width><height>0</height></size></property>
+           <layout class="QVBoxLayout" name="verticalLayout_metrics_sidebar">
             <item>
              <widget class="QLabel" name="lbl_books_count">
-              <property name="text">
-               <string>Books: 10</string>
-              </property>
+              <property name="text"><string>Books: 10</string></property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="lbl_active_days">
-              <property name="text">
-               <string>Active days: 8</string>
-              </property>
+              <property name="text"><string>Active days: 8</string></property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="lbl_challenges">
-              <property name="text">
-               <string>Challenges: 10</string>
-              </property>
+              <property name="text"><string>Streaks: x</string></property>
              </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation"><enum>Qt::Vertical</enum></property>
+              <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+             </spacer>
             </item>
            </layout>
           </widget>

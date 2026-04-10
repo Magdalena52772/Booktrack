@@ -1,101 +1,117 @@
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Signal, QFile
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from datetime import datetime, timedelta
+import traceback
+from PySide6.QtCore import Signal, Qt
+from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from data.utils.status_manager import StatusMsg
-
-from data.repositories.user_repo import UserRepository
 from data.repositories.book_repo import BookRepository
-from data.repositories.challenge_repo import ChallengeRepository
-from charts.activity_chart import ActivityChart
+from data.repositories.statistics_repo import StatsRepository
+from data.repositories.activity_repo import ActivityRepository
+from charts.activity_charts import ActivityChart, ActivityHeatmap
+from data.utils.ui_helpers import load_ui, apply_tooltips
 
 class DashboardView(QWidget):
+    """Główny panel z dynamicznym skalowaniem i optymalnym wykorzystaniem przestrzeni."""
     statusMessage = Signal(str, str)
 
     def __init__(self, conn):
         super().__init__()
-        # Ładowanie interfejsu z pliku .ui
-        loader = QUiLoader()
-        ui_file = QFile("views/ui/DashboardView.ui")
-        ui_file.open(QFile.ReadOnly)
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
         
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.ui)
+        # Ładowanie zaktualizowanego UI
+        self.ui = load_ui(self, "views/ui/DashboardView.ui")
+        if not self.ui: return
 
-        # Repozytoria
-        self.user_repo = UserRepository(conn)
+        self.stats_repo = StatsRepository(conn)
         self.book_repo = BookRepository(conn)
-        self.challenge_repo = ChallengeRepository(conn)
+        self.activity_repo = ActivityRepository(conn)
 
-        # Konfiguracja podpowiedzi (tooltips)
+        # Konfiguracja komponentów graficznych
+        self.setup_charts()
         self.setup_tooltips()
-
-        # Inicjalizacja widoku
+        
+        # Obsługa zdarzeń
         self.ui.btn_refresh.clicked.connect(self.load_view)
         
+        # Pierwsze wypełnienie danych
         self.load_view()
 
-    def setup_tooltips(self):
-        """Dodaje podpowiedzi do KPIs po najechaniu kursorem"""
-        self.ui.lbl_users.setToolTip(
-            "Total registered users and growth (+X) within the last 30 days."
-        )
-        self.ui.lbl_books.setToolTip(
-            "Number of books marked as 'finished' during the current month."
-        )
-        self.ui.lbl_pages.setToolTip(
-            "Average daily pages read per active user."
-        )
-        self.ui.lbl_challenges.setToolTip(
-            "Number of reading challenges currently in progress (status: active)."
-        )
-
-    def setup_chart(self):
-        """Inicjalizuje widget wykresu wewnątrz ramki z UI."""
-        if self.ui.verticalLayout_3.count() > 0:
-            item = self.ui.verticalLayout_3.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-                
+    def setup_charts(self):
+        """Inicjalizacja wykresów z wymuszeniem elastyczności rozmiaru."""
+        # Wykres Trendu
         self.canvas = ActivityChart(self.ui.frame_chart)
-        self.ui.verticalLayout_3.addWidget(self.canvas)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        if hasattr(self.ui, 'lbl_activity_chart'):
+            self.ui.verticalLayout_3.replaceWidget(self.ui.lbl_activity_chart, self.canvas)
+            self.ui.lbl_activity_chart.deleteLater()
 
+        # Heatmapa (30 kafli)
+        self.heatmap = ActivityHeatmap(self.ui.heatmap_container)
+        self.heatmap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        if hasattr(self.ui, 'lbl_heatmap_placeholder'):
+            self.ui.verticalLayout_heatmap.replaceWidget(self.ui.lbl_heatmap_placeholder, self.heatmap)
+            self.ui.lbl_heatmap_placeholder.deleteLater()
 
     def load_view(self):
-        """Szybkie odświeżanie KPI i wykresu z raportowaniem stanu."""
+        """Pobieranie danych i aktualizacja widoku w jednym cyklu."""
         try:
-            # Pobranie KPI z bazy danych
-            user_metrics = self.user_repo.get_dashboard_metrics()
-            total_users, new_users, avg_pages = user_metrics if user_metrics else (0, 0, 0)
-            
+            self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Dashboard"))
+
+            # Pobieranie metryk KPI
+            metrics = self.stats_repo.get_dashboard_metrics()
+            total_users, new_users, avg_pages = metrics if metrics else (0, 0, 0)
             books_month = self.book_repo.count_books_read(period="month")
-            active_challenges = self.challenge_repo.count_active()
 
-            # Aktualizacja UI
-            self.ui.lbl_users.setText(f"Users: {total_users} (+{new_users})")
-            self.ui.lbl_books.setText(f"Books read: {books_month or 0}")
-            self.ui.lbl_pages.setText(f"Pages / day: {round(avg_pages, 1) if avg_pages else 0}")
-            self.ui.lbl_challenges.setText(f"Active challenges: {active_challenges or 0}")
+            # Formatowanie tekstu
+            accent = "#daa520"
+            style = f"color:{accent}; font-weight:bold; font-size:16pt;"
+            self.ui.lbl_users.setText(f"Users: <br><span style='{style}'>{total_users}</span>")
+            self.ui.lbl_books.setText(f"Books read: <br><span style='{style}'>{books_month or 0}</span>")
+            self.ui.lbl_pages.setText(f"Pages / day: <br><span style='{style}'>{round(avg_pages, 1)}</span>")
 
-            # Zarządzanie wykresem
-            if not hasattr(self, 'canvas'):
-                self.setup_chart()
-
-            trend_data = self.book_repo.get_monthly_reading_trend()
+            # Pobieranie 30 dni danych
+            data_raw = self.activity_repo.get_activity_trend("month")
+            processed_data = self._prepare_30_days(data_raw)
             
-            # --- LOGIKA STATUSÓW ---
-            if trend_data:
-                dates = [row[0] for row in trend_data]
-                pages = [row[1] for row in trend_data]
-                self.canvas.plot_data(dates, pages, time_filter="month")
-                
-                self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", "Dashboard"))
-            else:
-                self.statusMessage.emit(*StatusMsg.get("NO_TREND_DATA", "current month"))
+            # Aktualizacja wykresów
+            dates, values = zip(*processed_data)
+            self.canvas.plot_data(list(dates), list(values), time_filter="month")
+            self.heatmap.plot_heatmap(processed_data)
+            
+            self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", "Dashboard", "Global"))
               
         except Exception as e:
-            # Error: Błąd krytyczny podczas pobierania danych z repozytoriów
+            traceback.print_exc()
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
+
+    def _prepare_30_days(self, data):
+        """Generuje listę 30 ostatnich dni."""
+        end_date = datetime.now().date()
+        
+        date_map = {}
+        if data:
+            for d, v in data:
+                d_key = d if isinstance(d, str) else d.strftime("%Y-%m-%d")
+                date_map[d_key] = v
+        
+        full_period = []
+        # pętla wykona się 30 razy (od 29 do 0 włącznie)
+        for i in range(29, -1, -1):
+            day = end_date - timedelta(days=i)
+            day_str = day.strftime("%Y-%m-%d")
+            full_period.append((day_str, date_map.get(day_str, 0)))
+            
+        return full_period
+
+    def setup_tooltips(self):
+        """Podpowiedzi dla elementów interfejsu."""
+        apply_tooltips(self.ui, {"btn_refresh": "Update statistics"})
+
+    def setup_tooltips(self):
+        """Definiowanie kontekstowych podpowiedzi dla elementów interfejsu."""
+        tooltips = {
+            "lbl_users": "Total registered users and growth (+X) within the last 30 days.",
+            "lbl_books": "Number of books finished this month across the whole community.",
+            "lbl_pages": "Average pages read daily per active user.",
+            "btn_refresh": "Click to recalculate all community statistics."
+        }
+        apply_tooltips(self.ui, tooltips)
