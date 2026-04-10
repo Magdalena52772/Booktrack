@@ -103,10 +103,6 @@ class DashboardView(QWidget):
         return full_period
 
     def setup_tooltips(self):
-        """Podpowiedzi dla elementów interfejsu."""
-        apply_tooltips(self.ui, {"btn_refresh": "Update statistics"})
-
-    def setup_tooltips(self):
         """Definiowanie kontekstowych podpowiedzi dla elementów interfejsu."""
         tooltips = {
             "lbl_users": "Total registered users and growth (+X) within the last 30 days.",

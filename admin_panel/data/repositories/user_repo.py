@@ -272,9 +272,6 @@ class UserRepository:
                 streak += 1
                 expected_date -= timedelta(days=1)
             else:
-                break 
-        return streak
-    
     def get_user_streak(self, user_id: int) -> int:
         """Pobiera gotowy, przeliczony streak z bazy danych (High Performance)."""
         cursor = self.conn.cursor()
