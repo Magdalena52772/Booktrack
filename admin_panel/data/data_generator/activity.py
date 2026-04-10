@@ -1,8 +1,9 @@
 import random
 from datetime import datetime, timedelta
-from data.config import *
+from data.config import get_fake, ARCHETYPE_SETTINGS, SEASONAL_IMPACT, SIM_SETTINGS, AGE_BASED_GENRES, GENRES
 from data.utils.generator_helpers import calculate_session_details
-from data.data_generator.stats import update_genre_stats
+from data.utils.maintenance_service import update_genre_stats
+from data.utils.user_service import update_user_ppd
 
 
 # =================== GENEROWANIE AKTYWNOŚCI ===================
@@ -10,7 +11,7 @@ def generate_activity(conn, users, books):
     """
     Symuluje sesje czytania. Dla każdej książki cofa się w czasie od daty 
     zakończenia i generuje sesje
-    Uwzględnia archetypy, weekendy oraz sezonowość.
+    Uwzględnia archetypy, weekendy oraz sezonowość
     """
     cursor = conn.cursor()
     user_map = {u['id']: u for u in users}
@@ -43,7 +44,7 @@ def generate_activity(conn, users, books):
             if end_limit <= reg_dt:
                 end_limit = reg_dt + timedelta(hours=2)
 
-            finish_dt = fake.date_time_between(
+            finish_dt = get_fake().date_time_between(
                 start_date=reg_dt + timedelta(minutes=60), 
                 end_date=end_limit
             )
@@ -115,80 +116,96 @@ def generate_activity(conn, users, books):
     print(f"SUCCESS: Generated {len(activity_data)} sessions for {len(active_books)} books.")
     
 
-#=========== SYMULACJA NOWYCH AKTYWNOŚCI ============
 # =========== SYMULACJA NOWYCH AKTYWNOŚCI (REAL-TIME) ============
 def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
     """
-    Generowanie przyrostowej aktywności (wywoływane przez QTimer w main).
+    Generowanie przyrostowej aktywności zwracającej listę zdarzeń dla UI (wywoływane przez QTimer w main).
     """
     cursor = conn.cursor()
     now = datetime.now()
     month = now.month
-    
+    logs = []
+
     cursor.execute("SELECT name, id FROM genres")
     genre_map = {name: gid for name, gid in cursor.fetchall()}
 
     active_users = [u for u in users_meta if u['status'] == 'active']
-    if not active_users: return
+    if not active_users: return []
 
     for _ in range(count):
         user = random.choice(active_users)
         
-        cursor.execute("SELECT id, current_page, total_pages FROM books WHERE user_id = ? AND status = 'reading'", (user['id'],))
+        # --- Pobieram username, jeśli nie ma to name ---
+        user_name = user.get('username') or user.get('name') or f"User {user['id']}"
+        
+        # Lista pomocnicza na logi z tej konkretnej iteracji dla jednego użytkownika
+        user_iteration_logs = []
+
+        # Sprawdza co użytkownik czyta
+        cursor.execute("SELECT id, title, current_page, total_pages FROM books WHERE user_id = ? AND status = 'reading'", (user['id'],))
         current_book = cursor.fetchone()
         
+        is_new_book = False
         if not current_book:
-            # Tworzenie nowej książki jeśli użytkownik nic nie czyta
-            bday = user['birth_date']
-            if isinstance(bday, str):
-                bday = datetime.strptime(bday, '%Y-%m-%d')
-
+            # --- SCENARIUSZ: NOWA KSIĄŻKA ---
+            is_new_book = True
+            bday = user.get('birth_date', '1990-01-01')
+            if isinstance(bday, str): bday = datetime.strptime(bday, '%Y-%m-%d')
+            
             age = (now.year - bday.year)
             cat = "junior" if age < 18 else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
             pref_list = AGE_BASED_GENRES.get(cat, GENRES)
             
             genre_name = random.choice(pref_list) if random.random() < 0.90 else random.choice(GENRES)
             genre_id = genre_map.get(genre_name, 1)
-            
-            title = f"The {random.choice(['Secret', 'Lost', 'Forgotten'])} {fake.word().capitalize()}"
+            title = f"The {random.choice(['Secret', 'Lost', 'Forgotten'])} {get_fake().word().capitalize()}"
             total_p = random.randint(150, 600)
             
             cursor.execute("""
                 INSERT INTO books (user_id, title, authors, genre_id, total_pages, current_page, status, added_by_generator)
                 VALUES (?, ?, ?, ?, ?, 0, 'reading', 1)
-            """, (user['id'], title, fake.name(), genre_id, total_p))
+            """, (user['id'], title, get_fake().name(), genre_id, total_p))
             
             book_id, curr_p, total_p = cursor.lastrowid, 0, total_p
+            
+            # Zapamiętuje log o starcie, ale jeszcze nie dodajem do głównej listy
+            user_iteration_logs.append(f"🆕 {user_name} started reading '{title}'")
         else:
-            book_id, curr_p, total_p = current_book
+            book_id, title, curr_p, total_p = current_book
 
-        # Parametry sesji
-        seasonal_factor = SEASONAL_IMPACT.get(month, 1.0)
-        is_weekend = now.weekday() >= 5
+        # --- SCENARIUSZ: SESJA CZYTANIA ---
         r_tier = user.get('r_tier', 'regular')
+        is_weekend = now.weekday() >= 5
         
         pages_read, duration = calculate_session_details(r_tier, is_weekend, total_p - curr_p)
-        pages_read = max(1, min(int(pages_read * seasonal_factor), total_p - curr_p))
-        duration = int(duration * seasonal_factor) 
+        pages_read = max(1, min(int(pages_read * SEASONAL_IMPACT.get(month, 1.0)), total_p - curr_p))
+        duration = int(duration * SEASONAL_IMPACT.get(month, 1.0)) 
 
         new_page = curr_p + pages_read
         is_done = new_page >= total_p
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-        # 1. Zapis sesji
         cursor.execute("""
             INSERT INTO activity (user_id, book_id, timestamp, pages_read, session_minutes)
             VALUES (?, ?, ?, ?, ?)
         """, (user['id'], book_id, timestamp, pages_read, duration))
 
-        # 2. Aktualizacja książki
         if is_done:
             rating = random.randint(3, 5)
             cursor.execute("""
                 UPDATE books SET current_page = ?, status = 'finished', finish_date = ?, rating = ? WHERE id = ?
             """, (total_p, timestamp, rating, book_id))
+            user_iteration_logs.append(f"🏆 {user_name} finished '{title}' ({rating}/5 ⭐)")
         else:
             cursor.execute("UPDATE books SET current_page = ? WHERE id = ?", (new_page, book_id))
+            user_iteration_logs.append(f"📖 {user_name} read {pages_read} pages of '{title}'")
+
+        # --- KOLEJNOŚĆ: Dodaje logi użytkownika do głównej listy ---
+        logs.extend(user_iteration_logs)
+
+        # Aktualizacja PPD użytkownika
+        update_user_ppd(cursor, user['id']) 
 
     conn.commit()
     update_genre_stats(conn)
+    return logs

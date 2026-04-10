@@ -1,5 +1,5 @@
 from PySide6.QtGui import QColor, Qt
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QEvent, Signal
 from PySide6.QtWidgets import QWidget, QTableWidgetItem, QFrame, QHeaderView, QPushButton, QLineEdit, QComboBox, QSpinBox
 
 from data.utils.status_manager import StatusMsg
@@ -20,10 +20,19 @@ class UsersView(QWidget):
         if not self.ui:
             print("Błąd ładowania UI!")
             return
+        
 
         # Usunięcie ramki z głównego kontenera
         if hasattr(self.ui, "setFrameShape"):
             self.ui.setFrameShape(QFrame.Shape.NoFrame)
+
+        # Rejestrujemy filtr dla głównego widgetu i kontenerów
+        self.installEventFilter(self)
+        self.ui.installEventFilter(self)
+        
+        # Jeśli w .ui masz ramkę o nazwie main_container, ona też musi filtrować:
+        if hasattr(self.ui, 'main_container'):
+             self.ui.main_container.installEventFilter(self)
         
         self.conn = conn
         self.repo = UserRepository(conn)
@@ -53,51 +62,65 @@ class UsersView(QWidget):
         }
         apply_tooltips(self.ui, tooltips)
 
-    def mousePressEvent(self, event):
-        """Obsługa kliknięcia poza interaktywne elementy w celu schowania detali."""
-        focused_widget = self.childAt(event.pos())
-        table = self.ui.table_users
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.MouseButtonPress:
+            # Pobieramy widget bezpośrednio pod myszką
+            child = self.childAt(event.pos())
+            
+            # 1. Sprawdzamy, czy kliknięcie trafiło w viewport tabeli (obszar z danymi)
+            # Jeśli tak - NIE resetujemy (bo chcemy zaznaczyć wiersz)
+            if child == self.ui.table_users.viewport():
+                return super().eventFilter(obj, event)
 
-        # Klasy widżetów, które nie powinny resetować widoku detali
-        interactive_types = (
-            table.viewport().__class__,
-            table.horizontalHeader().__class__,
-            table.verticalHeader().__class__,
-            QPushButton,
-            QLineEdit,
-            QComboBox,
-            QSpinBox
-        )
+            # 2. Sprawdzamy, czy kliknięty obiekt to interaktywny widget
+            # (przyciski, inputy, nagłówki tabeli)
+            interactive_widgets = (QPushButton, QLineEdit, QComboBox, QSpinBox, QHeaderView)
+            
+            # Jeśli kliknięto w coś, co nie jest interaktywne (np. tło, ramka, label informacyjny)
+            # lub kliknięto w "pustkę" (child is None)
+            if child is None or not isinstance(child, interactive_widgets):
+                # Dodatkowy check: czy to nie jest wnętrze nagłówka tabeli?
+                if child != self.ui.table_users.horizontalHeader().viewport():
+                    self.reset_details_selection()
 
-        # Resetowanie detali przy kliknięciu w tło (nie-interaktywne elementy)
-        if not isinstance(focused_widget, interactive_types):
-            table.clearSelection()
-            table.setCurrentItem(None)
-            self.ui.lbl_info.setText("💡 Click on a user to view details...")
-        
-        super().mousePressEvent(event)
+        return super().eventFilter(obj, event)
+
+    def reset_details_selection(self):
+        self.ui.table_users.clearSelection()
+        self.ui.lbl_info.setText("💡 Click on a user to view details...")
 
     def setup_table_ui(self):
-        """Konfiguracja wyglądu i zachowania tabeli."""
+        """
+        USTAWIENIA SZEROKOŚCI - TRYB FIXED WYMUSZA WARTOŚCI PIKSELOWE.
+        """
         table = self.ui.table_users
-        table.setFrameShape(QFrame.Shape.NoFrame)
-        table.setSelectionBehavior(QHeaderView.SelectionBehavior.SelectRows)
-        table.setAlternatingRowColors(True)
-        
         header = table.horizontalHeader()
-        for col in [0, 3, 5, 7]:
-            header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
-            
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Interactive)
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Interactive)
-        header.setSectionResizeMode(8, QHeaderView.ResizeMode.Interactive)
-        table.setColumnWidth(4, 120)
-        table.setColumnWidth(6, 130)
-        table.setColumnWidth(8, 100)
-
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         header.setStretchLastSection(False)
+
+        # Mapowanie trybów (0:ID, 1:Nick, 2:Email, 3:Books, 4:Genres, 5:PPD, 6:Act, 7:Stat, 8:Date)
+        # Nick i Email się rozciągają, reszta ma sztywne wymiary
+        modes = {
+            0: QHeaderView.ResizeMode.ResizeToContents,
+            1: QHeaderView.ResizeMode.Stretch,
+            2: QHeaderView.ResizeMode.Stretch,
+            3: QHeaderView.ResizeMode.Fixed,
+            4: QHeaderView.ResizeMode.Fixed,
+            5: QHeaderView.ResizeMode.Fixed,
+            6: QHeaderView.ResizeMode.Fixed,
+            7: QHeaderView.ResizeMode.Fixed,
+            8: QHeaderView.ResizeMode.Fixed
+        }
+
+        for col, mode in modes.items():
+            header.setSectionResizeMode(col, mode)
+
+        # TUTAJ USTALASZ SZEROKOŚCI W PIKSELACH
+        table.setColumnWidth(3, 70)   # Books
+        table.setColumnWidth(4, 180)  # Genres
+        table.setColumnWidth(5, 70)   # PPD
+        table.setColumnWidth(6, 150)  # Activity
+        table.setColumnWidth(7, 90)   # Status
+        table.setColumnWidth(8, 110)  # Date Joined
 
     def setup_connections(self):
         """Łączy zdarzenia interfejsu."""
@@ -152,6 +175,9 @@ class UsersView(QWidget):
         self.ui.input_search_user.clear()
         self.ui.cb_time.setCurrentIndex(0) 
         self.current_page = 1
+        
+        self.reset_details_selection() 
+        
         self.load_view()
 
     def load_view(self):
@@ -298,7 +324,7 @@ class UsersView(QWidget):
             system_avg = self.stats_repo.get_system_wide_ppd(current_filter)
 
             # Metryki wydajnościowe (Zależne od filtra)
-            user_ppd = float(self.ui.table_users.item(row, 5).text())
+            user_ppd = profile.get("ppd", 0.0) 
             diff = user_ppd - system_avg
             
             # Kolor i status dla Current Performance
@@ -325,7 +351,7 @@ class UsersView(QWidget):
 
             filter_label = f"({current_filter.upper()})" if current_filter.lower() != "all" else "(ALL TIME)"
 
-            # SZABLON HTML (Przywrócony w pełnej wersji)
+            # SZABLON HTML
             info_text = (
                 f"<div style='font-family: Segoe UI, sans-serif; padding: 10px; color: #2c3e50;'>"
                 f"  <div style='border-bottom: 2px solid #2c3e50; padding-bottom: 5px; margin-bottom: 15px;'>"

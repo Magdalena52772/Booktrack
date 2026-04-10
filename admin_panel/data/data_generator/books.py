@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-from data.config import GENRES, AGE_BASED_GENRES, RATING_SETTINGS, fake
+from data.config import GENRES, AGE_BASED_GENRES, RATING_SETTINGS, get_fake
 from data.utils.date_helpers import DateHelper
 
 # =================== GENEROWANIE KSIĄŻEK ===================
@@ -21,9 +21,11 @@ def generate_books(conn, users):
     genre_map = {name: gid for name, gid in cursor.fetchall()}
 
     for user in users:
+        bd_raw = user.get('birth_date', '1990-01-01')
+        reg_date_raw = user.get('date_joined', datetime.now().strftime("%Y-%m-%d"))
         # Konwersja dat na obiekty datetime dla poprawności obliczeń
-        bd = DateHelper.to_datetime(user['birth_date'])
-        reg_date = DateHelper.to_datetime(user.get('date_joined'))
+        bd = DateHelper.to_datetime(bd_raw)
+        reg_date = DateHelper.to_datetime(reg_date_raw)
 
         # Dopasowanie puli gatunków do wieku użytkownika (segmentacja demograficzna)
         age = DateHelper.calculate_age(bd)
@@ -35,7 +37,7 @@ def generate_books(conn, users):
         import_ratio = max(0.2, 1.0 - (days_on_platform / 900))
 
         # Określenie liczby pozycji w bibliotece na podstawie danych profilowych
-        total_finished = user['books_read']
+        total_finished = user.get('books_read', 2)
         currently_reading = random.randint(1, 2) if user['status'] == 'active' else 0
         
         for i in range(total_finished + currently_reading):
@@ -58,16 +60,25 @@ def generate_books(conn, users):
 
             # Rozróżnienie książek nowo dodanych od zaimportowanej historii
             is_old_import = False if status == 'reading' else (random.random() < import_ratio)
-            
+
             if is_old_import:
-                current_page, added_by_gen = total_pages, 0 # Historia: brak generowania sesji
+                # IMPORT: Książka została przeczytana "poza aplikacją"
+                status = 'finished'  # Dla pewności, importujemy tylko skończone jako stare
+                current_page = total_pages
+                added_by_gen = 0     # Generator aktywności to pominie -> PPD wyniesie 0.0
+                rating = rating      # Rating zostaje, bo użytkownik mógł ocenić książkę przy imporcie
             else:
-                current_page = total_pages if is_finished else random.randint(1, total_pages - 1)
-                added_by_gen = 1 # Aktywne pozycje: wymagają symulacji sesji czytania
+                # Książka czytana w trakcie symulacji
+                added_by_gen = 1     
+                if is_finished:
+                    current_page = total_pages
+                else:
+                    # Losujemy postęp dla książek w trakcie
+                    current_page = random.randint(1, total_pages - 1)
 
             # Generowanie danych tożsamościowych książki
             book_title = f"The {random.choice(title_words)} {random.choice(title_words)}"
-            author = f"{fake.first_name()} {fake.last_name()}"
+            author = f"{get_fake().first_name()} {get_fake().last_name()}"
             
             all_books_data.append((
                 user["id"], book_title, author, genre_id, 

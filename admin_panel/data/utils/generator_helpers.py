@@ -1,6 +1,7 @@
 import random
 import numpy as np
-from data.config import *
+from data.config import SIM_SETTINGS
+from data.config import ARCHETYPE_SETTINGS, get_fake
 
 # ==================== FUNKCJE POMOCNICZE =====================
 def calculate_session_details(arch_name, is_weekend, remaining_pages):
@@ -42,4 +43,4 @@ def generate_birth_date():
         age = random.randint(12, 17)
     
     # Zamiana wyliczonego wieku na obiekt daty przy użyciu Fakera
-    return fake.date_of_birth(minimum_age=age, maximum_age=age)
+    return get_fake().date_of_birth(minimum_age=age, maximum_age=age)

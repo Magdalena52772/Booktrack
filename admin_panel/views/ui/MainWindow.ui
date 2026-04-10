@@ -175,7 +175,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>../../assets/icons/monitoring.svg</normaloff>../../assets/icons/monitoring.svg</iconset>
+           <normaloff>assets/icons/monitoring.svg</normaloff>assets/icons/monitoring.svg</iconset>
          </property>
          <property name="class" stdset="0">
           <string>sidebarButton</string>
@@ -304,6 +304,7 @@
            </property>
           </layout>
          </widget>
+         <widget class="QWidget" name="page_live_feed"/>
          <widget class="QWidget" name="page_users">
           <layout class="QVBoxLayout" name="layout_users">
            <property name="spacing">
