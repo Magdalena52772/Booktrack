@@ -234,45 +234,6 @@ class UserRepository:
 
 
     def get_user_streak(self, user_id: int) -> int:
-        """Oblicza aktualny streak (dni z rzędu z aktywnością)."""
-        cursor = self.conn.cursor()
-        # Pobiera unikalne daty aktywności użytkownika, posortowane malejąco
-        query = """
-            SELECT DISTINCT date(timestamp) as activity_date 
-            FROM activity 
-            WHERE user_id = ? 
-            ORDER BY activity_date DESC
-            LIMIT 100
-        """
-        # LIMIT 100 sprawia, że baza nie analizuje tysięcy rekordów dla starych kont
-        rows = cursor.execute(query, (user_id,)).fetchall()
-        
-        if not rows:
-            return 0
-            
-        streak = 0
-        current_date = datetime.now().date()
-        
-        # Używa DateHelper zamiast strptime
-        last_act_dt = DateHelper.to_datetime(rows[0][0])
-        last_act = last_act_dt.date() if last_act_dt else current_date
-
-        # Jeśli ostatnia aktywność była dawniej niż wczoraj, streak pękł
-        if (current_date - last_act).days > 1:
-            return 0 
-        
-        # Obliczanie ciągłości: sprawdzanie czy kolejna data w rekordach 
-        # jest dokładnie o jeden dzień wcześniejsza od poprzedniej.  
-        expected_date = last_act
-        for row in rows:
-            act_dt = DateHelper.to_datetime(row[0])
-            act_date = act_dt.date() if act_dt else None
-            
-            if act_date == expected_date:
-                streak += 1
-                expected_date -= timedelta(days=1)
-            else:
-    def get_user_streak(self, user_id: int) -> int:
         """Pobiera gotowy, przeliczony streak z bazy danych (High Performance)."""
         cursor = self.conn.cursor()
         res = cursor.execute("SELECT current_streak FROM users WHERE id = ?", (user_id,)).fetchone()

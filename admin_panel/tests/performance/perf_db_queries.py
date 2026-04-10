@@ -10,7 +10,7 @@ root_path = None
 
 # iteracyjne przeszukiwanie katalogów nadrzednych w celu lokalizacji folderu data
 for parent in current_file.parents:
-    if (parent / "data" / "config.py").exists():
+    if (parent / "data" / "config" /"__init__.py").exists():
         root_path = parent
         break
 

@@ -12,7 +12,6 @@ import sys
 import os
 import random
 from datetime import datetime
-from.worker import DatabaseWorker
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer, Qt
