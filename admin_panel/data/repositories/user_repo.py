@@ -4,6 +4,7 @@ from typing import List
 from data.models.user import User
 from data.utils.time_periods import period_start
 from data.utils.helpers.date_helpers import DateHelper
+from data.services.user_performance_service import UserPerformanceService
 
 class UserRepository:
     def __init__(self, conn: sqlite3.Connection):
@@ -190,14 +191,15 @@ class UserRepository:
             streak = self.get_user_streak(user_id)
             # Potential PPD (ACTIVITY BASED): Suma stron / dni, w których faktycznie był wpis (Moc przerobowa)
             real_active_days = self.get_active_reading_days(user_id)
-            potential_ppd = (total_pages_sum or 0) / max(1, real_active_days)
+            potential_ppd = UserPerformanceService.get_potential_ppd(total_pages_sum or 0, real_active_days)
 
             # Obliczanie wieku przy użyciu Helpera
             age = DateHelper.calculate_age(birth_date_raw)
 
             # Obliczanie 'lenistwa' (Activity Ratio) - Ile dni czytał / ostatnie 30 dni
-            active_days_30 = self._get_active_days_in_range(user_id, 30)
-            consistency_score = (active_days_30 / 30.0) * 100
+            cursor_performance = self.conn.cursor()
+            active_days_30 = UserPerformanceService.get_active_days_in_range(cursor_performance, user_id, 30)
+            consistency_score = UserPerformanceService.calculate_consistency_score(active_days_30, 30)
 
             return {
                 "ext_id": ext_id,
@@ -213,16 +215,6 @@ class UserRepository:
             }
         finally:
             cursor.close()
-
-    def _get_active_days_in_range(self, user_id: int, days_limit: int) -> int:
-        """Pobiera liczbę unikalnych dni aktywności w danym przedziale (pomocnicze do consistency)."""
-        cursor = self.conn.cursor()
-        res = cursor.execute("""
-            SELECT COUNT(DISTINCT date(timestamp)) 
-            FROM activity 
-            WHERE user_id = ? AND timestamp >= date('now', ?)
-        """, (user_id, f"-{days_limit} days")).fetchone()
-        return res[0] if res else 0
 
     def get_active_reading_days(self, user_id: int) -> int:
         """Liczy ile unikalnych dni użytkownik faktycznie czytał (miał wpis w activity)."""
