@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime, timedelta
 from data.utils.time_periods import period_start
+from data.utils.time_filter_service import TimeFilterService
 
 class ActivityRepository:
     def __init__(self, conn: sqlite3.Connection):
@@ -11,21 +12,9 @@ class ActivityRepository:
         Pobieranie wskaźników KPI z uwzględnieniem uśrednionej aktywności dziennej.
         """
         cursor = self.conn.cursor()
-        params = []
-        date_clause = ""
-        f_type = time_filter.lower()
-        
-        # Określenie zakresu czasowego na podstawie wybranego filtra
-        if f_type != "all":
-            if f_type == "week":
-                start_dt = datetime.now() - timedelta(days=6)
-                date_clause = "WHERE timestamp >= ?"
-                params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
-            else:
-                dt = period_start(time_filter)
-                if dt:
-                    date_clause = "WHERE timestamp >= ?"
-                    params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+        # Centralizowana logika filtrowania czasowego
+        date_clause, params = TimeFilterService.build_time_filter(time_filter)
 
         # Obliczanie sumy stron
         cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {date_clause}", params)
@@ -106,20 +95,9 @@ class ActivityRepository:
     def get_unique_active_users(self, time_filter="all"):
         """Zwraca liczbę unikalnych użytkowników, którzy byli aktywni w danym okresie."""
         cursor = self.conn.cursor()
-        params = []
-        date_clause = ""
-        f_type = time_filter.lower()
 
-        if f_type != "all":
-            if f_type == "week":
-                start_dt = datetime.now() - timedelta(days=6)
-                date_clause = "WHERE timestamp >= ?"
-                params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
-            else:
-                dt = period_start(time_filter)
-                if dt:
-                    date_clause = "WHERE timestamp >= ?"
-                    params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
+        # Centralizowana logika filtrowania czasowego
+        date_clause, params = TimeFilterService.build_time_filter(time_filter)
 
         query = f"SELECT COUNT(DISTINCT user_id) FROM activity {date_clause}"
         cursor.execute(query, params)

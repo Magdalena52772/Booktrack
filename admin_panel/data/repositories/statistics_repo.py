@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from data.utils.time_periods import period_start
+from data.utils.time_filter_service import TimeFilterService
 
 class StatsRepository:
     """
@@ -15,13 +16,9 @@ class StatsRepository:
         Wykorzystuje grupowanie po identyfikatorze użytkownika i dacie dla analityki.
         """
         cursor = self.conn.cursor()
-        start_dt = period_start(period.lower())
-        
-        params = []
-        where_clause = ""
-        if start_dt:
-            where_clause = "WHERE timestamp >= ?"
-            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+        # Centralizowana logika filtrowania czasowego
+        where_clause, params = TimeFilterService.build_time_filter(period.lower())
 
         # Optymalizacja wydajnościowa poprzez wstępne filtrowanie danych w podzapytaniu
         query = f"""
