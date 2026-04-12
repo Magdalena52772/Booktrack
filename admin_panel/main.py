@@ -139,12 +139,19 @@ def main():
         """
         Cykliczna symulacja aktywności i odświeżanie statystyk globalnych.
         """
-        from data.services.maintenance_service import run_maintenance
-        
+        from data.services.maintenance_service import run_maintenance, update_all_user_streaks
+
         timer_cursor = conn.cursor()
         try:
+            # Codzienna aktualizacja streków o 19:00
+            current_time = datetime.now()
+            if current_time.hour == 19 and current_time.minute == 0:
+                update_all_user_streaks(timer_cursor)
+                conn.commit()
+                print(f"[STREAKS] {current_time.strftime('%H:%M:%S')} | Daily streak recalculation completed.")
+
             # Określenie intensywności ruchu (pory dnia)
-            hour = datetime.now().hour
+            hour = current_time.hour
             if 18 <= hour <= 23: base_activity = random.randint(10, 25)
             elif 0 <= hour <= 6: base_activity = random.randint(1, 5)
             else: base_activity = random.randint(5, 12)
