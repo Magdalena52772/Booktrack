@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from data.utils.time_periods import period_start
-from data.utils.time_filter_service import TimeFilterService
+from data.services.time_filter_service import TimeFilterService
 
 class StatsRepository:
     """

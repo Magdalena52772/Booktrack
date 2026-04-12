@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from data.config import GENRES, GENRE_WEIGHTS, ARCHETYPE_SETTINGS, SIX_MONTHS_INACTIVITY, DJANGO_HASHED_PWD
 from data.config.generator import INACTIVE_PROBABILITY
 from data.config.seed import get_fake
-from data.utils.generator_helpers import generate_birth_date, get_genre_map
-from data.utils.user_service import get_archetype_name, get_user_identity
+from data.utils.helpers.generator_helpers import generate_birth_date, get_genre_map
+from data.services.user_service import get_archetype_name, get_user_identity
 
 # =============== GENEROWANIE UŻYTKOWNIKÓW ===================
 

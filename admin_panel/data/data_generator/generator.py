@@ -8,7 +8,7 @@ from data.data_generator.books import generate_books
 from data.data_generator.activity import generate_activity
 from data.data_generator.challenges import generate_challenges
 
-from data.utils.user_service import finalize_database_consistency
+from data.services.user_service import finalize_database_consistency
 
 def run_data_generation():
     """

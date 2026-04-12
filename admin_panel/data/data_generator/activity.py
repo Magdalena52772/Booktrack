@@ -1,9 +1,9 @@
 import random
 from datetime import datetime, timedelta
 from data.config import get_fake, ARCHETYPE_SETTINGS, SEASONAL_IMPACT, SIM_SETTINGS, AGE_BASED_GENRES, GENRES
-from data.utils.generator_helpers import calculate_session_details, get_genre_map
-from data.utils.maintenance_service import update_genre_stats
-from data.utils.user_service import update_user_ppd
+from data.utils.helpers.generator_helpers import calculate_session_details, get_genre_map
+from data.services.maintenance_service import update_genre_stats
+from data.services.user_service import update_user_ppd
 
 
 # =================== GENEROWANIE AKTYWNOŚCI ===================

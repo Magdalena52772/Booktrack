@@ -56,8 +56,8 @@ def main():
         Zarządzanie procesem inicjalizacji danych i przeliczania statystyk.
         Wykorzystanie lazy loadingu dla modułów analitycznych.
         """
-        from data.utils.user_service import finalize_database_consistency
-        from data.utils.maintenance_service import run_maintenance
+        from data.services.user_service import finalize_database_consistency
+        from data.services.maintenance_service import run_maintenance
         
         # Sprawdzenie integralności bazy i ewentualna inicjalizacja danych
         cursor = conn.cursor()
@@ -139,7 +139,7 @@ def main():
         """
         Cykliczna symulacja aktywności i odświeżanie statystyk globalnych.
         """
-        from data.utils.maintenance_service import run_maintenance
+        from data.services.maintenance_service import run_maintenance
         
         timer_cursor = conn.cursor()
         try:
