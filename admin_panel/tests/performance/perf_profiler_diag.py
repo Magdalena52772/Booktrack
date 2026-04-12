@@ -6,7 +6,7 @@ import pstats
 from PySide6.QtWidgets import QApplication
 
 # Ścieżka projektu
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 # Importuje poszczególne części zamiast całego main()
 from data.database import get_connection, initialize_database
@@ -29,7 +29,7 @@ def diagnoza_bez_blokady():
     print("[DIAG] Odpalam ciężką logikę... Zaraz zobaczysz biały ekran. Czekaj.")
     
     
-    from data.utils.maintenance_service import update_genre_stats
+    from data.services.maintenance_service import update_genre_stats
     
     # Testuje konkretne podejrzane funkcje przez 5 sekund
     start = time.perf_counter()

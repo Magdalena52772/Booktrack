@@ -8,8 +8,8 @@ ACTIVITY_COUNT = 500    # Liczba dodatkowych rekordów aktywności
 # ============== DEMOGRAFIA I TRENDY ==============
 # Gatunki literackie i ich "waga"
 GENRES = [
-    "Fantasy", "Sci-Fi", "Romans", "Thriller", "Powieść historyczna",
-    "Kryminał", "Biografia", "Young Adult", "Dramat", "Fikcja", "Literatura dziecięca"
+    "Fantasy", "Sci-Fi", "Romance", "Thriller", "Historical fiction",
+    "Crime", "Biography", "Young Adult", "Drama", "Fiction", "Childrens literature"
 ]
 
 # Wagi popularności gatunków (oznaczane jako ulubione)
@@ -24,10 +24,10 @@ AGE_DISTRIBUTION = {
 
 # Przypisanie gatunków do grup wiekowych
 AGE_BASED_GENRES = {
-    "junior": ["Literatura dziecięca", "Fantasy", "Young Adult"],
-    "young_adult": ["Young Adult", "Romans", "Dramat", "Fantasy", "Sci-Fi"],
-    "adult": ["Kryminał", "Thriller", "Fikcja", "Biografia", "Powieść historyczna"],
-    "senior": ["Powieść historyczna", "Biografia", "Kryminał", "Dramat"]
+    "junior": ["Childrens literature", "Fantasy", "Young Adult"],
+    "young_adult": ["Young Adult", "Romance", "Drama", "Fantasy", "Sci-Fi"],
+    "adult": ["Crime", "Thriller", "Fiction", "Biography", "Historical fiction"],
+    "senior": ["Historical fiction", "Biography", "Crime", "Drama"]
 }
 
 # ============== AKTYWNOŚĆ ==============

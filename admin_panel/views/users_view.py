@@ -5,7 +5,9 @@ from PySide6.QtWidgets import QWidget, QTableWidgetItem, QFrame, QHeaderView, QP
 from data.utils.status_manager import StatusMsg
 from data.repositories.statistics_repo import StatsRepository
 from data.repositories.user_repo import UserRepository
-from data.utils.ui_helpers import load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
+from data.utils.formatters.user_profile_formatter import UserProfileFormatter
+from data.services.user_performance_service import UserPerformanceService
 
 class UsersView(QWidget):
     # Sygnał do przesyłania wiadomości do paska statusu w oknie głównym
@@ -50,7 +52,7 @@ class UsersView(QWidget):
     def setup_tooltips(self):
         """Konfiguracja opisów pomocniczych dla panelu zarządzania użytkownikami."""
         tooltips = {
-            "input_search_user": "Search users by nickname, email, or full name.",
+            "input_search_user": "Search users by nickname, email, full name, ID, or status.",
             "cb_time": "Filter user statistics (Pages/Day, Last Activity) by selected period.",
             "btn_reset": "Clear all search filters and return to default view.",
             "table_users": "Click a row to see detailed reading profile and engagement metrics.",
@@ -115,22 +117,22 @@ class UsersView(QWidget):
             header.setSectionResizeMode(col, mode)
 
         # TUTAJ USTALASZ SZEROKOŚCI W PIKSELACH
-        table.setColumnWidth(3, 70)   # Books
-        table.setColumnWidth(4, 180)  # Genres
-        table.setColumnWidth(5, 70)   # PPD
-        table.setColumnWidth(6, 150)  # Activity
-        table.setColumnWidth(7, 90)   # Status
-        table.setColumnWidth(8, 110)  # Date Joined
+        table.setColumnWidth(3, 90)    # Books Read
+        table.setColumnWidth(4, 180)   # Genres
+        table.setColumnWidth(5, 100)   # Pages/Day
+        table.setColumnWidth(6, 150)   # Activity
+        table.setColumnWidth(7, 90)    # Status
+        table.setColumnWidth(8, 110)   # Date Joined
 
     def setup_connections(self):
         """Łączy zdarzenia interfejsu."""
         self.ui.cb_time.currentTextChanged.connect(self.reset_pagination_and_load)
         self.ui.input_search_user.textChanged.connect(self.reset_pagination_and_load)
         self.ui.btn_reset.clicked.connect(self.reset_filters)
-        
+
         # Obsługa kliknięcia w komórkę tabeli
         self.ui.table_users.cellClicked.connect(self.display_user_details)
-        
+
         # Obsługa paginacji
         self.ui.btn_first.clicked.connect(self.first_page)
         self.ui.btn_prev.clicked.connect(self.prev_page)
@@ -138,6 +140,7 @@ class UsersView(QWidget):
         self.ui.btn_last.clicked.connect(self.last_page)
         self.ui.spin_page.valueChanged.connect(self.go_to_page)
 
+    # --- METODY PAGINACJI ---
 
     # --- METODY PAGINACJI ---
     def reset_pagination_and_load(self):
@@ -317,87 +320,17 @@ class UsersView(QWidget):
 
             # Pobranie przetworzonych danych profilowych z repozytorium
             profile = self.repo.get_detailed_user_profile(user_id)
-            if not profile: 
+            if not profile:
                 return
-            
-            # Pobranie średniej systemowej
-            system_avg = self.stats_repo.get_system_wide_ppd(current_filter)
 
-            # Metryki wydajnościowe (Zależne od filtra)
-            user_ppd = profile.get("ppd", 0.0) 
-            diff = user_ppd - system_avg
-            
-            # Kolor i status dla Current Performance
-            if diff > 1.0:
-                perf_status = "<b style='color: #27ae60;'>▲ ABOVE AVG</b>"
-                ppd_color = "#27ae60"
-            elif diff < -1.0:
-                perf_status = "<b style='color: #e67e22;'>▼ BELOW AVG</b>"
-                ppd_color = "#e67e22"
-            else:
-                perf_status = "<b style='color: #3498db;'>≈ ON PAR</b>"
-                ppd_color = "#3498db"
+            # Pobranie średniej systemowej (zawsze ostatnie 30 dni - SSOT benchmark)
+            system_avg = self.stats_repo.get_system_wide_ppd("month")
 
-            # Inne metryki (Niezależne od filtra)
-            reading_potential = profile["active_ppd"]
-            progress = profile['avg_progress']
-            total_pages = profile['total_pages']
-            reading_str = ", ".join(profile["reading_now"]) if profile["reading_now"] else "None"
-            
-            # Formatowanie wskaźnika streak
-            streak = profile["streak"]
-            streak_text = f"🔥 {streak} DAYS" if streak > 0 else "❄️ NO STREAK"
-            streak_color = "#e67e22" if streak > 0 else "#95a5a6"
+            # Metryki wydajnościowe użytkownika (zależą od wybranego filtra)
+            user_ppd = UserPerformanceService.calculate_systematic_ppd(user_id, self.conn, current_filter)
 
-            filter_label = f"({current_filter.upper()})" if current_filter.lower() != "all" else "(ALL TIME)"
-
-            # SZABLON HTML
-            info_text = (
-                f"<div style='font-family: Segoe UI, sans-serif; padding: 10px; color: #2c3e50;'>"
-                f"  <div style='border-bottom: 2px solid #2c3e50; padding-bottom: 5px; margin-bottom: 15px;'>"
-                f"      <table width='100%'><tr>"
-                f"          <td>"
-                f"              <span style='font-size: 18px;'><b>{full_name.upper()}</b></span> "
-                f"              <span style='color: #7f8c8d; font-size: 13px; margin-left: 5px;'>(@{username})</span>"
-                f"          </td>"
-                f"          <td align='right' style='font-size: 13px; color: #7f8c8d;'>"
-                f"              <b>EXT-ID: {profile['ext_id']}</b> &nbsp;|&nbsp; "
-                f"              <b style='color: {streak_color};'>{streak_text}</b>"
-                f"          </td>"
-                f"      </tr></table>"
-                f"  </div>"
-                f"  <table width='100%' style='margin-bottom: 20px;' cellpadding='0' cellspacing='0'><tr>"
-                f"      <td width='30%' style='vertical-align: top; border-right: 1px dotted #dcdfe3; padding-right: 15px;'>"
-                f"          <div style='color: #7f8c8d; font-size: 10px; margin-bottom: 5px;'>ACCOUNT INFO</div>"
-                f"          <div style='font-size: 12px; line-height: 1.6;'>"
-                f"              👤 <b>AGE:</b> {profile['age']}<br>"
-                f"              📅 <b>JOINED:</b> {profile['date_joined'][:10]}<br>"
-                f"              🕒 <b>LAST ACTIVITY:</b> {profile['last_activity'][:16] if profile['last_activity'] else 'Never'}"
-                f"          </div>"
-                f"      </td>"
-                f"      <td width='35%' style='vertical-align: top; border-right: 1px dotted #dcdfe3; padding-left: 15px; padding-right: 15px;' align='center'>"
-                f"          <div style='color: #7f8c8d; font-size: 11px; margin-bottom: 5px;'>CURRENT PERFORMANCE {filter_label}</div>"
-                f"          <div style='font-size: 28px; color: {ppd_color};'><b>{user_ppd:.1f}</b> <small style='font-size: 14px;'>PPD</small></div>"
-                f"          <div style='font-size: 12px; margin-top: 4px;'>{perf_status} <span style='color: #95a5a6;'>(AVG: {system_avg:.1f})</span></div>"
-                f"      </td>"
-                f"      <td width='35%' style='vertical-align: top; padding-left: 15px;' align='center'>"
-                f"          <div style='color: #7f8c8d; font-size: 11px; margin-bottom: 5px;'>CHALLENGE PROGRESS & POTENTIAL</div>"
-                f"          <div style='font-size: 28px; color: #3498db;'><b>{progress}%</b></div>"
-                f"          <div style='font-size: 12px; margin-top: 4px; color: #2c3e50;'>"
-                f"              <b>Potential:</b> {reading_potential:.1f} active ppd<br>"
-                f"              <b>Total Pages Read:</b> {total_pages}"
-                f"          </div>"
-                f"      </td>"
-                f"  </tr></table>"
-                f"  <div style='background-color: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #e9ecef;'>"
-                f"      <div style='font-size: 12px; color: #2c3e50; margin-bottom: 8px;'>📚 <b>CURRENTLY READING:</b> <span style='color: #27ae60; font-weight: bold;'>{reading_str.upper()}</span></div>"
-                f"      <div style='border-top: 1px solid #dee2e6; padding-top: 6px; color: #7f8c8d; font-size: 10px; line-height: 1.4;'>"
-                f"          <b>Reading Potential:</b> The average pages per day calculated ONLY from days with logged activity.<br>"
-                f"          <b>Performance {filter_label}:</b> Rolling average pages per day in the selected period."
-                f"      </div>"
-                f"  </div>"
-                f"</div>"
-            )
+            # Formatowanie profilu HTML
+            info_text = UserProfileFormatter.format_profile(profile, user_ppd, system_avg, current_filter)
             
             self.ui.lbl_info.setText(info_text)
             self.statusMessage.emit(*StatusMsg.get("USER_DETAILS", full_name))

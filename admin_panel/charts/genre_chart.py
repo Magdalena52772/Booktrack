@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
-from data.utils.chart_helpers import ChartTooltipHelper, ChartStyler
+from data.utils.helpers.chart_formatters import ChartTooltipHelper, ChartStyler
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class GenreChart(FigureCanvas):

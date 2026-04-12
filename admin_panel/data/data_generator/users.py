@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 from data.config import GENRES, GENRE_WEIGHTS, ARCHETYPE_SETTINGS, SIX_MONTHS_INACTIVITY, DJANGO_HASHED_PWD
 from data.config.generator import INACTIVE_PROBABILITY
 from data.config.seed import get_fake
-from data.utils.generator_helpers import generate_birth_date
-from data.utils.user_service import get_archetype_name, get_user_identity
+from data.services.generator_service import GeneratorService
+from data.repositories.genre_repo import GenresRepository
+from data.services.user_service import get_archetype_name, get_user_identity
 
 # =============== GENEROWANIE UŻYTKOWNIKÓW ===================
 
@@ -18,9 +19,8 @@ def generate_users(conn, count=1000):
         cursor.execute("INSERT OR IGNORE INTO genres (name) VALUES (?)", (g,))
     conn.commit()
 
-    # Mapowanie nazw gatunków na ich identyfikatory bazodanowe
-    cursor.execute("SELECT name, id FROM genres")
-    genre_map = {name: gid for name, gid in cursor.fetchall()}
+    # Mapowanie nazw gatunków na ich identyfikatory (DRY - z repozytorium)
+    genre_map = GenresRepository.get_genre_map(cursor)
 
     # Przygotowanie losowego rozkładu statusów aktywności
     num_inactive = int(count * INACTIVE_PROBABILITY)
@@ -98,7 +98,7 @@ def generate_users(conn, count=1000):
             books_read = max(1, int(account_years * random.randint(*arch_cfg["annual_limit"])))
             pages_per_day = 0.0
 
-        birth_date_obj = generate_birth_date()
+        birth_date_obj = GeneratorService.generate_birth_date()
         
         # Przygotowanie danych do masowego zapisu (bulk insert)
         db_tuple = (
@@ -194,10 +194,10 @@ def generate_realtime_user(conn):
             password, is_active, is_staff, is_superuser, current_streak
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        identity["nickname"], identity["email"], identity["full_name"], 
-        register_date.strftime("%Y-%m-%d %H:%M:%S"), "active", 
-        generate_birth_date().strftime("%Y-%m-%d"), external_id, 
-        now.strftime("%Y-%m-%d %H:%M:%S"), pages_per_day, books_read_count, 
+        identity["nickname"], identity["email"], identity["full_name"],
+        register_date.strftime("%Y-%m-%d %H:%M:%S"), "active",
+        GeneratorService.generate_birth_date().strftime("%Y-%m-%d"), external_id,
+        now.strftime("%Y-%m-%d %H:%M:%S"), pages_per_day, books_read_count,
         DJANGO_HASHED_PWD, 1, 0, 0, 0
     ))
     
@@ -205,8 +205,7 @@ def generate_realtime_user(conn):
 
     # Przypisanie preferencji gatunkowych
     selected_genres = set(random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1, 3)))
-    cursor.execute("SELECT name, id FROM genres")
-    genre_map = {name: gid for name, gid in cursor.fetchall()}
+    genre_map = GenresRepository.get_genre_map(cursor)
 
     for g_name in selected_genres:
         if g_id := genre_map.get(g_name):

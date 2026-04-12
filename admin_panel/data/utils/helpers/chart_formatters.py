@@ -4,7 +4,7 @@ import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 
 class ChartTooltipHelper:
-    """Zbiór metod do interakcji i obsługi zdarzeń na wykresach."""
+    """Zbiór metod do interakcji i obsługi zdarzeń na wykresach"""
 
     @staticmethod
     def setup_hover(canvas, func_get_message):
@@ -49,16 +49,16 @@ class ChartStyler:
         w zależności od wybranego zakresu czasu (tydzień, miesiąc, rok, all).
         """
         ax.tick_params(axis='x', rotation=30, labelsize=8)
-        
+
         if time_filter == "week":
-            # Pokazujemy skrót dnia i numer (np. "Mon 01")
+            # Pokazuje skrót dnia i numer (np. "Mon 01") - 7 dni
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%a %d'))
             ax.xaxis.set_major_locator(mdates.DayLocator())
         elif time_filter == "month":
-            # Pokazuje dzień i miesiąc
+            # Pokazuje dzień i miesiąc - 30 dni, pokazuje ~15 etykiet
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
-            ax.xaxis.set_major_locator(ticker.MaxNLocator(8))
+            ax.xaxis.set_major_locator(ticker.MaxNLocator(15))
         else:
-            # Pokazuje skrót miesiąca i rok
+            # "year" i "all" - miesiące/tygodnie, pokazuje ~12 etykiet
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))
-            ax.xaxis.set_major_locator(ticker.MaxNLocator(6))
+            ax.xaxis.set_major_locator(ticker.MaxNLocator(12))

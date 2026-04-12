@@ -1,6 +1,6 @@
 import random
 from data.config import ARCHETYPE_SETTINGS
-from data.utils.maintenance_service import run_maintenance
+from data.services.maintenance_service import run_maintenance
 
 def slugify(text):
     """Zamienia polskie znaki na łacińskie dla maili i loginów."""
