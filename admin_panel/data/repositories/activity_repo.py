@@ -12,14 +12,15 @@ class ActivityRepository:
         cursor = self.conn.cursor()
 
         # Centralizowana logika filtrowania czasowego
-        date_clause, params = TimeFilterService.build_time_filter(time_filter)
+        condition, params = TimeFilterService.build_time_filter(time_filter)
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
 
         # Obliczanie sumy stron
-        cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {date_clause}", params)
+        cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {where_clause}", params)
         total_pages = cursor.fetchone()[0]
 
         # Wyznaczanie liczby unikalnych dni
-        cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {date_clause}", params)
+        cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {where_clause}", params)
         active_days = cursor.fetchone()[0] or 0
 
         # Wyliczanie średniej dziennej na użytkownika
@@ -28,7 +29,7 @@ class ActivityRepository:
             FROM (
                 SELECT SUM(pages_read) as daily_total
                 FROM activity
-                {date_clause}
+                {where_clause}
                 GROUP BY user_id, SUBSTR(timestamp, 1, 10)
             )
         """
@@ -79,9 +80,11 @@ class ActivityRepository:
             """
             cursor.execute(query)
         else:
+            # "all" - ostatnie 24 miesiące dla lepszej wizualizacji (24 punkty)
             query = """
                 SELECT STRFTIME('%Y-%m', timestamp) as period, SUM(pages_read)
                 FROM activity
+                WHERE timestamp > date('now', '-24 months')
                 GROUP BY period
                 ORDER BY period ASC
             """
@@ -95,9 +98,10 @@ class ActivityRepository:
         cursor = self.conn.cursor()
 
         # Centralizowana logika filtrowania czasowego
-        date_clause, params = TimeFilterService.build_time_filter(time_filter)
+        condition, params = TimeFilterService.build_time_filter(time_filter)
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
 
-        query = f"SELECT COUNT(DISTINCT user_id) FROM activity {date_clause}"
+        query = f"SELECT COUNT(DISTINCT user_id) FROM activity {where_clause}"
         cursor.execute(query, params)
         res = cursor.fetchone()
         return res[0] if res else 0

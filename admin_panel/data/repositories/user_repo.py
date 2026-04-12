@@ -184,17 +184,25 @@ class UserRepository:
             
             # Statystyki aktywności
             streak = self.get_user_streak(user_id)
-            # Potential PPD (ACTIVITY BASED): Suma stron / dni, w których faktycznie był wpis (Moc przerobowa)
+            # Potential PPD (ACTIVITY BASED): Suma stron / dni, w których faktycznie był wpis
             real_active_days = self.get_active_reading_days(user_id)
             potential_ppd = UserPerformanceService.get_potential_ppd(total_pages_sum or 0, real_active_days)
 
             # Obliczanie wieku przy użyciu Helpera
             age = DateHelper.calculate_age(birth_date_raw)
 
-            # Obliczanie 'lenistwa' (Activity Ratio) - Ile dni czytał / ostatnie 30 dni
+            # Obliczanie 'regularności' (Activity Ratio) - Ile dni czytał / ostatnie 30 dni
             cursor_performance = self.conn.cursor()
-            active_days_30 = UserPerformanceService.get_active_days_in_range(cursor_performance, user_id, 30)
-            consistency_score = UserPerformanceService.calculate_consistency_score(active_days_30, 30)
+
+            # Nowe konto (registered today) - automatycznie 1/30
+            reg_date_dt = DateHelper.to_datetime(reg_date_raw)
+            reg_date = reg_date_dt.date() if reg_date_dt else datetime.now().date()
+
+            if reg_date == datetime.now().date():
+                consistency_score = (1.0 / 30) * 100  # 3.33%
+            else:
+                active_days_30 = UserPerformanceService.get_active_days_in_range(cursor_performance, user_id, 30)
+                consistency_score = UserPerformanceService.calculate_consistency_score(active_days_30, 30)
 
             return {
                 "ext_id": ext_id,
