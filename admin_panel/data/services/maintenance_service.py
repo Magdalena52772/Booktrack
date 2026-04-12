@@ -13,6 +13,7 @@ Wywoływane cyklicznie przez timer aplikacji (w main.py).
 from datetime import datetime, timedelta
 from data.utils.helpers.date_helpers import DateHelper
 from data.config import USER_COUNT
+from data.repositories.statistics_repo import StatsRepository
 
 # =============== AKTUALIZACJA STATYSTYK GATUNKÓW ===================
 def update_genre_stats(conn):
@@ -175,12 +176,12 @@ def run_maintenance(conn):
         # Streaki
         update_all_user_streaks(cursor)
 
-        # Globalne KPI
-        cursor.execute("SELECT AVG(pages_per_day) FROM users WHERE pages_per_day > 0")
-        global_avg = cursor.fetchone()[0] or 0
-        
+        # Globalne KPI - SSOT: zawsze z ostatnich 30 dni (ta sama logika co dashboard i details)
+        stats_repo = StatsRepository(conn)
+        global_avg = stats_repo.get_system_wide_ppd("month")
+
         conn.commit()
-        print(f"✅ Maintenance complete. Global Avg PPD: {global_avg:.2f}")
+        print(f"✅ Maintenance complete. Global Avg PPD (last 30 days): {global_avg:.2f}")
         return global_avg
     except Exception as e:
         conn.rollback()

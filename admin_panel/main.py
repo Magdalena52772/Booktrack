@@ -169,7 +169,16 @@ def main():
             if active_list and current_books:
                 # Symuluje przyrostową aktywność i odświeża statystyki
                 new_logs = simulate_incremental_activity(conn, active_list, current_books, count=base_activity)
-                
+
+                # Przelicza całą bazę po nowych logach
+                run_maintenance(conn)
+                conn.commit()
+
+                # Log z dodanymi aktywnościami
+                print(f"[LIVE] {datetime.now().strftime('%H:%M:%S')} | Added {len(new_logs)} activities:")
+                for log in new_logs:
+                    print(f"       {log}")
+
                 # Aktualizacja widoku LiveFeed, jeśli jest otwarty
                 if hasattr(window, 'view_config'):
                     for cfg in window.view_config.values():
@@ -178,10 +187,6 @@ def main():
                                 cfg["instance"].add_log_entry(log)
                             break
 
-                # Przelicza całą bazę po nowych logach
-                run_maintenance(conn) 
-                conn.commit()
-                print(f"[LIVE] {datetime.now().strftime('%H:%M:%S')} | Synchronizacja zakończona.")
 
             # Automatyczne odświeżanie widoku, jeśli użytkownik nic nie klika
             if hasattr(window, 'ui'):
@@ -207,7 +212,7 @@ def main():
 
     activity_timer = QTimer()
     activity_timer.timeout.connect(run_timer_update)
-    activity_timer.start(1500000) 
+    activity_timer.start(60000)  # 1 minute 
 
     exit_code = app.exec() 
     conn.close()

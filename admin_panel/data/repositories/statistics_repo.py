@@ -18,7 +18,8 @@ class StatsRepository:
         cursor = self.conn.cursor()
 
         # Centralizowana logika filtrowania czasowego
-        where_clause, params = TimeFilterService.build_time_filter(period.lower())
+        condition, params = TimeFilterService.build_time_filter(period.lower())
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
 
         # Optymalizacja wydajnościowa poprzez wstępne filtrowanie danych w podzapytaniu
         query = f"""
