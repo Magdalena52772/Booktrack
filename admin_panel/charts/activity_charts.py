@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from data.utils.chart_helpers import ChartTooltipHelper, ChartStyler
+from data.utils.helpers.chart_formatters import ChartTooltipHelper, ChartStyler
 
 class ActivityChart(FigureCanvas):
     """Wykres liniowy prezentujący trend aktywności użytkowników"""

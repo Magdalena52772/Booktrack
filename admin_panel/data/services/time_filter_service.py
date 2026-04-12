@@ -10,9 +10,12 @@ class TimeFilterService:
     @staticmethod
     def build_time_filter(time_filter: str = "all") -> tuple[str, list]:
         """
-        Buduje klauzulę WHERE i parametry dla zapytań SQL na podstawie filtra czasowego
+        Buduje warunek WHERE (bez "WHERE" keyword) dla filtra czasowego.
+        Zwraca: (condition_clause, params)
+        - Jeśli no filter: ("", [])
+        - Jeśli filter: ("AND timestamp >= ?", ["2026-03-13..."])
         """
-        date_clause = ""
+        condition = ""
         params = []
         f_type = time_filter.lower()
 
@@ -20,13 +23,13 @@ class TimeFilterService:
             if f_type == "week":
                 # Tydzień = ostatnie 6 dni + dzisiaj = 7 dni razem
                 start_dt = datetime.now() - timedelta(days=6)
-                date_clause = "WHERE timestamp >= ?"
+                condition = "AND timestamp >= ?"
                 params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
             else:
                 # Użycie time_periods utility dla month/year
                 dt = period_start(f_type)
                 if dt:
-                    date_clause = "WHERE timestamp >= ?"
+                    condition = "AND timestamp >= ?"
                     params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
 
-        return date_clause, params
+        return condition, params

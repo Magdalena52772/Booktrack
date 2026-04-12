@@ -39,45 +39,38 @@ class UserRepository:
         where_clauses = []
         params = []
 
+        # Filtry czasu dla subqueries
+        act_time_filter = "AND timestamp >= ?" if since_str else ""
+        if since_str:
+            params.insert(0, since_str)  # Parametr na początek listy
+
         # Dodawanie warunków wyszukiwania
         if search_term:
             where_clauses.append("(u.username LIKE ? OR u.email LIKE ? OR u.name LIKE ? OR u.status LIKE ? OR u.id LIKE ?)")
             term = f"%{search_term}%"
             params.extend([term, term, term, term, term])
 
-        # Filtry czasu dla JOINów
-        book_time_filter = "AND b.finish_date >= ?" if since_str else ""
-        act_time_filter = "AND a.timestamp >= ?" if since_str else ""
-        
-        join_params = []
-        if since_str:
-            join_params.append(since_str) # dla books
-            join_params.append(since_str) # dla activity
-
         # Składanie głównego WHERE
-        where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
 
         # Główne zapytanie (JOIN -> WHERE -> GROUP -> ORDER -> LIMIT)
         allowed_cols = {"id": "u.id", "name": "u.name", "register_date": "u.date_joined"}
         sort_column = allowed_cols.get(sort_by, "u.id")
 
         query = f"""
-            SELECT 
-                u.id, u.username, u.name, u.email, u.status, u.last_activity, 
+            SELECT
+                u.id, u.username, u.name, u.email, u.status, u.last_activity,
                 u.date_joined, u.birth_date, u.r_tier,
-                COUNT(DISTINCT b.id) AS books_count,
-                COALESCE(SUM(a.pages_read), 0) AS total_pages
+                (SELECT COUNT(*) FROM books WHERE user_id = u.id AND status = 'finished') AS books_count,
+                COALESCE((SELECT SUM(pages_read) FROM activity WHERE user_id = u.id {act_time_filter}), 0) AS total_pages
             FROM users u
-            LEFT JOIN books b ON u.id = b.user_id AND b.status = 'finished' {book_time_filter}
-            LEFT JOIN activity a ON u.id = a.user_id {act_time_filter}
             {where_sql}
-            GROUP BY u.id
             ORDER BY {sort_column} {order}
             LIMIT ? OFFSET ?
         """
 
-        # Łączenie parametrów: [filtry czasowe joinów] + [filtry wyszukiwania] + [limit, offset]
-        final_params = join_params + params + [limit, offset]
+        # Łączenie parametrów: [time filter] + [search filters] + [limit, offset]
+        final_params = params + [limit, offset]
         users_data = cursor.execute(query, final_params).fetchall()
         user_ids = [u['id'] for u in users_data]
 
@@ -116,7 +109,8 @@ class UserRepository:
 
             # Obliczanie Systematic PPD (TIME BASED)
             total_p = u['total_pages'] if u['total_pages'] is not None else 0
-            db_ppd = u['pages_per_day'] if u['pages_per_day'] is not None else 0.0
+            calculated_ppd = total_p / final_divisor if final_divisor > 0 else 0.0
+            db_ppd = round(calculated_ppd, 1)
 
             users.append(User(
                 id=u['id'],
@@ -170,8 +164,9 @@ class UserRepository:
 
             # Pobieranie danych bazowych
             cursor.execute("""
-                SELECT 
+                SELECT
                     u.external_id, u.birth_date, u.last_activity, u.date_joined,
+                    u.name, u.username,
                     (SELECT SUM(pages_read) FROM activity WHERE user_id = u.id) as total_pages,
                     AVG(CAST(c.current_value AS FLOAT) / c.target_value * 100) as avg_progress
                 FROM users u
@@ -184,7 +179,7 @@ class UserRepository:
                 return None
 
             # Rozpakowanie danych
-            ext_id, birth_date_raw, last_act_raw, reg_date_raw, total_pages_sum, avg_progress = u_data
+            ext_id, birth_date_raw, last_act_raw, reg_date_raw, name, username, total_pages_sum, avg_progress = u_data
             total_pages_sum = total_pages_sum or 0
             
             # Statystyki aktywności
@@ -203,6 +198,8 @@ class UserRepository:
 
             return {
                 "ext_id": ext_id,
+                "name": name,
+                "username": username,
                 "reading_now": reading_now,
                 "total_pages": total_pages_sum,
                 "avg_progress": int(avg_progress) if avg_progress else 0,
