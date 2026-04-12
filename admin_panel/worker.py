@@ -1,5 +1,5 @@
 from PySide6.QtCore import QThread, Signal
-from data.utils.maintenance_service import run_maintenance
+from data.services.maintenance_service import run_maintenance
 
 class DatabaseWorker(QThread):
     """Asynchroniczny pracownik do ciężkich zadań SQL/API"""

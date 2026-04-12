@@ -11,8 +11,9 @@ Wywoływane cyklicznie przez timer aplikacji (w main.py).
 """
 
 from datetime import datetime, timedelta
-from data.utils.date_helpers import DateHelper
+from data.utils.helpers.date_helpers import DateHelper
 from data.config import USER_COUNT
+from data.repositories.statistics_repo import StatsRepository
 
 # =============== AKTUALIZACJA STATYSTYK GATUNKÓW ===================
 def update_genre_stats(conn):
@@ -106,26 +107,35 @@ def update_challenges_progress(conn):
 def update_all_user_streaks(cursor):
     """
     LOGIKA SERWISOWA: Przelicza i zapisuje streaki dla wszystkich użytkowników.
+    Nowe konta (registered today) mają automatycznie 1 dzień streaki bez liczenia.
     """
-    cursor.execute("SELECT id FROM users")
+    cursor.execute("SELECT id, date_joined FROM users")
     users = cursor.fetchall()
-    
+
+    current_date = datetime.now().date()
+
     for user in users:
         user_id = user['id']
-        
+        date_joined_dt = DateHelper.to_datetime(user['date_joined'])
+        date_joined = date_joined_dt.date() if date_joined_dt else current_date
+
+        # Nowe konto (registered today) - automatycznie 1 dzień
+        if date_joined == current_date:
+            cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (1, user_id))
+            continue
+
         # Logika obliczania streaka (limit 100 dni)
         query = """
-            SELECT DISTINCT date(timestamp) as activity_date 
-            FROM activity 
-            WHERE user_id = ? 
+            SELECT DISTINCT date(timestamp) as activity_date
+            FROM activity
+            WHERE user_id = ?
             ORDER BY activity_date DESC
             LIMIT 100
         """
         rows = cursor.execute(query, (user_id,)).fetchall()
-        
+
         streak = 0
         if rows:
-            current_date = datetime.now().date()
             last_act_dt = DateHelper.to_datetime(rows[0][0])
             last_act = last_act_dt.date() if last_act_dt else current_date
 
@@ -137,8 +147,8 @@ def update_all_user_streaks(cursor):
                         streak += 1
                         expected_date -= timedelta(days=1)
                     else:
-                        break 
-        
+                        break
+
         cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (streak, user_id))
 
 def run_maintenance(conn):
@@ -175,12 +185,12 @@ def run_maintenance(conn):
         # Streaki
         update_all_user_streaks(cursor)
 
-        # Globalne KPI
-        cursor.execute("SELECT AVG(pages_per_day) FROM users WHERE pages_per_day > 0")
-        global_avg = cursor.fetchone()[0] or 0
-        
+        # Globalne KPI - SSOT: zawsze z ostatnich 30 dni (ta sama logika co dashboard i details)
+        stats_repo = StatsRepository(conn)
+        global_avg = stats_repo.get_system_wide_ppd("month")
+
         conn.commit()
-        print(f"✅ Maintenance complete. Global Avg PPD: {global_avg:.2f}")
+        print(f"✅ Maintenance complete. Global Avg PPD (last 30 days): {global_avg:.2f}")
         return global_avg
     except Exception as e:
         conn.rollback()

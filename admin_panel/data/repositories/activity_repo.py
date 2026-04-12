@@ -1,6 +1,5 @@
 import sqlite3
-from datetime import datetime, timedelta
-from data.utils.time_periods import period_start
+from data.services.time_filter_service import TimeFilterService
 
 class ActivityRepository:
     def __init__(self, conn: sqlite3.Connection):
@@ -11,28 +10,17 @@ class ActivityRepository:
         Pobieranie wskaźników KPI z uwzględnieniem uśrednionej aktywności dziennej.
         """
         cursor = self.conn.cursor()
-        params = []
-        date_clause = ""
-        f_type = time_filter.lower()
-        
-        # Określenie zakresu czasowego na podstawie wybranego filtra
-        if f_type != "all":
-            if f_type == "week":
-                start_dt = datetime.now() - timedelta(days=6)
-                date_clause = "WHERE timestamp >= ?"
-                params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
-            else:
-                dt = period_start(time_filter)
-                if dt:
-                    date_clause = "WHERE timestamp >= ?"
-                    params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+        # Centralizowana logika filtrowania czasowego
+        condition, params = TimeFilterService.build_time_filter(time_filter)
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
 
         # Obliczanie sumy stron
-        cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {date_clause}", params)
+        cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {where_clause}", params)
         total_pages = cursor.fetchone()[0]
 
         # Wyznaczanie liczby unikalnych dni
-        cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {date_clause}", params)
+        cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {where_clause}", params)
         active_days = cursor.fetchone()[0] or 0
 
         # Wyliczanie średniej dziennej na użytkownika
@@ -41,7 +29,7 @@ class ActivityRepository:
             FROM (
                 SELECT SUM(pages_read) as daily_total
                 FROM activity
-                {date_clause}
+                {where_clause}
                 GROUP BY user_id, SUBSTR(timestamp, 1, 10)
             )
         """
@@ -92,9 +80,11 @@ class ActivityRepository:
             """
             cursor.execute(query)
         else:
+            # "all" - ostatnie 24 miesiące dla lepszej wizualizacji (24 punkty)
             query = """
                 SELECT STRFTIME('%Y-%m', timestamp) as period, SUM(pages_read)
                 FROM activity
+                WHERE timestamp > date('now', '-24 months')
                 GROUP BY period
                 ORDER BY period ASC
             """
@@ -106,22 +96,12 @@ class ActivityRepository:
     def get_unique_active_users(self, time_filter="all"):
         """Zwraca liczbę unikalnych użytkowników, którzy byli aktywni w danym okresie."""
         cursor = self.conn.cursor()
-        params = []
-        date_clause = ""
-        f_type = time_filter.lower()
 
-        if f_type != "all":
-            if f_type == "week":
-                start_dt = datetime.now() - timedelta(days=6)
-                date_clause = "WHERE timestamp >= ?"
-                params.append(start_dt.strftime("%Y-%m-%d 00:00:00"))
-            else:
-                dt = period_start(time_filter)
-                if dt:
-                    date_clause = "WHERE timestamp >= ?"
-                    params.append(dt.strftime("%Y-%m-%d %H:%M:%S"))
+        # Centralizowana logika filtrowania czasowego
+        condition, params = TimeFilterService.build_time_filter(time_filter)
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
 
-        query = f"SELECT COUNT(DISTINCT user_id) FROM activity {date_clause}"
+        query = f"SELECT COUNT(DISTINCT user_id) FROM activity {where_clause}"
         cursor.execute(query, params)
         res = cursor.fetchone()
         return res[0] if res else 0

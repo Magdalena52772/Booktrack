@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from typing import List
 from data.models.user import User
 from data.utils.time_periods import period_start
-from data.utils.date_helpers import DateHelper
+from data.utils.helpers.date_helpers import DateHelper
+from data.services.user_performance_service import UserPerformanceService
 
 class UserRepository:
     def __init__(self, conn: sqlite3.Connection):
@@ -38,45 +39,38 @@ class UserRepository:
         where_clauses = []
         params = []
 
+        # Filtry czasu dla subqueries
+        act_time_filter = "AND timestamp >= ?" if since_str else ""
+        if since_str:
+            params.insert(0, since_str)  # Parametr na początek listy
+
         # Dodawanie warunków wyszukiwania
         if search_term:
             where_clauses.append("(u.username LIKE ? OR u.email LIKE ? OR u.name LIKE ? OR u.status LIKE ? OR u.id LIKE ?)")
             term = f"%{search_term}%"
             params.extend([term, term, term, term, term])
 
-        # Filtry czasu dla JOINów
-        book_time_filter = "AND b.finish_date >= ?" if since_str else ""
-        act_time_filter = "AND a.timestamp >= ?" if since_str else ""
-        
-        join_params = []
-        if since_str:
-            join_params.append(since_str) # dla books
-            join_params.append(since_str) # dla activity
-
         # Składanie głównego WHERE
-        where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
 
         # Główne zapytanie (JOIN -> WHERE -> GROUP -> ORDER -> LIMIT)
         allowed_cols = {"id": "u.id", "name": "u.name", "register_date": "u.date_joined"}
         sort_column = allowed_cols.get(sort_by, "u.id")
 
         query = f"""
-            SELECT 
-                u.id, u.username, u.name, u.email, u.status, u.last_activity, 
+            SELECT
+                u.id, u.username, u.name, u.email, u.status, u.last_activity,
                 u.date_joined, u.birth_date, u.r_tier,
-                COUNT(DISTINCT b.id) AS books_count,
-                COALESCE(SUM(a.pages_read), 0) AS total_pages
+                (SELECT COUNT(*) FROM books WHERE user_id = u.id AND status = 'finished') AS books_count,
+                COALESCE((SELECT SUM(pages_read) FROM activity WHERE user_id = u.id {act_time_filter}), 0) AS total_pages
             FROM users u
-            LEFT JOIN books b ON u.id = b.user_id AND b.status = 'finished' {book_time_filter}
-            LEFT JOIN activity a ON u.id = a.user_id {act_time_filter}
             {where_sql}
-            GROUP BY u.id
             ORDER BY {sort_column} {order}
             LIMIT ? OFFSET ?
         """
 
-        # Łączenie parametrów: [filtry czasowe joinów] + [filtry wyszukiwania] + [limit, offset]
-        final_params = join_params + params + [limit, offset]
+        # Łączenie parametrów: [time filter] + [search filters] + [limit, offset]
+        final_params = params + [limit, offset]
         users_data = cursor.execute(query, final_params).fetchall()
         user_ids = [u['id'] for u in users_data]
 
@@ -115,7 +109,8 @@ class UserRepository:
 
             # Obliczanie Systematic PPD (TIME BASED)
             total_p = u['total_pages'] if u['total_pages'] is not None else 0
-            db_ppd = u['pages_per_day'] if u['pages_per_day'] is not None else 0.0
+            calculated_ppd = total_p / final_divisor if final_divisor > 0 else 0.0
+            db_ppd = round(calculated_ppd, 1)
 
             users.append(User(
                 id=u['id'],
@@ -169,8 +164,9 @@ class UserRepository:
 
             # Pobieranie danych bazowych
             cursor.execute("""
-                SELECT 
+                SELECT
                     u.external_id, u.birth_date, u.last_activity, u.date_joined,
+                    u.name, u.username,
                     (SELECT SUM(pages_read) FROM activity WHERE user_id = u.id) as total_pages,
                     AVG(CAST(c.current_value AS FLOAT) / c.target_value * 100) as avg_progress
                 FROM users u
@@ -183,24 +179,35 @@ class UserRepository:
                 return None
 
             # Rozpakowanie danych
-            ext_id, birth_date_raw, last_act_raw, reg_date_raw, total_pages_sum, avg_progress = u_data
+            ext_id, birth_date_raw, last_act_raw, reg_date_raw, name, username, total_pages_sum, avg_progress = u_data
             total_pages_sum = total_pages_sum or 0
             
             # Statystyki aktywności
             streak = self.get_user_streak(user_id)
-            # Potential PPD (ACTIVITY BASED): Suma stron / dni, w których faktycznie był wpis (Moc przerobowa)
+            # Potential PPD (ACTIVITY BASED): Suma stron / dni, w których faktycznie był wpis
             real_active_days = self.get_active_reading_days(user_id)
-            potential_ppd = (total_pages_sum or 0) / max(1, real_active_days)
+            potential_ppd = UserPerformanceService.get_potential_ppd(total_pages_sum or 0, real_active_days)
 
             # Obliczanie wieku przy użyciu Helpera
             age = DateHelper.calculate_age(birth_date_raw)
 
-            # Obliczanie 'lenistwa' (Activity Ratio) - Ile dni czytał / ostatnie 30 dni
-            active_days_30 = self._get_active_days_in_range(user_id, 30)
-            consistency_score = (active_days_30 / 30.0) * 100
+            # Obliczanie 'regularności' (Activity Ratio) - Ile dni czytał / ostatnie 30 dni
+            cursor_performance = self.conn.cursor()
+
+            # Nowe konto (registered today) - automatycznie 1/30
+            reg_date_dt = DateHelper.to_datetime(reg_date_raw)
+            reg_date = reg_date_dt.date() if reg_date_dt else datetime.now().date()
+
+            if reg_date == datetime.now().date():
+                consistency_score = (1.0 / 30) * 100  # 3.33%
+            else:
+                active_days_30 = UserPerformanceService.get_active_days_in_range(cursor_performance, user_id, 30)
+                consistency_score = UserPerformanceService.calculate_consistency_score(active_days_30, 30)
 
             return {
                 "ext_id": ext_id,
+                "name": name,
+                "username": username,
                 "reading_now": reading_now,
                 "total_pages": total_pages_sum,
                 "avg_progress": int(avg_progress) if avg_progress else 0,
@@ -214,16 +221,6 @@ class UserRepository:
         finally:
             cursor.close()
 
-    def _get_active_days_in_range(self, user_id: int, days_limit: int) -> int:
-        """Pobiera liczbę unikalnych dni aktywności w danym przedziale (pomocnicze do consistency)."""
-        cursor = self.conn.cursor()
-        res = cursor.execute("""
-            SELECT COUNT(DISTINCT date(timestamp)) 
-            FROM activity 
-            WHERE user_id = ? AND timestamp >= date('now', ?)
-        """, (user_id, f"-{days_limit} days")).fetchone()
-        return res[0] if res else 0
-
     def get_active_reading_days(self, user_id: int) -> int:
         """Liczy ile unikalnych dni użytkownik faktycznie czytał (miał wpis w activity)."""
         cursor = self.conn.cursor()
@@ -233,45 +230,6 @@ class UserRepository:
         return max(res[0], 1) if res and res[0] else 1
 
 
-    def get_user_streak(self, user_id: int) -> int:
-        """Oblicza aktualny streak (dni z rzędu z aktywnością)."""
-        cursor = self.conn.cursor()
-        # Pobiera unikalne daty aktywności użytkownika, posortowane malejąco
-        query = """
-            SELECT DISTINCT date(timestamp) as activity_date 
-            FROM activity 
-            WHERE user_id = ? 
-            ORDER BY activity_date DESC
-            LIMIT 100
-        """
-        # LIMIT 100 sprawia, że baza nie analizuje tysięcy rekordów dla starych kont
-        rows = cursor.execute(query, (user_id,)).fetchall()
-        
-        if not rows:
-            return 0
-            
-        streak = 0
-        current_date = datetime.now().date()
-        
-        # Używa DateHelper zamiast strptime
-        last_act_dt = DateHelper.to_datetime(rows[0][0])
-        last_act = last_act_dt.date() if last_act_dt else current_date
-
-        # Jeśli ostatnia aktywność była dawniej niż wczoraj, streak pękł
-        if (current_date - last_act).days > 1:
-            return 0 
-        
-        # Obliczanie ciągłości: sprawdzanie czy kolejna data w rekordach 
-        # jest dokładnie o jeden dzień wcześniejsza od poprzedniej.  
-        expected_date = last_act
-        for row in rows:
-            act_dt = DateHelper.to_datetime(row[0])
-            act_date = act_dt.date() if act_dt else None
-            
-            if act_date == expected_date:
-                streak += 1
-                expected_date -= timedelta(days=1)
-            else:
     def get_user_streak(self, user_id: int) -> int:
         """Pobiera gotowy, przeliczony streak z bazy danych (High Performance)."""
         cursor = self.conn.cursor()

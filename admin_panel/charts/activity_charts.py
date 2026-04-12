@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from data.utils.chart_helpers import ChartTooltipHelper, ChartStyler
+from data.utils.helpers.chart_formatters import ChartTooltipHelper, ChartStyler
 
 class ActivityChart(FigureCanvas):
     """Wykres liniowy prezentujący trend aktywności użytkowników"""
@@ -83,9 +83,10 @@ class ActivityHeatmap(FigureCanvas):
         self.axes = self.fig.add_subplot(111)
         super().__init__(self.fig)
         self.setParent(parent)
-        
-        # Gradient dla intensywności aktywności
-        self.gold_cmap = LinearSegmentedColormap.from_list("gold", ["#f4f1ea", "#daa520"])
+
+        # Gradient w złocie - od jasnego do ciemnego złota
+        self.gold_cmap = LinearSegmentedColormap.from_list("gold_gradient",
+                                                            ["#fffef0", "#b8860b"])
         self.grid_data = None
         self.dates_map = None
 

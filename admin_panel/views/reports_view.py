@@ -7,7 +7,7 @@ from data.repositories.statistics_repo import StatsRepository
 from data.repositories.user_repo import UserRepository
 from data.repositories.activity_repo import ActivityRepository
 from data.repositories.book_repo import BookRepository
-from data.utils.ui_helpers import load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
 
 class ReportsView(QWidget):
     """

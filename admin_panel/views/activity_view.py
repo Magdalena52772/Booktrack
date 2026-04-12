@@ -3,7 +3,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget
 
 from data.utils.status_manager import StatusMsg
-from data.utils.ui_helpers import apply_tooltips, load_ui
+from data.utils.helpers.ui_helpers import apply_tooltips, load_ui
 from charts.activity_charts import ActivityChart
 from data.repositories.activity_repo import ActivityRepository
 from data.repositories.challenge_repo import ChallengeRepository

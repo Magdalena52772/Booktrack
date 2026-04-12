@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from data.utils.time_periods import period_start
+from data.services.time_filter_service import TimeFilterService
 
 class StatsRepository:
     """
@@ -15,13 +16,10 @@ class StatsRepository:
         Wykorzystuje grupowanie po identyfikatorze użytkownika i dacie dla analityki.
         """
         cursor = self.conn.cursor()
-        start_dt = period_start(period.lower())
-        
-        params = []
-        where_clause = ""
-        if start_dt:
-            where_clause = "WHERE timestamp >= ?"
-            params.append(start_dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+        # Centralizowana logika filtrowania czasowego
+        condition, params = TimeFilterService.build_time_filter(period.lower())
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
 
         # Optymalizacja wydajnościowa poprzez wstępne filtrowanie danych w podzapytaniu
         query = f"""
@@ -95,7 +93,7 @@ class StatsRepository:
         """
         cursor = self.conn.cursor()
         start_dt = None if period.lower() == "all" else period_start(period)
-        
+
         params = []
         where_clause = ""
         if start_dt:
@@ -113,7 +111,7 @@ class StatsRepository:
             ORDER BY total_pages DESC
             LIMIT 1
         """
-        
+
         # Wyznaczanie liczby gatunków, w których odnotowano jakąkolwiek aktywność
         query_count = f"""
             SELECT COUNT(DISTINCT g.id)
@@ -132,3 +130,22 @@ class StatsRepository:
         active_count = count_res[0] if count_res else 0
 
         return top_genre, active_count
+
+    def get_average_streak(self) -> float:
+        """Pobiera średni streak dla wszystkich użytkowników."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT AVG(current_streak) FROM users WHERE status = 'active'")
+        res = cursor.fetchone()
+        return round(float(res[0]), 1) if res and res[0] else 0.0
+
+    def get_top_3_streaks(self):
+        """Pobiera top 3 użytkowników z najwyższymi strekami."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT username, current_streak
+            FROM users
+            WHERE status = 'active'
+            ORDER BY current_streak DESC
+            LIMIT 3
+        """)
+        return cursor.fetchall()

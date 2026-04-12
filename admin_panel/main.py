@@ -12,7 +12,6 @@ import sys
 import os
 import random
 from datetime import datetime
-from.worker import DatabaseWorker
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer, Qt
@@ -57,8 +56,8 @@ def main():
         Zarządzanie procesem inicjalizacji danych i przeliczania statystyk.
         Wykorzystanie lazy loadingu dla modułów analitycznych.
         """
-        from data.utils.user_service import finalize_database_consistency
-        from data.utils.maintenance_service import run_maintenance
+        from data.services.user_service import finalize_database_consistency
+        from data.services.maintenance_service import run_maintenance
         
         # Sprawdzenie integralności bazy i ewentualna inicjalizacja danych
         cursor = conn.cursor()
@@ -140,12 +139,19 @@ def main():
         """
         Cykliczna symulacja aktywności i odświeżanie statystyk globalnych.
         """
-        from data.utils.maintenance_service import run_maintenance
-        
+        from data.services.maintenance_service import run_maintenance, update_all_user_streaks
+
         timer_cursor = conn.cursor()
         try:
+            # Codzienna aktualizacja streków o 19:00
+            current_time = datetime.now()
+            if current_time.hour == 19 and current_time.minute == 0:
+                update_all_user_streaks(timer_cursor)
+                conn.commit()
+                print(f"[STREAKS] {current_time.strftime('%H:%M:%S')} | Daily streak recalculation completed.")
+
             # Określenie intensywności ruchu (pory dnia)
-            hour = datetime.now().hour
+            hour = current_time.hour
             if 18 <= hour <= 23: base_activity = random.randint(10, 25)
             elif 0 <= hour <= 6: base_activity = random.randint(1, 5)
             else: base_activity = random.randint(5, 12)
@@ -170,7 +176,16 @@ def main():
             if active_list and current_books:
                 # Symuluje przyrostową aktywność i odświeża statystyki
                 new_logs = simulate_incremental_activity(conn, active_list, current_books, count=base_activity)
-                
+
+                # Przelicza całą bazę po nowych logach
+                run_maintenance(conn)
+                conn.commit()
+
+                # Log z dodanymi aktywnościami
+                print(f"[LIVE] {datetime.now().strftime('%H:%M:%S')} | Added {len(new_logs)} activities:")
+                for log in new_logs:
+                    print(f"       {log}")
+
                 # Aktualizacja widoku LiveFeed, jeśli jest otwarty
                 if hasattr(window, 'view_config'):
                     for cfg in window.view_config.values():
@@ -179,10 +194,6 @@ def main():
                                 cfg["instance"].add_log_entry(log)
                             break
 
-                # Przelicza całą bazę po nowych logach
-                run_maintenance(conn) 
-                conn.commit()
-                print(f"[LIVE] {datetime.now().strftime('%H:%M:%S')} | Synchronizacja zakończona.")
 
             # Automatyczne odświeżanie widoku, jeśli użytkownik nic nie klika
             if hasattr(window, 'ui'):
@@ -208,7 +219,7 @@ def main():
 
     activity_timer = QTimer()
     activity_timer.timeout.connect(run_timer_update)
-    activity_timer.start(1500000) 
+    activity_timer.start(60000)  # 1 minute 
 
     exit_code = app.exec() 
     conn.close()
