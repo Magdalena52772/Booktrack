@@ -52,13 +52,6 @@ def get_progress_bar_style(chunk_color="#630D16"):
             border-radius: 3px;
         }}
     """
-    
-def get_rating_color(rating):
-    """Zwraca kolor UI na podstawie wartości oceny (genres_view)"""
-    if rating >= 4.5: return "#27ae60" # Ciemnozielony
-    if rating >= 3.0: return "#2c3e50" # Standardowy
-    return "#e67e22" # Pomarańczowy dla słabych ocen
-
 
 def clear_layout(layout):
     """Czyści layout z widgetów, zapobiegając wyciekom pamięci i nakładaniu się elementów"""
@@ -70,13 +63,3 @@ def clear_layout(layout):
                 widget.deleteLater()
             else:
                 clear_layout(item.layout())
-
-# Przykład użycia w generatorze z Batchingiem
-def batch_insert_books(conn, books_data):
-    """Szybki zapis dzięki transakcji i executemany"""
-    sql = "INSERT INTO books (user_id, title, authors, genre_id, status) VALUES (?, ?, ?, ?, ?)"
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA synchronous = OFF") # Maksymalna prędkość
-    cursor.execute("BEGIN TRANSACTION")
-    cursor.executemany(sql, books_data)
-    conn.commit()
