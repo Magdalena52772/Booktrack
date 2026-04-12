@@ -9,7 +9,7 @@ class UserPerformanceService:
     @staticmethod
     def calculate_performance_status(user_ppd: float, system_avg: float) -> dict:
         """
-        Oblicza status wydajności użytkownika na podstawie 
+        Oblicza status wydajności użytkownika na podstawie
         porównania ze średnią systemową (PPD - Pages Per Day)
         """
         diff = user_ppd - system_avg
@@ -41,4 +41,72 @@ class UserPerformanceService:
         return {
             "text": streak_text,
             "color": streak_color
+        }
+
+    @staticmethod
+    def calculate_consistency_score(active_days: int, total_days: int = 30) -> float:
+        """
+        Oblicza wskaźnik konsekwencji/regularności użytkownika (0-100%).
+
+        Logika: Ile dni z aktywnością na przestrzeni ostatnich N dni.
+        (np. 15 dni aktywności z 30 = 50%)
+        """
+        if total_days <= 0:
+            return 0.0
+
+        score = (active_days / total_days) * 100
+        return round(score, 1)
+
+    @staticmethod
+    def get_active_days_in_range(cursor, user_id: int, days_limit: int) -> int:
+        """
+        Pobiera liczbę unikalnych dni aktywności w danym przedziale czasowym
+        Pomocnicza metoda do obliczania consistency score
+        """
+        res = cursor.execute("""
+            SELECT COUNT(DISTINCT date(timestamp))
+            FROM activity
+            WHERE user_id = ? AND timestamp >= date('now', ?)
+        """, (user_id, f"-{days_limit} days")).fetchone()
+        return res[0] if res else 0
+
+    @staticmethod
+    def get_potential_ppd(total_pages: float, active_reading_days: int) -> float:
+        """
+        Oblicza Potential PPD (Activity-based Pages Per Day)
+        Wskaźnik wydajności tylko dla dni, w których faktycznie była aktywność
+        Odzwierciedla prawdziwą moc przerobową użytkownika 
+        (ignoruje dni bez aktywności)
+        """
+        if active_reading_days <= 0:
+            return 0.0
+        return round(total_pages / active_reading_days, 1)
+
+    @staticmethod
+    def calculate_all_metrics(profile_data: dict) -> dict:
+        """
+        Metoda łącząca wszystkie metryki wydajności w jednym miejscu 
+        (SSOT dla wydajności użytkownika).
+
+        Łączy: consistency_score, potential_ppd, performance_status
+        """
+        consistency = UserPerformanceService.calculate_consistency_score(
+            profile_data.get("active_days_30", 0),
+            total_days=30
+        )
+
+        potential_ppd = UserPerformanceService.get_potential_ppd(
+            profile_data.get("total_pages", 0),
+            profile_data.get("active_reading_days", 1)
+        )
+
+        performance_status = UserPerformanceService.calculate_performance_status(
+            profile_data.get("user_ppd", 0.0),
+            profile_data.get("system_avg", 0.0)
+        )
+
+        return {
+            "consistency_score": consistency,
+            "potential_ppd": potential_ppd,
+            "performance_status": performance_status
         }
