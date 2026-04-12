@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 from data.models.user import User
 from data.utils.time_periods import period_start
-from data.utils.date_helpers import DateHelper
+from data.utils.helpers.date_helpers import DateHelper
 
 class UserRepository:
     def __init__(self, conn: sqlite3.Connection):

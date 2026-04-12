@@ -29,7 +29,7 @@ def diagnoza_bez_blokady():
     print("[DIAG] Odpalam ciężką logikę... Zaraz zobaczysz biały ekran. Czekaj.")
     
     
-    from data.utils.maintenance_service import update_genre_stats
+    from data.services.maintenance_service import update_genre_stats
     
     # Testuje konkretne podejrzane funkcje przez 5 sekund
     start = time.perf_counter()

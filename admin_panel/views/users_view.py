@@ -5,7 +5,8 @@ from PySide6.QtWidgets import QWidget, QTableWidgetItem, QFrame, QHeaderView, QP
 from data.utils.status_manager import StatusMsg
 from data.repositories.statistics_repo import StatsRepository
 from data.repositories.user_repo import UserRepository
-from data.utils.ui_helpers import load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
+from data.services.user_performance_service import UserPerformanceService
 
 class UsersView(QWidget):
     # Sygnał do przesyłania wiadomości do paska statusu w oknie głównym

@@ -11,7 +11,7 @@ base_dir = next((p for p in current_path.parents if (p / 'data').exists()), curr
 sys.path.insert(0, str(base_dir))
 
 from data.database import get_connection, initialize_database
-from data.utils.maintenance_service import update_genre_stats
+from data.services.maintenance_service import update_genre_stats
 from views.main_window import MainWindow
 
 app = QApplication.instance() or QApplication(sys.argv)

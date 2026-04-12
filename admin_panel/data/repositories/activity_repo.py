@@ -1,7 +1,5 @@
 import sqlite3
-from datetime import datetime, timedelta
-from data.utils.time_periods import period_start
-from data.utils.time_filter_service import TimeFilterService
+from data.services.time_filter_service import TimeFilterService
 
 class ActivityRepository:
     def __init__(self, conn: sqlite3.Connection):

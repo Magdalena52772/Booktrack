@@ -1,8 +1,8 @@
 import random
 from datetime import datetime
 from data.config import GENRES, AGE_BASED_GENRES, RATING_SETTINGS, get_fake
-from data.utils.date_helpers import DateHelper
-from data.utils.generator_helpers import get_genre_map
+from data.utils.helpers.date_helpers import DateHelper
+from data.utils.helpers.generator_helpers import get_genre_map
 
 # =================== GENEROWANIE KSIĄŻEK ===================
 def generate_books(conn, users):

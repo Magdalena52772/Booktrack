@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QWidget, QTableWidgetItem, QVBoxLayout, QHeaderVie
 from PySide6.QtGui import QColor
 
 from data.utils.status_manager import StatusMsg
-from data.utils.ui_helpers import create_numeric_item, get_progress_bar_style, get_rating_color, load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import create_numeric_item, get_progress_bar_style, get_rating_color, load_ui, apply_tooltips
 from data.repositories.genre_repo import GenresRepository
 from charts.genre_chart import GenreChart
 

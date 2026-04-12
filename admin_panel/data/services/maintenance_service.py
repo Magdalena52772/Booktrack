@@ -11,7 +11,7 @@ Wywoływane cyklicznie przez timer aplikacji (w main.py).
 """
 
 from datetime import datetime, timedelta
-from data.utils.date_helpers import DateHelper
+from data.utils.helpers.date_helpers import DateHelper
 from data.config import USER_COUNT
 
 # =============== AKTUALIZACJA STATYSTYK GATUNKÓW ===================

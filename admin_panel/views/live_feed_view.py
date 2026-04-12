@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QWidget, QListWidgetItem
 from datetime import datetime
 
 from data.utils.status_manager import StatusMsg
-from data.utils.ui_helpers import load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
 
 class LiveFeedView(QWidget):
     statusMessage = Signal(str, str)

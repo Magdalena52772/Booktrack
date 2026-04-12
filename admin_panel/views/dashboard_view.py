@@ -8,7 +8,7 @@ from data.repositories.book_repo import BookRepository
 from data.repositories.statistics_repo import StatsRepository
 from data.repositories.activity_repo import ActivityRepository
 from charts.activity_charts import ActivityChart, ActivityHeatmap
-from data.utils.ui_helpers import load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
 
 class DashboardView(QWidget):
     """Główny panel z dynamicznym skalowaniem i optymalnym wykorzystaniem przestrzeni."""
