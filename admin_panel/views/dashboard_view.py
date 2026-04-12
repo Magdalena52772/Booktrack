@@ -60,6 +60,7 @@ class DashboardView(QWidget):
             metrics = self.stats_repo.get_dashboard_metrics()
             total_users, new_users, avg_pages = metrics if metrics else (0, 0, 0)
             books_month = self.book_repo.count_books_read(period="month")
+            top_3_streaks = self.stats_repo.get_top_3_streaks()
 
             # Formatowanie tekstu
             accent = "#daa520"
@@ -68,17 +69,24 @@ class DashboardView(QWidget):
             self.ui.lbl_books.setText(f"Books read: <br><span style='{style}'>{books_month or 0}</span>")
             self.ui.lbl_pages.setText(f"Pages / day: <br><span style='{style}'>{round(avg_pages, 1)}</span>")
 
+            # Top 3 streaks - kompaktowy format z większą czcionką
+            streak_text = "<span style='font-size:11pt;'><b>Top Streaks:</b><br>"
+            for i, (username, streak) in enumerate(top_3_streaks, 1):
+                streak_text += f"{i}. {username} ({streak}d)<br>"
+            streak_text += "</span>"
+            self.ui.lbl_streak.setText(streak_text)
+
             # Pobieranie 30 dni danych
             data_raw = self.activity_repo.get_activity_trend("month")
             processed_data = self._prepare_30_days(data_raw)
-            
+
             # Aktualizacja wykresów
             dates, values = zip(*processed_data)
             self.canvas.plot_data(list(dates), list(values), time_filter="month")
             self.heatmap.plot_heatmap(processed_data)
-            
+
             self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", "Dashboard", "Global"))
-              
+
         except Exception as e:
             traceback.print_exc()
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
@@ -108,6 +116,7 @@ class DashboardView(QWidget):
             "lbl_users": "Total registered users and growth (+X) within the last 30 days.",
             "lbl_books": "Number of books finished this month across the whole community.",
             "lbl_pages": "Average pages read daily per active user.",
+            "lbl_streak": "Top 3 users with the longest reading streaks.",
             "btn_refresh": "Click to recalculate all community statistics."
         }
         apply_tooltips(self.ui, tooltips)
