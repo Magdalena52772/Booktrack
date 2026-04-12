@@ -1,7 +1,8 @@
 import random
 from datetime import datetime, timedelta
 from data.config import get_fake, ARCHETYPE_SETTINGS, SEASONAL_IMPACT, SIM_SETTINGS, AGE_BASED_GENRES, GENRES
-from data.utils.helpers.generator_helpers import calculate_session_details, get_genre_map
+from data.services.generator_service import GeneratorService
+from data.repositories.genre_repo import GenresRepository
 from data.services.maintenance_service import update_genre_stats
 from data.services.user_service import update_user_ppd
 
@@ -126,8 +127,8 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
     month = now.month
     logs = []
 
-    # Pobranie mapy gatunków (DRY - z utility function)
-    genre_map = get_genre_map(cursor)
+    # Pobranie mapy gatunków (DRY - z repozytorium)
+    genre_map = GenresRepository.get_genre_map(cursor)
 
     active_users = [u for u in users_meta if u['status'] == 'active']
     if not active_users: return []
@@ -176,8 +177,8 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
         # --- SCENARIUSZ: SESJA CZYTANIA ---
         r_tier = user.get('r_tier', 'regular')
         is_weekend = now.weekday() >= 5
-        
-        pages_read, duration = calculate_session_details(r_tier, is_weekend, total_p - curr_p)
+
+        pages_read, duration = GeneratorService.calculate_session_details(r_tier, is_weekend, total_p - curr_p)
         pages_read = max(1, min(int(pages_read * SEASONAL_IMPACT.get(month, 1.0)), total_p - curr_p))
         duration = int(duration * SEASONAL_IMPACT.get(month, 1.0)) 
 
