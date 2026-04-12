@@ -107,26 +107,35 @@ def update_challenges_progress(conn):
 def update_all_user_streaks(cursor):
     """
     LOGIKA SERWISOWA: Przelicza i zapisuje streaki dla wszystkich użytkowników.
+    Nowe konta (registered today) mają automatycznie 1 dzień streaki bez liczenia.
     """
-    cursor.execute("SELECT id FROM users")
+    cursor.execute("SELECT id, date_joined FROM users")
     users = cursor.fetchall()
-    
+
+    current_date = datetime.now().date()
+
     for user in users:
         user_id = user['id']
-        
+        date_joined_dt = DateHelper.to_datetime(user['date_joined'])
+        date_joined = date_joined_dt.date() if date_joined_dt else current_date
+
+        # Nowe konto (registered today) - automatycznie 1 dzień
+        if date_joined == current_date:
+            cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (1, user_id))
+            continue
+
         # Logika obliczania streaka (limit 100 dni)
         query = """
-            SELECT DISTINCT date(timestamp) as activity_date 
-            FROM activity 
-            WHERE user_id = ? 
+            SELECT DISTINCT date(timestamp) as activity_date
+            FROM activity
+            WHERE user_id = ?
             ORDER BY activity_date DESC
             LIMIT 100
         """
         rows = cursor.execute(query, (user_id,)).fetchall()
-        
+
         streak = 0
         if rows:
-            current_date = datetime.now().date()
             last_act_dt = DateHelper.to_datetime(rows[0][0])
             last_act = last_act_dt.date() if last_act_dt else current_date
 
@@ -138,8 +147,8 @@ def update_all_user_streaks(cursor):
                         streak += 1
                         expected_date -= timedelta(days=1)
                     else:
-                        break 
-        
+                        break
+
         cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (streak, user_id))
 
 def run_maintenance(conn):

@@ -83,9 +83,10 @@ class ActivityHeatmap(FigureCanvas):
         self.axes = self.fig.add_subplot(111)
         super().__init__(self.fig)
         self.setParent(parent)
-        
-        # Gradient dla intensywności aktywności
-        self.gold_cmap = LinearSegmentedColormap.from_list("gold", ["#f4f1ea", "#daa520"])
+
+        # Gradient w złocie - od jasnego do ciemnego złota
+        self.gold_cmap = LinearSegmentedColormap.from_list("gold_gradient",
+                                                            ["#fffef0", "#b8860b"])
         self.grid_data = None
         self.dates_map = None
 

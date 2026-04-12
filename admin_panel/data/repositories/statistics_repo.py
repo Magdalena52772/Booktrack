@@ -93,7 +93,7 @@ class StatsRepository:
         """
         cursor = self.conn.cursor()
         start_dt = None if period.lower() == "all" else period_start(period)
-        
+
         params = []
         where_clause = ""
         if start_dt:
@@ -111,7 +111,7 @@ class StatsRepository:
             ORDER BY total_pages DESC
             LIMIT 1
         """
-        
+
         # Wyznaczanie liczby gatunków, w których odnotowano jakąkolwiek aktywność
         query_count = f"""
             SELECT COUNT(DISTINCT g.id)
@@ -130,3 +130,22 @@ class StatsRepository:
         active_count = count_res[0] if count_res else 0
 
         return top_genre, active_count
+
+    def get_average_streak(self) -> float:
+        """Pobiera średni streak dla wszystkich użytkowników."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT AVG(current_streak) FROM users WHERE status = 'active'")
+        res = cursor.fetchone()
+        return round(float(res[0]), 1) if res and res[0] else 0.0
+
+    def get_top_3_streaks(self):
+        """Pobiera top 3 użytkowników z najwyższymi strekami."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT username, current_streak
+            FROM users
+            WHERE status = 'active'
+            ORDER BY current_streak DESC
+            LIMIT 3
+        """)
+        return cursor.fetchall()
