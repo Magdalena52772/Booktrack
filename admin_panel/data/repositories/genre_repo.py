@@ -10,6 +10,15 @@ class GenresRepository:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
 
+    @staticmethod
+    def get_genre_map(cursor) -> dict:
+        """
+        Pobiera mapę gatunków (name -> id) z bazy danych.
+        """
+        query = "SELECT name, id FROM genres"
+        cursor.execute(query)
+        return {name: gid for name, gid in cursor.fetchall()}
+
     def get_all(self, age_group: str = "All") -> List[Genre]:
         """
         Pobiera zagregowane statystyki gatunków z uwzględnieniem filtrów wiekowych.
