@@ -3,7 +3,8 @@ from PySide6.QtWidgets import QWidget, QTableWidgetItem, QVBoxLayout, QHeaderVie
 from PySide6.QtGui import QColor
 
 from data.utils.status_manager import StatusMsg
-from data.utils.helpers.ui_helpers import create_numeric_item, get_progress_bar_style, get_rating_color, load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import create_numeric_item, get_progress_bar_style, load_ui, apply_tooltips
+from data.services.rating_service import RatingService
 from data.repositories.genre_repo import GenresRepository
 from charts.genre_chart import GenreChart
 
@@ -113,8 +114,8 @@ class GenresView(QWidget):
                 display_rating = f"⭐ {genre.avg_rating:.2f}" if genre.avg_rating > 0 else "N/A"
                 rating_item = QTableWidgetItem(display_rating)
                 rating_item.setTextAlignment(Qt.AlignCenter)
-                # Wykorzystanie helpera kolorów
-                rating_item.setForeground(QColor(get_rating_color(genre.avg_rating)))
+                # Wykorzystanie serwisu kolorów ocen
+                rating_item.setForeground(QColor(RatingService.get_rating_color(genre.avg_rating)))
                 self.ui.table_genres.setItem(row, 2, rating_item)
                 
                 # Książki
