@@ -235,3 +235,89 @@ class UserRepository:
         cursor = self.conn.cursor()
         res = cursor.execute("SELECT current_streak FROM users WHERE id = ?", (user_id,)).fetchone()
         return res[0] if res and res[0] else 0
+
+    def get_user_report_metrics(self, period: str = "all"):
+        """Pobiera metryki dla User Report - total, growth, average PPD."""
+        cursor = self.conn.cursor()
+        from data.utils.time_periods import period_start
+
+        # Całkowita liczba użytkowników
+        cursor.execute("SELECT COUNT(*) FROM users")
+        total_users = cursor.fetchone()[0] or 0
+
+        # Nowi użytkownicy w okresie
+        since = None if period.lower() == "all" else period_start(period)
+        if since:
+            since_str = since.strftime("%Y-%m-%d %H:%M:%S")
+            cursor.execute("SELECT COUNT(*) FROM users WHERE date_joined >= ?", (since_str,))
+            new_users = cursor.fetchone()[0] or 0
+        else:
+            new_users = 0
+
+        # Średnia PPD (już policzone w kolumnie)
+        cursor.execute("SELECT AVG(pages_per_day) FROM users WHERE status = 'active'")
+        avg_ppd = cursor.fetchone()[0] or 0
+
+        return total_users, new_users, round(avg_ppd, 1)
+
+    def get_top_users_report(self, period: str = "all", limit: int = 5):
+        """Pobiera top użytkowników rankingiem - top 5 wg stron przeczytanych w okresie.
+        Consistency_score obliczany dla wybranego okresu.
+        """
+        cursor = self.conn.cursor()
+        from data.utils.time_periods import period_start
+        from data.services.user_performance_service import UserPerformanceService
+        from datetime import datetime
+
+        since = None if period.lower() == "all" else period_start(period)
+        since_str = since.strftime("%Y-%m-%d %H:%M:%S") if since else None
+
+        # Filtr czasowy dla subquery
+        time_filter = "AND timestamp >= ?" if since_str else ""
+        params = []
+        if since_str:
+            params.append(since_str)
+
+        # Liczba dni w okresie
+        if period.lower() == "week":
+            period_days = 7
+        elif period.lower() == "month":
+            period_days = 30
+        elif period.lower() == "year":
+            period_days = 365
+        else:  # "all"
+            period_days = 365  # nie ogranicza do ostatniego roku dla "all"
+
+        query = f"""
+            SELECT
+                u.id,
+                u.username,
+                COALESCE((SELECT SUM(pages_read) FROM activity WHERE user_id = u.id {time_filter}), 0) as pages_in_period,
+                u.current_streak,
+                u.date_joined
+            FROM users u
+            WHERE u.status = 'active'
+            ORDER BY pages_in_period DESC
+            LIMIT ?
+        """
+
+        final_params = params + [limit]
+        rows = cursor.execute(query, final_params).fetchall()
+
+        result = []
+        for user_id, username, pages_period, streak, date_joined in rows:
+            # Obliczenie consistency_score dla wybranego okresu
+            reg_date_dt = datetime.strptime(date_joined, "%Y-%m-%d %H:%M:%S")
+            reg_date = reg_date_dt.date()
+
+            # Czy użytkownik zarejestrował się dzisiaj
+            if reg_date == datetime.now().date():
+                consistency_score = (1.0 / period_days) * 100
+            else:
+                # Liczba dni aktywnych w danym okresie
+                active_days = UserPerformanceService.get_active_days_in_range(cursor, user_id, period_days)
+                consistency_score = UserPerformanceService.calculate_consistency_score(active_days, period_days)
+
+            result.append((username, pages_period, streak, round(consistency_score, 1)))
+
+        return result

@@ -71,10 +71,10 @@ class ReportsView(QWidget):
 
             # Pobieranie danych z odpowiednich repozytoriów
             if report_type == "Activity":
-                total_p, active_d, avg_s = self.act_repo.get_activity_kpi(period.lower())
+                total_p, retention, avg_s = self.act_repo.get_activity_kpi(period.lower())
                 rows = [
                     ("Total Volume", f"{total_p} pages", "Dynamic", period, "Sum of all reading logs"),
-                    ("User Retention", f"{active_d} active days", "Stable", period, "Unique dates with activity"),
+                    ("User Retention", f"{retention}%", "Engagement", period, "% of active users in period"),
                     ("Session Density", f"{avg_s} p/session", "Quality", period, "Average intensity per entry")
                 ]
                 is_empty = (total_p == 0)
@@ -98,6 +98,30 @@ class ReportsView(QWidget):
                     ("Genre Diversity", f"{genre_count} active", "Stable", period, "Unique genres in period")
                 ]
                 is_empty = (genre_count == 0)
+
+            elif report_type == "Top Users":
+                top_users = self.user_repo.get_top_users_report(period.lower(), limit=5)
+                rows = []
+                for rank, user_data in enumerate(top_users, 1):
+                    username, pages_period, streak, consistency = user_data
+                    rows.append((
+                        f"#{rank} {username}",
+                        f"{pages_period} pages",
+                        f"Streak: {streak}d",
+                        period,
+                        f"Consistency: {int(consistency)}%"
+                    ))
+                is_empty = (len(rows) == 0)
+
+            elif report_type == "Trend Analysis":
+                trend_data, total_sum, growth, peak = self.act_repo.get_trend_analysis(period.lower())
+                growth_indicator = "📈" if growth > 0 else "📉" if growth < 0 else "→"
+                rows = [
+                    ("Period Total", f"{total_sum} pages", "Volume", period, "Sum of all activities"),
+                    ("vs Previous Period", f"{growth_indicator} {abs(growth)}%", "Growth", period, "Change from previous period"),
+                    ("Peak Activity", f"{peak} pages", "Maximum", period, "Highest activity recorded")
+                ]
+                is_empty = (total_sum == 0)
 
             # Weryfikacja statusu i wyświetlanie danych w interfejsie
             if not rows or is_empty:
