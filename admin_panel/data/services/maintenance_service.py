@@ -116,6 +116,7 @@ def update_all_user_streaks(cursor):
     users = cursor.fetchall()
 
     current_date = datetime.now().date()
+    streak_updates = []
 
     for user in users:
         user_id = user['id']
@@ -124,7 +125,7 @@ def update_all_user_streaks(cursor):
 
         # Nowe konto (registered today) - automatycznie 1 dzień
         if date_joined == current_date:
-            cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (1, user_id))
+            streak_updates.append((1, user_id))
             continue
 
         # Logika obliczania streaka (limit 100 dni)
@@ -152,7 +153,10 @@ def update_all_user_streaks(cursor):
                     else:
                         break
 
-        cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (streak, user_id))
+        streak_updates.append((streak, user_id))
+
+    # Batch update zamiast 1000+ individual execute
+    cursor.executemany("UPDATE users SET current_streak = ? WHERE id = ?", streak_updates)
 
 def run_maintenance(conn):
     """Główny punkt wejścia do konserwacji danych."""
