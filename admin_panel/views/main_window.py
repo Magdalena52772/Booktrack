@@ -46,7 +46,6 @@ class MainWindow(QMainWindow):
         # Parametry startowe okna
         self.setMinimumSize(1100, 750)
         self.ui.btn_dashboard.setChecked(True)
-        self.startup_sequence()
 
     def handle_navigation(self):
         """Metoda pośrednicząca w obsłudze nawigacji."""
