@@ -22,10 +22,10 @@ def update_genre_stats(conn):
     Oblicza zasięg czytelniczy, średnie oceny oraz procentowy udział w rynku.
     """
     cursor = conn.cursor()
-    
+
     # Oblicza wszystko jednym zapytaniem agregującym
     cursor.execute("""
-        SELECT 
+        SELECT
             g.id,
             COUNT(DISTINCT b.user_id) as readers,
             ROUND(IFNULL(AVG(CASE WHEN b.status = 'finished' THEN b.rating END), 0.0), 2) as avg_rating,
@@ -39,18 +39,21 @@ def update_genre_stats(conn):
     # Oblicza sumę wszystkich przeczytanych książek do udziału procentowego
     total_finished = sum(row[3] for row in stats) or 1
 
-    # Wykonuje masową aktualizację
+    # Przygotowanie danych do batch update
     try:
+        updates = []
         for row in stats:
             g_id, readers, avg_rating, books_read = row
             share = round((books_read / total_finished) * 100, 2)
-            
-            cursor.execute("""
-                UPDATE genres 
-                SET readers = ?, avg_rating = ?, books_read = ?, reading_time_share = ?
-                WHERE id = ?
-            """, (readers, avg_rating, books_read, share, g_id))
-        
+            updates.append((readers, avg_rating, books_read, share, g_id))
+
+        # Batch update zamiast pętli
+        cursor.executemany("""
+            UPDATE genres
+            SET readers = ?, avg_rating = ?, books_read = ?, reading_time_share = ?
+            WHERE id = ?
+        """, updates)
+
         conn.commit()
         print("[STATS] Batch update zakończony sukcesem.")
     except Exception as e:
