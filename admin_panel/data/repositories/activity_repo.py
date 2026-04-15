@@ -64,19 +64,15 @@ class ActivityRepository:
             """
             cursor.execute(query)
         elif f_type == "year":
-            # Agreguje po tygodniach (52 punkty)
+            # Agreguje po tygodniach (52 punkty) - uproszczone bez RECURSIVE CTE
             query = """
-                WITH RECURSIVE calendar(d) AS (
-                    SELECT date('now', '-364 days')
-                    UNION ALL
-                    SELECT date(d, '+7 days') FROM calendar WHERE d < date('now', '-7 days')
-                )
-                SELECT c.d, IFNULL(SUM(a.pages_read), 0)
-                FROM calendar c
-                LEFT JOIN activity a ON a.timestamp >= c.d || ' 00:00:00'
-                                    AND a.timestamp < date(c.d, '+7 days') || ' 00:00:00'
-                GROUP BY c.d
-                ORDER BY c.d ASC
+                SELECT
+                    DATE(timestamp, 'weekday 0', '-6 days') as week_start,
+                    SUM(pages_read) as total
+                FROM activity
+                WHERE timestamp >= date('now', '-364 days')
+                GROUP BY DATE(timestamp, 'weekday 0', '-6 days')
+                ORDER BY week_start ASC
             """
             cursor.execute(query)
         else:
