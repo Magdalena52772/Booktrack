@@ -286,7 +286,7 @@ class UserRepository:
         elif period.lower() == "year":
             period_days = 365
         else:  # "all"
-            period_days = 365  # nie ograniczamy do ostatniego roku dla "all"
+            period_days = 365  # nie ogranicza do ostatniego roku dla "all"
 
         query = f"""
             SELECT
