@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """ Test poprawności i responsywności podczas uruchamiania aplikacji."""
 import sys
 import time
