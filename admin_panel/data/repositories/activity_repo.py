@@ -39,32 +39,62 @@ class ActivityRepository:
         # Zwrot przetworzonych wskaźników z zaokrągleniem wartości średniej
         return int(total_pages), active_days, round(float(avg_per_day), 1)
 
+    def get_activity_kpi_core(self, time_filter="week"):
+        """
+        Pobieranie TYLKO total_pages i active_days (BEZ avg_per_day - SZYBKO!)
+        Używane przez ActivityView gdzie avg_per_day nie jest potrzebne.
+        """
+        cursor = self.conn.cursor()
+
+        # Centralizowana logika filtrowania czasowego
+        condition, params = TimeFilterService.build_time_filter(time_filter)
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
+
+        # Obliczanie sumy stron
+        cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {where_clause}", params)
+        total_pages = cursor.fetchone()[0]
+
+        # Wyznaczanie liczby unikalnych dni
+        cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {where_clause}", params)
+        active_days = cursor.fetchone()[0] or 0
+
+        # Zwrot BEZ avg_per_day - 0 jako placeholder
+        return int(total_pages), active_days, 0.0
+
 
     def get_activity_trend(self, time_filter="week"):
         """Pobieranie trendu aktywności"""
         cursor = self.conn.cursor()
         f_type = time_filter.lower()
-        
-        # Zapewnienie ciągłości danych: generuje pełną listę dat (kalendarz), 
-        # aby dni bez aktywności również pojawiły się na wykresie jako 0.
-        if f_type in ["week", "month"]:
-            days = 6 if f_type == "week" else 30
-            query = f"""
+
+        if f_type == "week":
+            # Week: RECURSIVE CTE (7 dni)
+            query = """
                 WITH RECURSIVE calendar(d) AS (
-                    SELECT date('now', '-{days} days')
+                    SELECT date('now', '-6 days')
                     UNION ALL
                     SELECT date(d, '+1 day') FROM calendar WHERE d < date('now')
                 )
                 SELECT c.d, IFNULL(SUM(a.pages_read), 0)
                 FROM calendar c
-                LEFT JOIN activity a ON a.timestamp >= c.d || ' 00:00:00' 
+                LEFT JOIN activity a ON a.timestamp >= c.d || ' 00:00:00'
                                     AND a.timestamp <= c.d || ' 23:59:59'
                 GROUP BY c.d
                 ORDER BY c.d ASC
             """
             cursor.execute(query)
+        elif f_type == "month":
+            # Month: GROUP BY
+            query = """
+                SELECT DATE(timestamp), IFNULL(SUM(pages_read), 0)
+                FROM activity
+                WHERE timestamp >= date('now', '-30 days')
+                GROUP BY DATE(timestamp)
+                ORDER BY DATE(timestamp) ASC
+            """
+            cursor.execute(query)
         elif f_type == "year":
-            # Agreguje po tygodniach (52 punkty) - uproszczone bez RECURSIVE CTE
+            # Year: Agreguje po tygodniach (52 punkty)
             query = """
                 SELECT
                     DATE(timestamp, 'weekday 0', '-6 days') as week_start,
@@ -76,7 +106,7 @@ class ActivityRepository:
             """
             cursor.execute(query)
         else:
-            # "all" - ostatnie 24 miesiące dla lepszej wizualizacji (24 punkty)
+            # "all" - ostatnie 24 miesiące
             query = """
                 SELECT STRFTIME('%Y-%m', timestamp) as period, SUM(pages_read)
                 FROM activity
@@ -85,7 +115,7 @@ class ActivityRepository:
                 ORDER BY period ASC
             """
             cursor.execute(query)
-            
+
         results = cursor.fetchall()
         return results if results else []
     

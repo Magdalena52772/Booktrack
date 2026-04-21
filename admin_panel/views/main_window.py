@@ -47,11 +47,20 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1100, 750)
         self.ui.btn_dashboard.setChecked(True)
 
+        # Zaplanuj Dashboard loading po pokazaniu okna
+        # QTimer.singleShot zadba aby UI się pokazał najpierw, potem załaduje dane
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(100, self._deferred_load_dashboard)
+
     def handle_navigation(self):
         """Metoda pośrednicząca w obsłudze nawigacji."""
         button = self.sender()
         if config := self.view_config.get(button):
             self.switch_page(config)
+
+    def _deferred_load_dashboard(self):
+        """Ładuje Dashboard po tym jak UI się pokazał (non-blocking startup)."""
+        self.switch_page(self.view_config[self.ui.btn_dashboard])
 
     def switch_page(self, config):
         """Zarządzanie przełączaniem stron i leniwą inicjalizacją widoków."""

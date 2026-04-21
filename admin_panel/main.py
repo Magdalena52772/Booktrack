@@ -27,22 +27,40 @@ from data.data_generator.books import generate_books
 from data.data_generator.activity import generate_activity, simulate_incremental_activity
 from data.data_generator.challenges import generate_challenges
 
+# ==================== PROFILING ====================
+PROFILE_ENABLED = True
+STARTUP_TIME = datetime.now()
+
+def log_time(event: str):
+    """Log timestamp dla performance profiling."""
+    if PROFILE_ENABLED:
+        elapsed = (datetime.now() - STARTUP_TIME).total_seconds()
+        print(f"[TIMING] {elapsed:.2f}s | {event}")
+
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
 def main():
+    log_time("Script started")
+
     # Inicjalizacja bazy
     initialize_database()
+    log_time("Database initialized")
 
     # Pobieranie połączenia
     conn = get_connection()
+    log_time("DB connection established")
 
     app = QApplication(sys.argv)
+    log_time("QApplication created")
 
     window = MainWindow(conn)
+    log_time("MainWindow.__init__ completed")
+
     window.setWindowState(Qt.WindowMaximized)
     window.show()
+    log_time("Window shown on screen")
     print("[UI] Okno pokazane - UI responsive!")
 
     # Uruchamia startup w oddzielnym wątku (bez blokowania UI)
@@ -50,7 +68,6 @@ def main():
         """Startup w tle, nie blokuje UI - nowe połączenie dla wątku!"""
         from data.database import get_connection as get_db_connection
         from data.services.user_service import finalize_database_consistency
-        from data.services.maintenance_service import run_maintenance
 
         # Nowe połączenie dla tego wątku (SQLite wymaga osobnych połączeń dla wątków)
         thread_conn = get_db_connection()
@@ -111,16 +128,30 @@ def main():
                     act_count = random.randint(3, 8)
                     simulate_incremental_activity(thread_conn, active_users, books_in_progress, count=act_count)
 
-            print("[STARTUP] Maintenance...")
-            run_maintenance(thread_conn)
             thread_conn.commit()
             cursor.close()
+            log_time("Startup data generation completed")
             print("[STARTUP] Zakończone! UI odświeży się automatycznie.")
         except Exception as e:
             print(f"[STARTUP ERROR] {e}")
             thread_conn.rollback()
         finally:
             thread_conn.close()
+
+    # Defer maintenance do DEPOIS niż Dashboard load
+    def run_maintenance_later():
+        """Uruchom maintenance po załadowaniu Dashboard'a."""
+        from data.services.maintenance_service import run_maintenance
+        from data.database import get_connection as get_db_connection
+
+        print("[MAINTENANCE] Uruchamianie maintenance (bez blokowania Dashboard)...")
+        maint_conn = get_db_connection()
+        try:
+            run_maintenance(maint_conn)
+            maint_conn.commit()
+            log_time("Startup sequence completed")
+        finally:
+            maint_conn.close()
 
     # Uruchamia startup w oddzielnym wątku, aby nie blokować UI
     startup_thread = threading.Thread(target=run_startup_in_thread, daemon=True)
@@ -213,6 +244,25 @@ def main():
     activity_timer = QTimer()
     activity_timer.timeout.connect(run_timer_update)
     activity_timer.start(60000)  # 1 minuta
+
+    # ==================== TIMER DLA UPDATE_GENRE_STATS ====================
+    def run_genre_stats_worker():
+        """Uruchamia DatabaseWorker dla update_genre_stats."""
+        worker = DatabaseWorker("update_genre_stats", db_connection=conn)
+        worker.finished.connect(lambda: print(f"[GENRES] {datetime.now().strftime('%H:%M:%S')} | Genre stats updated."))
+        worker.error.connect(lambda err: print(f"[GENRES ERROR] {err}"))
+        worker.start()
+
+    def start_recurring_genre_timer():
+        """Uruchamia recurring timer co 5 minut."""
+        genre_timer = QTimer()
+        genre_timer.timeout.connect(run_genre_stats_worker)
+        genre_timer.start(300000)  # 5 minut = 300000ms
+        return genre_timer
+
+    # Delay 1 minuta, potem recurring co 5 minut
+    QTimer.singleShot(60000, start_recurring_genre_timer)
+    print("[GENRES] Timer zaplanowany: first run za 1 min, potem co 5 min")
 
     exit_code = app.exec() 
     conn.close()

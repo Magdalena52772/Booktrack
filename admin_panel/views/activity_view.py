@@ -44,25 +44,25 @@ class ActivityView(QWidget):
             # Pobranie parametrów filtra czasowego
             selected_filter = self.ui.cb_time_filter.currentText().lower()
             self.statusMessage.emit(*StatusMsg.get("LOAD_START", selected_filter))
-            
+
             # Pozyskanie danych trendu historycznego
             trend_data = self.repo.get_activity_trend(selected_filter)
-            
-            # Pobranie kluczowych wskaźników wydajności (KPI)
-            total_pages, real_active_days, _ = self.repo.get_activity_kpi(selected_filter)
+
+            # Pobranie kluczowych wskaźników wydajności (KPI) - CORE VERSION (bez avg_per_day)
+            total_pages, real_active_days, _ = self.repo.get_activity_kpi_core(selected_filter)
             unique_readers = self.repo.get_unique_active_users(selected_filter)
             active_challenges = self.challenge_repo.count_active()
-            
+
             # Aktualizacja komponentów wizualnych
             if trend_data:
                 dates, values = zip(*trend_data)
                 self.canvas.plot_data(list(dates), list(values), time_filter=selected_filter)
-                
+
                 # Odświeżenie etykiet w panelu bocznym
                 self.ui.lbl_books_count.setText(f"Total pages:<br><b style='color:#daa520; font-size:14pt;'>{total_pages:,}</b>")
                 self.ui.lbl_active_days.setText(f"Active days:<br><b style='color:#daa520; font-size:14pt;'>{real_active_days}</b>")
                 self.ui.lbl_challenges.setText(f"Active challenges:<br><b style='color:#daa520; font-size:14pt;'>{active_challenges or 0}</b>")
-                
+
                 # Aktualizacja dolnego podsumowania
                 self._update_summary(trend_data, unique_readers)
                 

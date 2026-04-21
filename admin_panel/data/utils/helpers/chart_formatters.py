@@ -9,21 +9,58 @@ class ChartTooltipHelper:
     @staticmethod
     def setup_hover(canvas, func_get_message):
         """
-        Konfiguruje dynamiczne tooltipy dla wykresów Matplotlib w środowisku PySide6
+        Konfiguruje dynamiczne tooltipy dla wykresów Matplotlib w środowisku PySide6.
+        Tooltip tylko gdy blisko markerów (tolerance 10px)
         """
+        last_msg = [None]  # Cache message
+
         def on_motion(event):
             # Sprawdzenie czy kursor znajduje się wewnątrz obszaru osi
-            if event.inaxes:
-                # Pobiera wiadomość (xdata dla liniowego lub wedge dla kołowego)
-                msg = func_get_message(event) 
-                if msg:
-                    # Mapowanie pozycji myszy na współrzędne globalne ekranu
-                    global_pos = QCursor.pos()
-                    QToolTip.showText(global_pos, msg, canvas)
-                    return
-            
-            # Jeśli nie ma komunikatu lub poza osią, chowa tooltip
-            QToolTip.hideText()
+            if not event.inaxes:
+                QToolTip.hideText()
+                return
+
+            # Tolerance: tylko jeśli blisko markerów (<10 pixels od danych)
+            tolerance = 10
+            xpixel = event.x
+            ypixel = event.y
+
+            # Transform axes to display coordinates
+            ax = event.inaxes
+            try:
+                # Sprawdzenie czy jest blisko linii/markerów
+                transform = ax.transData.transform
+                if hasattr(ax, 'lines') and len(ax.lines) > 0:
+                    line = ax.lines[0]
+                    xdata = line.get_xdata()
+                    ydata = line.get_ydata()
+                    if len(xdata) > 0:
+                        # Transform danych na pixel coords
+                        points_px = transform(list(zip(xdata, ydata)))
+
+                        # Sprawdzenie odległości do wszystkich markerów
+                        min_dist = float('inf')
+                        for px, py in points_px:
+                            dist = ((xpixel - px)**2 + (ypixel - py)**2)**0.5
+                            if dist < min_dist:
+                                min_dist = dist
+
+                        # Pokaz tooltip TYLKO jeśli blisko markera
+                        if min_dist > tolerance:
+                            QToolTip.hideText()
+                            return
+            except:
+                pass
+
+            # Pobiera wiadomość tylko jeśli blisko markerów
+            msg = func_get_message(event)
+            if msg and msg != last_msg[0]:
+                last_msg[0] = msg
+                global_pos = QCursor.pos()
+                QToolTip.showText(global_pos, msg, canvas)
+            elif not msg:
+                QToolTip.hideText()
+                last_msg[0] = None
 
         # Łączenie zdarzenia ruchu myszy Matplotlib z funkcją on_motion
         canvas.figure.canvas.mpl_connect('motion_notify_event', on_motion)
@@ -44,21 +81,22 @@ class ChartStyler:
 
     @staticmethod
     def set_date_axis(ax, time_filter="week"):
-        """
-        Automatycznie dostosowuje formatowanie i zagęszczenie etykiet osi X
-        w zależności od wybranego zakresu czasu (tydzień, miesiąc, rok, all).
-        """
+        """Dostosowuje ticków i formatowanie osi X."""
         ax.tick_params(axis='x', rotation=30, labelsize=8)
 
         if time_filter == "week":
-            # Pokazuje skrót dnia i numer (np. "Mon 01") - 7 dni
+            # Week: każdy dzień
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%a %d'))
             ax.xaxis.set_major_locator(mdates.DayLocator())
         elif time_filter == "month":
-            # Pokazuje dzień i miesiąc - 30 dni, pokazuje ~15 etykiet
+            # Month: raz w tygodniu (co 7 dni)
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
-            ax.xaxis.set_major_locator(ticker.MaxNLocator(15))
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
+        elif time_filter == "year":
+            # Year: 12 ticków (co miesiąc)
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+            ax.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
         else:
-            # "year" i "all" - miesiące/tygodnie, pokazuje ~12 etykiet
+            # All: co pół roku (2 ticki na rok)
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))
-            ax.xaxis.set_major_locator(ticker.MaxNLocator(12))
+            ax.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
