@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import traceback
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, QThread, QTimer
 from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from data.utils.status_manager import StatusMsg
@@ -11,12 +11,40 @@ from charts.activity_charts import ActivityChart, ActivityHeatmap
 from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
 from worker import DatabaseWorker
 
+class ChartRenderWorker(QThread):
+    """Renderuje wykresy matplotlib w tle (nie blokuje UI)"""
+    finished = Signal()
+
+    def __init__(self, canvas, heatmap, chart_data):
+        super().__init__()
+        self.canvas = canvas
+        self.heatmap = heatmap
+        self.chart_data = chart_data
+
+    def run(self):
+        """Renderuje wykresy w osobnym wątku"""
+        try:
+            dates, values = self.chart_data
+            # Plot w tle
+            self.canvas.plot_data(list(dates), list(values), time_filter="month")
+
+            # Heatmap w tle
+            if hasattr(self, 'heatmap_data'):
+                self.heatmap.plot_heatmap(self.heatmap_data)
+        finally:
+            self.finished.emit()
+
 class DashboardView(QWidget):
     """Główny panel z dynamicznym skalowaniem i optymalnym wykorzystaniem przestrzeni."""
     statusMessage = Signal(str, str)
+    renderingFinished = Signal()  # Wyemituje się kiedy wykresy się wyrenderują
 
     def __init__(self, conn):
         super().__init__()
+        from datetime import datetime as dt
+        t_init = dt.now()
+        print(f"[DASHBOARD_INIT] START at {t_init.strftime('%H:%M:%S.%f')[:-3]}")
+
         self.conn = conn
 
         # Ładowanie zaktualizowanego UI
@@ -27,14 +55,19 @@ class DashboardView(QWidget):
         self.book_repo = BookRepository(conn)
         self.activity_repo = ActivityRepository(conn)
 
-        # Konfiguracja komponentów graficznych
-        self.setup_charts()
-        self.setup_tooltips()
+        # Nie inicjalizuje matplotlib od razu
+        self.canvas = None
+        self.heatmap = None
 
         # Obsługa zdarzeń
         self.ui.btn_refresh.clicked.connect(self.load_view)
 
         self._current_worker = None
+
+        # Setup charts asynchronicznie na Qt event loop (po pokazaniu UI)
+        QTimer.singleShot(0, self._setup_charts_deferred)
+
+        print(f"[DASHBOARD_INIT] DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]} ({(dt.now()-t_init).total_seconds()*1000:.0f}ms)")
 
     def setup_charts(self):
         """Inicjalizacja wykresów z wymuszeniem elastyczności rozmiaru."""
@@ -52,19 +85,37 @@ class DashboardView(QWidget):
             self.ui.verticalLayout_heatmap.replaceWidget(self.ui.lbl_heatmap_placeholder, self.heatmap)
             self.ui.lbl_heatmap_placeholder.deleteLater()
 
+    def _setup_charts_deferred(self):
+        """Setup charts w tle po pokazaniu UI (nie blokuje startup)."""
+        from datetime import datetime as dt
+        print(f"[DASHBOARD_CHARTS] SETUP START at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
+        self.setup_charts()
+        self.setup_tooltips()
+        print(f"[DASHBOARD_CHARTS] SETUP DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
+
     def load_view(self):
-        """Załaduj dane Dashboard'a w tle (worker thread)."""
+        """Załaduje dane Dashboard'a w tle (worker thread)."""
         # Pokazuje loading state
         self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Dashboard"))
         self._set_loading_state(True)
         from datetime import datetime as dt
         print(f"[TIMING] Dashboard.load_view() started at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
 
-        # Uruchom worker w tle
-        self._current_worker = DatabaseWorker("load_dashboard", db_connection=self.conn)
-        self._current_worker.finished.connect(self._on_dashboard_data_loaded)
-        self._current_worker.error.connect(self._on_dashboard_error)
-        self._current_worker.start()
+        # Jeśli dane są już preloaded (z MainWindow) - używa ich od razu
+        parent_window = self.parent()
+        while parent_window and not hasattr(parent_window, '_preloaded_dashboard_data'):
+            parent_window = parent_window.parent()
+
+        if parent_window and hasattr(parent_window, '_preloaded_dashboard_data') and parent_window._preloaded_dashboard_data:
+            # Używa preloaded data
+            print(f"[TIMING] Using preloaded dashboard data")
+            self._on_dashboard_data_loaded(parent_window._preloaded_dashboard_data)
+        else:
+            # Fallback - uruchamia worker w tle
+            self._current_worker = DatabaseWorker("load_dashboard", db_connection=self.conn)
+            self._current_worker.finished.connect(self._on_dashboard_data_loaded)
+            self._current_worker.error.connect(self._on_dashboard_error)
+            self._current_worker.start()
 
     def _on_dashboard_data_loaded(self, data):
         """Callback gdy worker załaduje dane."""
@@ -108,20 +159,32 @@ class DashboardView(QWidget):
         streak_text += "</span>"
         self.ui.lbl_streak.setText(streak_text)
 
-        # Aktualizacja wykresów - render w tle aby nie blokować UI!
+        # Aktualizacja wykresów - opóźnia rendering
         processed_data = self._prepare_30_days(activity_data)
         if processed_data:
-            # Defer oba wykresy do QTimer - nie blokuj UI!
-            from PySide6.QtCore import QTimer
             dates, values = zip(*processed_data) if processed_data else ([], [])
-            QTimer.singleShot(10, lambda: self.canvas.plot_data(list(dates), list(values), time_filter="month"))
-            QTimer.singleShot(50, lambda: self.heatmap.plot_heatmap(processed_data))
+            chart_data = (list(dates), list(values))
+
+            # Zaplanuje rendering na później (500ms) - uruchamia placeholder
+            def start_chart_render():
+                self._chart_worker = ChartRenderWorker(self.canvas, self.heatmap, chart_data)
+                self._chart_worker.heatmap_data = processed_data
+                self._chart_worker.finished.connect(self._on_charts_rendered)
+                self._chart_worker.start()
+
+            QTimer.singleShot(500, start_chart_render)
 
         from datetime import datetime as dt
         print(f"[TIMING] Dashboard UI fully rendered at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
 
+    def _on_charts_rendered(self):
+        """Callback kiedy wykresy się wyrenderują w tle"""
+        from datetime import datetime as dt
+        print(f"[DASHBOARD_READY] Charts fully rendered at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
+        self.renderingFinished.emit()
+
     def _set_loading_state(self, is_loading):
-        """Pokaż/ukryj loading state z eleganckim placeholderem."""
+        """Pokazuje/ukrywa loading state z placeholderem."""
         if is_loading:
             # Loading placeholders dla metryk
             loading_style = "color: #999; font-style: italic;"
@@ -130,20 +193,22 @@ class DashboardView(QWidget):
             self.ui.lbl_pages.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
             self.ui.lbl_streak.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
 
-            # Placeholder dla wykresów
-            self.canvas.axes.clear()
-            self.canvas.axes.text(0.5, 0.5, '[LOADING CHART DATA...]',
-                              ha='center', va='center',
-                              fontsize=12, color='#999', style='italic',
-                              transform=self.canvas.axes.transAxes)
-            self.canvas.draw()
+            # Placeholder dla wykresów (tylko jeśli canvas już się zainicjalizował)
+            if self.canvas and self.canvas.axes:
+                self.canvas.axes.clear()
+                self.canvas.axes.text(0.5, 0.5, '[LOADING CHART DATA...]',
+                                  ha='center', va='center',
+                                  fontsize=12, color='#999', style='italic',
+                                  transform=self.canvas.axes.transAxes)
+                self.canvas.draw()
 
-            self.heatmap.axes.clear()
-            self.heatmap.axes.text(0.5, 0.5, '[LOADING HEATMAP...]',
-                               ha='center', va='center',
-                               fontsize=12, color='#999', style='italic',
-                               transform=self.heatmap.axes.transAxes)
-            self.heatmap.draw()
+            if self.heatmap and self.heatmap.axes:
+                self.heatmap.axes.clear()
+                self.heatmap.axes.text(0.5, 0.5, '[LOADING HEATMAP...]',
+                                   ha='center', va='center',
+                                   fontsize=12, color='#999', style='italic',
+                                   transform=self.heatmap.axes.transAxes)
+                self.heatmap.draw()
         else:
             # Loading state ukryty - UI będzie aktualizowany przez _update_dashboard_ui()
             pass
@@ -164,36 +229,6 @@ class DashboardView(QWidget):
             day_str = day.strftime("%Y-%m-%d")
             full_period.append((day_str, date_map.get(day_str, 0)))
 
-        return full_period
-
-    def setup_tooltips(self):
-        """Definiowanie kontekstowych podpowiedzi dla elementów interfejsu."""
-        tooltips = {
-            "lbl_users": "Total registered users and growth (+X) within the last 30 days.",
-            "lbl_books": "Number of books finished this month across the whole community.",
-            "lbl_pages": "Average pages read daily per active user.",
-            "lbl_streak": "Top 3 users with the longest reading streaks.",
-            "btn_refresh": "Click to recalculate all community statistics."
-        }
-        apply_tooltips(self.ui, tooltips)
-
-    def _prepare_30_days(self, data):
-        """Generuje listę 30 ostatnich dni."""
-        end_date = datetime.now().date()
-        
-        date_map = {}
-        if data:
-            for d, v in data:
-                d_key = d if isinstance(d, str) else d.strftime("%Y-%m-%d")
-                date_map[d_key] = v
-        
-        full_period = []
-        # pętla wykona się 30 razy (od 29 do 0 włącznie)
-        for i in range(29, -1, -1):
-            day = end_date - timedelta(days=i)
-            day_str = day.strftime("%Y-%m-%d")
-            full_period.append((day_str, date_map.get(day_str, 0)))
-            
         return full_period
 
     def setup_tooltips(self):

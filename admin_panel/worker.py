@@ -15,7 +15,16 @@ class DatabaseWorker(QThread):
 
     def run(self):
         try:
-            if self.task_type == "fetch_books":
+            if self.task_type == "preload_matplotlib":
+                # Załadowanie matplotlib w Qt thread
+                try:
+                    import matplotlib
+                    matplotlib.use('Qt5Agg')
+                    import matplotlib.pyplot as plt
+                    self.finished.emit(True)
+                except Exception as e:
+                    self.error.emit(f"Matplotlib preload failed: {str(e)}")
+            elif self.task_type == "fetch_books":
                 result = self._get_books_from_api(self.params)
                 self.finished.emit(result)
             elif self.task_type == "run_maintenance":

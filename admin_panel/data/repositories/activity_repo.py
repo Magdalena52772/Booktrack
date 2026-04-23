@@ -41,8 +41,7 @@ class ActivityRepository:
 
     def get_activity_kpi_core(self, time_filter="week"):
         """
-        Pobieranie TYLKO total_pages i active_days (BEZ avg_per_day - SZYBKO!)
-        Używane przez ActivityView gdzie avg_per_day nie jest potrzebne.
+        Pobieranie total_pages i active_days. Używane przez ActivityView
         """
         cursor = self.conn.cursor()
 
@@ -58,8 +57,7 @@ class ActivityRepository:
         cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {where_clause}", params)
         active_days = cursor.fetchone()[0] or 0
 
-        # Zwrot BEZ avg_per_day - 0 jako placeholder
-        return int(total_pages), active_days, 0.0
+        return int(total_pages), active_days
 
 
     def get_activity_trend(self, time_filter="week"):
