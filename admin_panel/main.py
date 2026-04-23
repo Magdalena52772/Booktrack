@@ -55,6 +55,15 @@ def main():
     app = QApplication(sys.argv)
     log_time("QApplication created")
 
+    # Załadowanie matplotlib synchronicznie, żeby był gotowy zanim Dashboard go załaduje
+    try:
+        import matplotlib
+        matplotlib.use('Qt5Agg')
+        import matplotlib.pyplot as plt
+        log_time("Matplotlib loaded synchronously")
+    except Exception as e:
+        print(f"[MATPLOTLIB] Load error: {e}")
+
     window = MainWindow(conn)
     log_time("MainWindow.__init__ completed")
 
