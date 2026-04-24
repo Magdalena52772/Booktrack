@@ -62,48 +62,72 @@ class ActivityRepository:
         retention = (active_users / total_users) * 100 if total_users > 0 else 0
         return round(retention, 1)
 
+    def get_activity_kpi_core(self, time_filter="week"):
+        """
+        Pobieranie total_pages i active_days. Używane przez ActivityView
+        """
+        cursor = self.conn.cursor()
+
+        # Centralizowana logika filtrowania czasowego
+        condition, params = TimeFilterService.build_time_filter(time_filter)
+        where_clause = f"WHERE 1=1 {condition}" if condition else ""
+
+        # Obliczanie sumy stron
+        cursor.execute(f"SELECT IFNULL(SUM(pages_read), 0) FROM activity {where_clause}", params)
+        total_pages = cursor.fetchone()[0]
+
+        # Wyznaczanie liczby unikalnych dni
+        cursor.execute(f"SELECT COUNT(DISTINCT DATE(timestamp)) FROM activity {where_clause}", params)
+        active_days = cursor.fetchone()[0] or 0
+
+        return int(total_pages), active_days
+
 
     def get_activity_trend(self, time_filter="week"):
         """Pobieranie trendu aktywności"""
         cursor = self.conn.cursor()
         f_type = time_filter.lower()
-        
-        # Zapewnienie ciągłości danych: generuje pełną listę dat (kalendarz), 
-        # aby dni bez aktywności również pojawiły się na wykresie jako 0.
-        if f_type in ["week", "month"]:
-            days = 6 if f_type == "week" else 30
-            query = f"""
+
+        if f_type == "week":
+            # Week: RECURSIVE CTE (7 dni)
+            query = """
                 WITH RECURSIVE calendar(d) AS (
-                    SELECT date('now', '-{days} days')
+                    SELECT date('now', '-6 days')
                     UNION ALL
                     SELECT date(d, '+1 day') FROM calendar WHERE d < date('now')
                 )
                 SELECT c.d, IFNULL(SUM(a.pages_read), 0)
                 FROM calendar c
-                LEFT JOIN activity a ON a.timestamp >= c.d || ' 00:00:00' 
+                LEFT JOIN activity a ON a.timestamp >= c.d || ' 00:00:00'
                                     AND a.timestamp <= c.d || ' 23:59:59'
                 GROUP BY c.d
                 ORDER BY c.d ASC
             """
             cursor.execute(query)
-        elif f_type == "year":
-            # Agreguje po tygodniach (52 punkty)
+        elif f_type == "month":
+            # Month: GROUP BY
             query = """
-                WITH RECURSIVE calendar(d) AS (
-                    SELECT date('now', '-364 days')
-                    UNION ALL
-                    SELECT date(d, '+7 days') FROM calendar WHERE d < date('now', '-7 days')
-                )
-                SELECT c.d, IFNULL(SUM(a.pages_read), 0)
-                FROM calendar c
-                LEFT JOIN activity a ON a.timestamp >= c.d || ' 00:00:00'
-                                    AND a.timestamp < date(c.d, '+7 days') || ' 00:00:00'
-                GROUP BY c.d
-                ORDER BY c.d ASC
+                SELECT DATE(timestamp), IFNULL(SUM(pages_read), 0)
+                FROM activity
+                WHERE timestamp >= date('now', '-30 days')
+                GROUP BY DATE(timestamp)
+                ORDER BY DATE(timestamp) ASC
+            """
+            cursor.execute(query)
+        elif f_type == "year":
+            # Year: Agreguje po tygodniach (52 punkty)
+            query = """
+                SELECT
+                    DATE(timestamp, 'weekday 0', '-6 days') as week_start,
+                    SUM(pages_read) as total
+                FROM activity
+                WHERE timestamp >= date('now', '-364 days')
+                GROUP BY DATE(timestamp, 'weekday 0', '-6 days')
+                ORDER BY week_start ASC
             """
             cursor.execute(query)
         else:
-            # "all" - ostatnie 24 miesiące dla lepszej wizualizacji (24 punkty)
+            # "all" - ostatnie 24 miesiące
             query = """
                 SELECT STRFTIME('%Y-%m', timestamp) as period, SUM(pages_read)
                 FROM activity
@@ -112,7 +136,7 @@ class ActivityRepository:
                 ORDER BY period ASC
             """
             cursor.execute(query)
-            
+
         results = cursor.fetchall()
         return results if results else []
     

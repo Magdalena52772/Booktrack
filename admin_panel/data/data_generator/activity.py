@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from data.config import get_fake, ARCHETYPE_SETTINGS, SEASONAL_IMPACT, SIM_SETTINGS, AGE_BASED_GENRES, GENRES
 from data.services.generator_service import GeneratorService
 from data.repositories.genre_repo import GenresRepository
-from data.services.maintenance_service import update_genre_stats
 from data.services.user_service import update_user_ppd
 
 
@@ -208,5 +207,4 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
         update_user_ppd(cursor, user['id']) 
 
     conn.commit()
-    update_genre_stats(conn)
     return logs

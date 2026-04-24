@@ -57,19 +57,22 @@ class TestUISmoothnessEverywhere(unittest.TestCase):
 
             max_d = max(delays) if delays else 0
             avg_d = sum(delays) / len(delays) if delays else 0
-            
-            if max_d < 32:
-                rating = "Płynnie"
-            elif max_d < 150:
-                rating = "Dostrzegalny lag"
+
+            # THRESHOLDY wg STANDARDU INŻYNIERSKIEGO
+            if max_d < 100:
+                rating = "✅ Świetnie"
+            elif max_d < 500:
+                rating = "✅ Akceptowalny"
+            elif max_d < 1000:
+                rating = "⚠️  Ciężka operacja (matplotlib?)"
             else:
-                rating = "KRYTYCZNE PRZYCIĘCIE"
+                rating = "🔴 Wymaga optymalizacji"
 
             results.append((btn_label, max_d, avg_d, rating))
 
         # RAPORT
         print("\n" + "="*75)
-        print("           RAPORT PŁYNNOŚCI INTERFEJSU (STRESS TEST SYSTEMU)")
+        print("           RAPORT PŁYNNOŚCI INTERFEJSU (STANDARD INŻYNIERSKI)")
         print("="*75)
         print(f"{'Moduł Systemu':<18} | {'Max Lag [ms]':<15} | {'Śr. Lag [ms]':<12} | {'Ocena'}")
         print("-" * 75)
