@@ -28,26 +28,29 @@ class TestAdminPanelPerformance(unittest.TestCase):
     def test_performance_report(self):
         """Generuje zbiorczy raport wydajności interfejsu i bazy danych."""
         navigation_results = []
-        
+
         # TEST NAWIGACJI (LATENCJA MODUŁÓW)
         if hasattr(self.window, 'view_config'):
             for btn, cfg in self.window.view_config.items():
                 btn_label = btn.text().strip() if hasattr(btn, 'text') else str(btn.objectName())
-                
+
                 start_nav = time.perf_counter()
-                btn.click() 
+                btn.click()
                 QApplication.processEvents()
                 duration = time.perf_counter() - start_nav
-                
+
                 # Klasyfikacja inżynierska
                 if duration < 0.5:
                     status, rating = "PASS", "Optymalny"
                 elif duration < 1.0:
-                    status, rating = "WARN", "Akceptowalny"
+                    status, rating = "PASS", "Akceptowalny"
                 else:
                     status, rating = "FAIL", "Wymaga optymalizacji"
-                    
+
                 navigation_results.append((btn_label, duration, status, rating))
+
+                # ASERCJA: Wszystkie widoki < 1s (standard inżynierski - user nie czuje lag)
+                self.assertLess(duration, 1.0, f"{btn_label} exceeded 1.0s threshold")
 
         # TEST LIVE FEED (LOG INJECTION)
         self.window.ui.btn_live_feed.click()
@@ -74,11 +77,11 @@ class TestAdminPanelPerformance(unittest.TestCase):
         print("="*75)
         print(f"{'Moduł/Operacja':<20} | {'Czas [s]':<12} | {'Status':<8} | {'Ocena'}")
         print("-" * 75)
-        
+
         # Wyniki nawigacji
         for name, dur, stat, rat in navigation_results:
             print(f"{name[:20]:<20} | {dur:10.4f}s | {stat:<8} | {rat}")
-            
+
         print("-" * 75)
         # Wyniki techniczne
         print(f"{'Live Feed Injection':<20} | {avg_log_time:10.6f}s | PASS     | Optymalny")
@@ -86,9 +89,6 @@ class TestAdminPanelPerformance(unittest.TestCase):
         print("-" * 75)
         print(f"Data: {time.strftime('%Y-%m-%d %H:%M:%S')} | Środowisko: Python/PySide6/SQLite")
         print("="*75)
-
-        # Minimalna asercja, żeby unittest był "zaliczony"
-        self.assertTrue(len(navigation_results) > 0)
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,11 +11,13 @@ Moduł integrujący wszystkie komponenty systemu administracyjnego. Odpowiada za
 import sys
 import os
 import random
+import threading
 from datetime import datetime
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer, Qt
 from views.main_window import MainWindow
+from worker import DatabaseWorker
 
 from data.database import initialize_database, get_connection
 from data.config import USER_COUNT
@@ -25,114 +27,142 @@ from data.data_generator.books import generate_books
 from data.data_generator.activity import generate_activity, simulate_incremental_activity
 from data.data_generator.challenges import generate_challenges
 
+# ==================== PROFILING ====================
+PROFILE_ENABLED = True
+STARTUP_TIME = datetime.now()
+
+def log_time(event: str):
+    """Log timestamp dla performance profiling."""
+    if PROFILE_ENABLED:
+        elapsed = (datetime.now() - STARTUP_TIME).total_seconds()
+        print(f"[TIMING] {elapsed:.2f}s | {event}")
+
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
 def main():
+    log_time("Script started")
+
     # Inicjalizacja bazy
     initialize_database()
-    
+    log_time("Database initialized")
+
     # Pobieranie połączenia
     conn = get_connection()
-    
+    log_time("DB connection established")
+
     app = QApplication(sys.argv)
-    
+    log_time("QApplication created")
+
+    # Pre-import matplotlib aby uniknąć opóźnień podczas pierwszego użycia w widoku Dashboard
+    import matplotlib
+    matplotlib.use('Qt5Agg')
+    import matplotlib.pyplot as plt
+    log_time("Matplotlib pre-imported (heavy init done early)")
+
     window = MainWindow(conn)
+    log_time("MainWindow.__init__ completed")
+
     window.setWindowState(Qt.WindowMaximized)
     window.show()
+    log_time("Window shown on screen")
+    print("[UI] Okno pokazane - UI responsive!")
 
-    if hasattr(window, 'view_config'):
-        current_widget = window.ui.ContentArea.currentWidget()
-        for cfg in window.view_config.values():
-            if cfg["container"] == current_widget:
-                if cfg["instance"] and hasattr(cfg["instance"], "load_view"):
-                    cfg["instance"].load_view()
-                    print("[UI] Wstępne ładowanie widoku zakończone.")
-                break
-
-    def run_startup():
-        """
-        Zarządzanie procesem inicjalizacji danych i przeliczania statystyk.
-        Wykorzystanie lazy loadingu dla modułów analitycznych.
-        """
+    # Uruchamia startup w oddzielnym wątku (bez blokowania UI)
+    def run_startup_in_thread():
+        """Startup w tle, nie blokuje UI - nowe połączenie dla wątku!"""
+        from data.database import get_connection as get_db_connection
         from data.services.user_service import finalize_database_consistency
+
+        # Nowe połączenie dla tego wątku (SQLite wymaga osobnych połączeń dla wątków)
+        thread_conn = get_db_connection()
+
+        try:
+            # Sprawdzenie integralności bazy
+            cursor = thread_conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activity'")
+            if not cursor.fetchone():
+                print("[CRITICAL] Tabela activity nie istnieje! Inicjalizacja wymuszona.")
+                initialize_database()
+
+            print("[STARTUP] Weryfikacja integralności danych...")
+            cursor.execute("SELECT COUNT(*) FROM users")
+            user_count = cursor.fetchone()[0]
+
+            if user_count == 0:
+                print("[INIT] Generowanie danych...")
+                users_list = generate_users(thread_conn, count=USER_COUNT)
+                books_list = generate_books(thread_conn, users_list)
+                generate_challenges(thread_conn, users_list)
+                generate_activity(thread_conn, users_list, books_list)
+                finalize_database_consistency(thread_conn)
+            else:
+                print(f"[DATABASE] System gotowy. Liczba: {user_count}.")
+                cursor.execute("SELECT id, status, name, username, birth_date, date_joined, books_read FROM users")
+                existing_users = [
+                    {
+                        "id": r[0],
+                        "status": r[1],
+                        "name": r[2],
+                        "username": r[3],
+                        "birth_date": r[4],
+                        "date_joined": r[5],
+                        "books_read": r[6]
+                    } for r in cursor.fetchall()
+                ]
+
+                new_users = []
+                for _ in range(random.randint(0, 2)):
+                    new_id = generate_realtime_user(thread_conn)
+                    cursor.execute("SELECT id, status, name, birth_date, date_joined, books_read FROM users WHERE id = ?", (new_id,))
+                    row = cursor.fetchone()
+                    if row:
+                        u_data = {"id": row[0], "status": row[1], "name": row[2], "birth_date": row[3], "date_joined": row[4], "books_read": row[5]}
+                        new_users.append(u_data)
+                        print(f"[GROWTH] {datetime.now().strftime('%H:%M:%S')} | Nowy użytkownik: {u_data['name']}")
+
+                if new_users:
+                    generate_books(thread_conn, new_users)
+                    generate_challenges(thread_conn, new_users)
+
+                cursor.execute("SELECT id, user_id, status FROM books WHERE status = 'reading'")
+                books_in_progress = [{"id": r[0], "user_id": r[1], "status": r[2]} for r in cursor.fetchall()]
+
+                active_users = [u for u in (existing_users + new_users) if u["status"] == "active"]
+                if active_users and books_in_progress:
+                    act_count = random.randint(3, 8)
+                    simulate_incremental_activity(thread_conn, active_users, books_in_progress, count=act_count)
+
+            thread_conn.commit()
+            cursor.close()
+            log_time("Startup data generation completed")
+            print("[STARTUP] Zakończone! UI odświeży się automatycznie.")
+        except Exception as e:
+            print(f"[STARTUP ERROR] {e}")
+            thread_conn.rollback()
+        finally:
+            thread_conn.close()
+
+    # ==================== TIMER DLA SYMULACJI AKTYWNOŚCI (REAL-TIME) ============
+    def run_maintenance_later():
+        """Uruchom maintenance po załadowaniu Dashboard'a."""
         from data.services.maintenance_service import run_maintenance
-        
-        # Sprawdzenie integralności bazy i ewentualna inicjalizacja danych
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activity'")
-        if not cursor.fetchone():
-            print("[CRITICAL] Tabela activity nie istnieje! Inicjalizacja wymuszona.")
-            initialize_database()
-        
-        print("[STARTUP] Weryfikacja integralności danych...")
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM users")
-        user_count = cursor.fetchone()[0]
+        from data.database import get_connection as get_db_connection
 
-        if user_count == 0:
-            print("[INIT] Generowanie danych...")
-            users_list = generate_users(conn, count=USER_COUNT)
-            books_list = generate_books(conn, users_list)
-            generate_challenges(conn, users_list)
-            generate_activity(conn, users_list, books_list)
-            finalize_database_consistency(conn) 
-        else:
-            print(f"[DATABASE] System gotowy. Liczba: {user_count}.")
-            # Jeśli baza już była, odświeża wszystko na start
-            run_maintenance(conn)
-            
-            cursor.execute("SELECT id, status, name, username, birth_date, date_joined, books_read FROM users")
-            existing_users = [
-                {
-                    "id": r[0], 
-                    "status": r[1], 
-                    "name": r[2], 
-                    "username": r[3], 
-                    "birth_date": r[4], 
-                    "date_joined": r[5], 
-                    "books_read": r[6]
-                } for r in cursor.fetchall()
-            ]
+        print("[MAINTENANCE] Uruchamianie maintenance (bez blokowania Dashboard)...")
+        maint_conn = get_db_connection()
+        try:
+            run_maintenance(maint_conn)
+            maint_conn.commit()
+            log_time("Startup sequence completed")
+        finally:
+            maint_conn.close()
 
-            new_users = []
-            for _ in range(random.randint(0, 2)):
-                new_id = generate_realtime_user(conn)
-                cursor.execute("SELECT id, status, name, birth_date, date_joined, books_read FROM users WHERE id = ?", (new_id,))
-                row = cursor.fetchone()
-                if row:
-                    u_data = {"id": row[0], "status": row[1], "name": row[2], "birth_date": row[3], "date_joined": row[4], "books_read": row[5]}
-                    new_users.append(u_data)
-                    print(f"[GROWTH] {datetime.now().strftime('%H:%M:%S')} | Nowy użytkownik: {u_data['name']}")
-
-            if new_users:
-                generate_books(conn, new_users)
-                generate_challenges(conn, new_users)
-
-            cursor.execute("SELECT id, user_id, status FROM books WHERE status = 'reading'")
-            books_in_progress = [{"id": r[0], "user_id": r[1], "status": r[2]} for r in cursor.fetchall()]
-            
-            active_users = [u for u in (existing_users + new_users) if u["status"] == "active"]
-            if active_users and books_in_progress:
-                act_count = random.randint(3, 8)
-                simulate_incremental_activity(conn, active_users, books_in_progress, count=act_count)
-
-        run_maintenance(conn) 
-        conn.commit()
-        cursor.close()
-
-        if hasattr(window, 'view_config'):
-            current_widget = window.ui.ContentArea.currentWidget()
-            for cfg in window.view_config.values():
-                if cfg["container"] == current_widget:
-                    view = cfg["instance"]
-                    if view and hasattr(view, "load_view"):
-                        view.load_view()
-                        print(f"[STARTUP] UI: Odświeżono widok {view.__class__.__name__}.")
-                    break
-
-    QTimer.singleShot(100, run_startup)
+    # Uruchamia startup w oddzielnym wątku, aby nie blokować UI
+    startup_thread = threading.Thread(target=run_startup_in_thread, daemon=True)
+    startup_thread.start()
+    print("[UI] Startup w tle - UI RESPONSIVE!")
 
 
     def run_timer_update():
@@ -219,7 +249,26 @@ def main():
 
     activity_timer = QTimer()
     activity_timer.timeout.connect(run_timer_update)
-    activity_timer.start(60000)  # 1 minute 
+    activity_timer.start(60000)  # 1 minuta
+
+    # ==================== TIMER DLA UPDATE_GENRE_STATS ====================
+    def run_genre_stats_worker():
+        """Uruchamia DatabaseWorker dla update_genre_stats."""
+        worker = DatabaseWorker("update_genre_stats", db_connection=conn)
+        worker.finished.connect(lambda: print(f"[GENRES] {datetime.now().strftime('%H:%M:%S')} | Genre stats updated."))
+        worker.error.connect(lambda err: print(f"[GENRES ERROR] {err}"))
+        worker.start()
+
+    def start_recurring_genre_timer():
+        """Uruchamia recurring timer co 5 minut."""
+        genre_timer = QTimer()
+        genre_timer.timeout.connect(run_genre_stats_worker)
+        genre_timer.start(300000)  # 5 minut = 300000ms
+        return genre_timer
+
+    # Delay 1 minuta, potem recurring co 5 minut
+    QTimer.singleShot(60000, start_recurring_genre_timer)
+    print("[GENRES] Timer zaplanowany: first run za 1 min, potem co 5 min")
 
     exit_code = app.exec() 
     conn.close()

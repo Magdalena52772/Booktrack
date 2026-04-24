@@ -22,10 +22,10 @@ def update_genre_stats(conn):
     Oblicza zasięg czytelniczy, średnie oceny oraz procentowy udział w rynku.
     """
     cursor = conn.cursor()
-    
+
     # Oblicza wszystko jednym zapytaniem agregującym
     cursor.execute("""
-        SELECT 
+        SELECT
             g.id,
             COUNT(DISTINCT b.user_id) as readers,
             ROUND(IFNULL(AVG(CASE WHEN b.status = 'finished' THEN b.rating END), 0.0), 2) as avg_rating,
@@ -39,18 +39,21 @@ def update_genre_stats(conn):
     # Oblicza sumę wszystkich przeczytanych książek do udziału procentowego
     total_finished = sum(row[3] for row in stats) or 1
 
-    # Wykonuje masową aktualizację
+    # Przygotowanie danych do batch update
     try:
+        updates = []
         for row in stats:
             g_id, readers, avg_rating, books_read = row
             share = round((books_read / total_finished) * 100, 2)
-            
-            cursor.execute("""
-                UPDATE genres 
-                SET readers = ?, avg_rating = ?, books_read = ?, reading_time_share = ?
-                WHERE id = ?
-            """, (readers, avg_rating, books_read, share, g_id))
-        
+            updates.append((readers, avg_rating, books_read, share, g_id))
+
+        # Batch update zamiast pętli
+        cursor.executemany("""
+            UPDATE genres
+            SET readers = ?, avg_rating = ?, books_read = ?, reading_time_share = ?
+            WHERE id = ?
+        """, updates)
+
         conn.commit()
         print("[STATS] Batch update zakończony sukcesem.")
     except Exception as e:
@@ -113,6 +116,7 @@ def update_all_user_streaks(cursor):
     users = cursor.fetchall()
 
     current_date = datetime.now().date()
+    streak_updates = []
 
     for user in users:
         user_id = user['id']
@@ -121,7 +125,7 @@ def update_all_user_streaks(cursor):
 
         # Nowe konto (registered today) - automatycznie 1 dzień
         if date_joined == current_date:
-            cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (1, user_id))
+            streak_updates.append((1, user_id))
             continue
 
         # Logika obliczania streaka (limit 100 dni)
@@ -149,7 +153,10 @@ def update_all_user_streaks(cursor):
                     else:
                         break
 
-        cursor.execute("UPDATE users SET current_streak = ? WHERE id = ?", (streak, user_id))
+        streak_updates.append((streak, user_id))
+
+    # Batch update zamiast 1000+ individual execute
+    cursor.executemany("UPDATE users SET current_streak = ? WHERE id = ?", streak_updates)
 
 def run_maintenance(conn):
     """Główny punkt wejścia do konserwacji danych."""
