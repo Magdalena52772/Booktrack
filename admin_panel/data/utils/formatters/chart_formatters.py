@@ -82,7 +82,8 @@ class ChartStyler:
     @staticmethod
     def set_date_axis(ax, time_filter="week"):
         """Dostosowuje ticków i formatowanie osi X."""
-        ax.tick_params(axis='x', rotation=30, labelsize=8)
+        ax.tick_params(axis='x', rotation=30, labelsize=9)
+        ax.tick_params(axis='y', labelsize=9)
 
         if time_filter == "week":
             # Week: każdy dzień

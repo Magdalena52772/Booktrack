@@ -55,14 +55,11 @@ def main():
     app = QApplication(sys.argv)
     log_time("QApplication created")
 
-    # Załadowanie matplotlib synchronicznie, żeby był gotowy zanim Dashboard go załaduje
-    try:
-        import matplotlib
-        matplotlib.use('Qt5Agg')
-        import matplotlib.pyplot as plt
-        log_time("Matplotlib loaded synchronously")
-    except Exception as e:
-        print(f"[MATPLOTLIB] Load error: {e}")
+    # Pre-import matplotlib aby uniknąć opóźnień podczas pierwszego użycia w widoku Dashboard
+    import matplotlib
+    matplotlib.use('Qt5Agg')
+    import matplotlib.pyplot as plt
+    log_time("Matplotlib pre-imported (heavy init done early)")
 
     window = MainWindow(conn)
     log_time("MainWindow.__init__ completed")
@@ -147,7 +144,7 @@ def main():
         finally:
             thread_conn.close()
 
-    # Defer maintenance do DEPOIS niż Dashboard load
+    # ==================== TIMER DLA SYMULACJI AKTYWNOŚCI (REAL-TIME) ============
     def run_maintenance_later():
         """Uruchom maintenance po załadowaniu Dashboard'a."""
         from data.services.maintenance_service import run_maintenance

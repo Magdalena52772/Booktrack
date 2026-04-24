@@ -66,14 +66,8 @@ try:
         test_state["first_paint_time"] = (t_callback - t_after_show) * 1000
         print(f"[UI] First paint (from show): {test_state['first_paint_time']:.0f}ms")
 
-        # Podłącz się do renderingFinished sygnału DashboardView
-        dashboard_view = window.view_config[window.ui.btn_dashboard]["instance"]
-        if dashboard_view and hasattr(dashboard_view, "renderingFinished"):
-            dashboard_view.renderingFinished.connect(on_dashboard_rendered)
-            print(f"[CONNECT] Listening for dashboard renderingFinished signal...")
-        else:
-            print(f"[WARNING] Could not connect to renderingFinished signal")
-            finish()
+        # Czeka aż DashboardView się załaduje - potem czeka na renderingFinished
+        QTimer.singleShot(1100, lambda: check_dashboard_loaded())
 
     def on_dashboard_rendered():
         """Callback kiedy wykresy się wyrenderują"""
@@ -81,6 +75,20 @@ try:
             test_state["dashboard_render_time"] = (time.perf_counter() - start_time) * 1000
             print(f"[DASHBOARD] Charts rendered at {test_state['dashboard_render_time']:.0f}ms")
             finish()
+
+    def check_dashboard_loaded():
+        """Czeka aż DashboardView się załaduje i podłącza do renderingFinished"""
+        dashboard_view = window.view_config[window.ui.btn_dashboard]["instance"]
+        if dashboard_view and hasattr(dashboard_view, "renderingFinished"):
+            dashboard_view.renderingFinished.connect(on_dashboard_rendered)
+            print(f"[CONNECT] Listening for dashboard renderingFinished signal...")
+        else:
+            # Czeka maksymalnie 5 sekund, potem zakańcza
+            if (time.perf_counter() - start_time) < 5:
+                QTimer.singleShot(50, check_dashboard_loaded)
+            else:
+                print(f"[WARNING] Timeout waiting for dashboard")
+                finish()
 
     def finish():
         total_time = (time.perf_counter() - start_time)

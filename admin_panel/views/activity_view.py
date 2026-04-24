@@ -48,8 +48,8 @@ class ActivityView(QWidget):
             # Pozyskanie danych trendu historycznego
             trend_data = self.repo.get_activity_trend(selected_filter)
 
-            # Pobranie kluczowych wskaźników wydajności (KPI) - CORE VERSION (bez avg_per_day)
-            total_pages, real_active_days, _ = self.repo.get_activity_kpi_core(selected_filter)
+            # Pobranie kluczowych wskaźników wydajności (KPI)
+            total_pages, real_active_days = self.repo.get_activity_kpi_core(selected_filter)
             unique_readers = self.repo.get_unique_active_users(selected_filter)
             active_challenges = self.challenge_repo.count_active()
 
