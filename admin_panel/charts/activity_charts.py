@@ -1,20 +1,17 @@
 import bisect
-from matplotlib.patches import Rectangle
-import numpy as np
-from datetime import datetime
-from matplotlib.figure import Figure
-from matplotlib.colors import LinearSegmentedColormap
-import matplotlib.dates as mdates
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from data.utils.helpers.chart_formatters import ChartTooltipHelper, ChartStyler
 import hashlib
+from datetime import datetime
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from data.utils.formatters.chart_formatters import ChartTooltipHelper, ChartStyler
 
 class ActivityChart(FigureCanvas):
     """Wykres liniowy prezentujący trend aktywności użytkowników"""
 
     def __init__(self, parent=None):
         """Inicjalizacja komponentu wykresu i konfiguracja podstawowych parametrów figury."""
-        self.fig = Figure(figsize=(5, 4), dpi=80)
+        # zdefiniowanie figury i osi przed wywołaniem super() dla uniknięcia problemów z importami matplotlib podczas inicjalizacji Qt
+        from matplotlib.figure import Figure
+        self.fig = Figure(figsize=(5, 4), dpi=60)
         self.axes = self.fig.add_subplot(111)
         super().__init__(self.fig)
         self.setParent(parent)
@@ -32,6 +29,8 @@ class ActivityChart(FigureCanvas):
         if not self.line:
             return None
 
+        import matplotlib.dates as mdates
+
         x_data = self.line.get_xdata()
         y_data = self.line.get_ydata()
 
@@ -47,8 +46,10 @@ class ActivityChart(FigureCanvas):
         """
         Główna metoda renderująca dane.
         Odpowiada za parsowanie dat, rysowanie oraz stylizację osi.
-        Cache: jeśli dane się nie zmieniły, nie renderuj ponownie.
+        Cache: jeśli dane się nie zmieniły, nie renderuje ponownie.
         """
+        import matplotlib.dates as mdates
+
         # Generowanie hashu dla danych wejściowych
         data_key = (tuple(dates_str) if dates_str else (), tuple(values) if values else (), time_filter)
         current_hash = hashlib.md5(str(data_key).encode()).hexdigest()
@@ -91,6 +92,11 @@ class ActivityHeatmap(FigureCanvas):
 
     def __init__(self, parent=None):
         """Inicjalizacja mapy cieplnej i definicja palety kolorów."""
+        # zdefiniowanie figury i osi przed wywołaniem super() dla uniknięcia problemów z importami matplotlib podczas inicjalizacji Qt
+        from matplotlib.figure import Figure
+        from matplotlib.colors import LinearSegmentedColormap
+        import numpy as np
+
         self.fig = Figure(figsize=(8, 3), dpi=60)
         self.axes = self.fig.add_subplot(111)
         super().__init__(self.fig)
@@ -102,6 +108,7 @@ class ActivityHeatmap(FigureCanvas):
                                                             ["#fffef0", "#b8860b"])
         self.grid_data = None
         self.dates_map = None
+        self.np = np  # Przechowywanie referencji do numpy dla późniejszego użycia w metodzie plot_heatmap
 
         ChartTooltipHelper.setup_hover(self, self._get_tooltip_msg)
 
@@ -124,8 +131,10 @@ class ActivityHeatmap(FigureCanvas):
     def plot_heatmap(self, trend_data):
         """
         Generowanie siatki kafelków reprezentujących aktywność w czasie.
-        Cache: jeśli dane się nie zmieniły, nie renderuj ponownie.
+        Cache: jeśli dane się nie zmieniły, nie renderuje ponownie.
         """
+        from matplotlib.patches import Rectangle
+
         # Generowanie hashu dla danych wejściowych
         current_hash = hashlib.md5(str(trend_data).encode()).hexdigest() if trend_data else None
 
@@ -141,8 +150,8 @@ class ActivityHeatmap(FigureCanvas):
 
         # Inicjalizacja struktur danych dla siatki 7x5
         cols, rows = 7, 5
-        self.grid_data = np.zeros((rows, cols))
-        self.dates_map = np.full((rows, cols), "", dtype=object)
+        self.grid_data = self.np.zeros((rows, cols))
+        self.dates_map = self.np.full((rows, cols), "", dtype=object)
 
         # Wypełnianie macierzy danymi wejściowymi
         for i, (d, v) in enumerate(trend_data[:30]):
@@ -151,7 +160,7 @@ class ActivityHeatmap(FigureCanvas):
             self.dates_map[r, c] = d
 
         # Wyznaczenie punktu odniesienia dla normalizacji kolorów
-        max_val = np.max(self.grid_data) if np.max(self.grid_data) > 0 else 1
+        max_val = self.np.max(self.grid_data) if self.np.max(self.grid_data) > 0 else 1
 
         spacing = 0.18
         tile_size = 1.0 - spacing

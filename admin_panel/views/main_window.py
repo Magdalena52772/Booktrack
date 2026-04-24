@@ -64,9 +64,10 @@ class MainWindow(QMainWindow):
 
         print(f"[TIMING] MainWindow.__init__ DONE: {(time.perf_counter()-_t_start)*1000:.0f}ms")
 
-        # Opóźnienie ładowania dashboardu aż UI się pokaże (non-blocking startup)
+        # Opóźnia Dashboard loading (50ms) - Qt wyrenderuje template, potem matplotlib
+        # (Preload worker runs in background, nie blokuje main thread)
         from PySide6.QtCore import QTimer
-        QTimer.singleShot(0, self._deferred_load_dashboard)
+        QTimer.singleShot(50, self._deferred_load_dashboard)
 
     def _preload_dashboard_data(self):
         """Startuj ładowanie dashboard danych w tle zaraz (nie czekaj na UI)"""
@@ -116,7 +117,7 @@ class MainWindow(QMainWindow):
         # Startuje preload w tle
         self._preload_dashboard_data()
 
-        # Wołuje switch_page()
+        # Wołuje switch_page() zaraz - bez opóźnienia
         self.switch_page(self.view_config[self.ui.btn_dashboard])
 
         print(f"[TIMING] _deferred_load_dashboard DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")

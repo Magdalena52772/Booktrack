@@ -95,6 +95,17 @@ class DashboardView(QWidget):
 
     def load_view(self):
         """Załaduje dane Dashboard'a w tle (worker thread)."""
+        # Safety check - jeśli charts nie istnieją, trigger setup
+        if self.canvas is None or self.heatmap is None:
+            print("[WARNING] Charts missing on load_view(), re-initializing...")
+            self.setup_charts()
+
+        # Force redraw na canvasach (w przypadku gdy widget był ukryty, może nie renderować poprawnie)
+        if self.canvas:
+            self.canvas.draw()
+        if self.heatmap:
+            self.heatmap.draw()
+
         # Pokazuje loading state
         self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Dashboard"))
         self._set_loading_state(True)
