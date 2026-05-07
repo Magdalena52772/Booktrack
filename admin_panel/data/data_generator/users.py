@@ -100,6 +100,9 @@ def generate_users(conn, count=1000):
 
         birth_date_obj = GeneratorService.generate_birth_date()
         
+        # Generowanie preferencji gatunkowych z uwzględnieniem wieku i biasu
+        fav_genres = GeneratorService.generate_favorite_genres_for_birth(birth_date_obj)
+        
         # Przygotowanie danych do masowego zapisu (bulk insert)
         db_tuple = (
             DJANGO_HASHED_PWD, None, 0, nickname, email, full_name,
@@ -111,7 +114,7 @@ def generate_users(conn, count=1000):
         
         temp_users_data.append({
         "db_tuple": db_tuple,
-        "fav_genres": list(set(random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1,3)))),
+        "fav_genres": fav_genres,
         "meta": {
         "id": None, 
         "nickname": nickname, 
@@ -148,6 +151,8 @@ def generate_users(conn, count=1000):
         u_name = u['meta']['nickname']
         if user_id := db_users.get(u_name):
             u['meta']['id'] = user_id
+            # Przeniesienie fav_genres do meta dla późniejszej analizy i testów
+            u['meta']['favorite_genres'] = u.get('fav_genres', [])
             final_meta_list.append(u['meta'])
             
             for g_name in u['fav_genres']:
@@ -179,7 +184,8 @@ def generate_realtime_user(conn):
     pages_per_day = 0.0
     books_read_count = random.randint(1, 2)
     register_date = now - timedelta(minutes=random.randint(5, 60))
-    
+    birth_date = GeneratorService.generate_birth_date()
+
     # Zapewnienie unikalności identyfikatora zewnętrznego
     while True:
         external_id = random.randint(100000, 999999)
@@ -189,22 +195,22 @@ def generate_realtime_user(conn):
     # Wstawienie rekordu nowego użytkownika
     cursor.execute("""
         INSERT INTO users (
-            username, email, name, date_joined, status, birth_date, 
-            external_id, last_activity, pages_per_day, books_read, 
+            username, email, name, date_joined, status, birth_date,
+            external_id, last_activity, pages_per_day, books_read,
             password, is_active, is_staff, is_superuser, current_streak
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         identity["nickname"], identity["email"], identity["full_name"],
         register_date.strftime("%Y-%m-%d %H:%M:%S"), "active",
-        GeneratorService.generate_birth_date().strftime("%Y-%m-%d"), external_id,
+        birth_date.strftime("%Y-%m-%d"), external_id,
         now.strftime("%Y-%m-%d %H:%M:%S"), pages_per_day, books_read_count,
         DJANGO_HASHED_PWD, 1, 0, 0, 0
     ))
-    
+
     new_user_id = cursor.lastrowid
 
-    # Przypisanie preferencji gatunkowych
-    selected_genres = set(random.choices(GENRES, weights=GENRE_WEIGHTS, k=random.randint(1, 3)))
+    # Przypisanie preferencji gatunkowych (z uwzględnieniem grupy wiekowej)
+    selected_genres = set(GeneratorService.generate_favorite_genres_for_birth(birth_date))
     genre_map = GenresRepository.get_genre_map(cursor)
 
     for g_name in selected_genres:

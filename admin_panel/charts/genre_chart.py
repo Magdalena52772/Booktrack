@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
-from data.utils.formatters.chart_formatters import ChartTooltipHelper, ChartStyler
+from data.utils.formatters.chart_formatters import ChartTooltipHelper
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class GenreChart(FigureCanvas):
@@ -24,7 +24,7 @@ class GenreChart(FigureCanvas):
             if contained:
                 name, count = self.genre_data[i]
                 return f"{name}: {count} users"
-        return "Overall distribution based on unique user selections"
+        return None
 
     def update_chart(self, genres, age_group_name):
         """Generowanie grafiki pierścieniowej z gradientem złota"""
@@ -37,14 +37,14 @@ class GenreChart(FigureCanvas):
         names = [g.name for g in sorted_genres]
         values = [g.readers for g in sorted_genres]
         self.genre_data = list(zip(names, values))
-        
+
         base_gold = np.array([212, 175, 55]) / 255.0
-        colors = [base_gold * (1 - (i/max(len(names)-1, 1))*0.7) + 
-                  np.array([1.0, 1.0, 1.0]) * ((i/max(len(names)-1, 1))*0.7) 
+        colors = [base_gold * (1 - (i/max(len(names)-1, 1))*0.7) +
+                  np.array([1.0, 1.0, 1.0]) * ((i/max(len(names)-1, 1))*0.7)
                   for i in range(len(names))]
 
         self.wedges, _, autotexts = self.axes.pie(
-            values, labels=names, autopct='%1.1f%%', startangle=140, 
+            values, labels=names, autopct='%1.1f%%', startangle=140,
             colors=colors, pctdistance=0.75, radius=0.9,
             wedgeprops={'edgecolor': 'white', 'linewidth': 2}
         )

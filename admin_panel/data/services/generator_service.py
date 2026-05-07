@@ -6,6 +6,8 @@ czytelników i sesji czytania na podstawie konfiguracji
 import random
 import numpy as np
 from data.config import SIM_SETTINGS, ARCHETYPE_SETTINGS, get_fake
+from data.config import GENRES, GENRE_WEIGHTS, AGE_BASED_GENRES, FAVORITE_GENRE_BIAS, READING_ANOMALY
+from data.utils.helpers.date_helpers import DateHelper
 
 
 class GeneratorService:
@@ -72,3 +74,62 @@ class GeneratorService:
 
         # Konwersja wyliczonego wieku na obiekt daty przy użyciu Fakera
         return get_fake().date_of_birth(minimum_age=age, maximum_age=age)
+
+    @staticmethod
+    def age_category_from_birth(birth_date) -> str:
+        """Zwraca kategorię wiekową: 'junior', 'young_adult', 'adult', 'senior'"""
+        if not birth_date:
+            return 'adult'
+        bd = DateHelper.to_datetime(birth_date)
+        age = DateHelper.calculate_age(bd)
+        return "junior" if age < 18 else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
+
+    @staticmethod
+    def generate_favorite_genres_for_birth(birth_date):
+        """Generuje listę 1-3 ulubionych gatunków zgodnie z config FAVORITE_GENRE_BIAS"""
+        cat = GeneratorService.age_category_from_birth(birth_date)
+        age_genres = AGE_BASED_GENRES.get(cat, GENRES)
+        fav_genres = set()
+        fav_count = random.randint(1, 3)
+        for _ in range(fav_count):
+            if random.random() < FAVORITE_GENRE_BIAS.get("age_based_ratio", 0.6):
+                fav_genres.add(random.choice(age_genres))
+            else:
+                fav_genres.add(random.choices(GENRES, weights=GENRE_WEIGHTS, k=1)[0])
+        return list(fav_genres)
+
+    @staticmethod
+    def generate_actual_reading_genre(birth_date, declared_genres: list):
+        """Generuje gatunek rzeczywistego czytania z uwzględnieniem anomalii"""
+        if not READING_ANOMALY.get("enabled", False):
+            return random.choice(declared_genres) if declared_genres else random.choice(GENRES)
+
+        bd = DateHelper.to_datetime(birth_date)
+        age = DateHelper.calculate_age(bd)
+
+        # Wybór profilu anomalii
+        if age < 16:
+            profile = READING_ANOMALY.get("junior_under_16", {})
+        elif age <= 17:
+            profile = READING_ANOMALY.get("junior_16_17", {})
+        elif age <= 25:
+            profile = READING_ANOMALY.get("young_adult", {})
+        elif age <= 60:
+            profile = READING_ANOMALY.get("adult", {})
+        else:
+            profile = READING_ANOMALY.get("senior", {})
+
+        anomaly_ratio = profile.get("anomaly_ratio", 0.0)
+
+        # Zastosowanie anomalii
+        if random.random() < anomaly_ratio:
+            swap_to = profile.get("swap_to", [])
+            adult_genres = profile.get("adult_genres", [])
+
+            if swap_to and random.random() < 0.6:
+                return random.choice(swap_to)
+            elif adult_genres:
+                return random.choice(adult_genres)
+
+        # Bez anomalii - używa deklarowanych
+        return random.choice(declared_genres) if declared_genres else random.choice(GENRES)

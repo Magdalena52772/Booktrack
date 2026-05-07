@@ -1,8 +1,35 @@
 import random
+import json
 from datetime import datetime
+from pathlib import Path
 from data.config import GENRES, AGE_BASED_GENRES, RATING_SETTINGS, get_fake
+from data.services.generator_service import GeneratorService
 from data.utils.helpers.date_helpers import DateHelper
 from data.repositories.genre_repo import GenresRepository
+
+POOL_FILE = Path(__file__).with_name("open_library_pool.json")
+
+def _load_book_pool():
+    """Ładuje pulę książek z pliku JSON. Struktura danych jest 
+    zoptymalizowana pod kątem szybkiego dostępu do książek według gatunku.
+    Zwraca listę wszystkich książek oraz słownik z książkami pogrupowanymi"""
+    try:
+        payload = json.loads(POOL_FILE.read_text(encoding="utf-8"))
+        books = payload.get("books", [])
+        if not isinstance(books, list):
+            return [], {}
+
+        by_genre = {}
+        for book in books:
+            if not isinstance(book, dict):
+                continue
+            genre_hint = book.get("genre_hint")
+            if isinstance(genre_hint, str):
+                by_genre.setdefault(genre_hint, []).append(book)
+
+        return books, by_genre
+    except Exception:
+        return [], {}
 
 # =================== GENEROWANIE KSIĄŻEK ===================
 def generate_books(conn, users):
@@ -14,7 +41,7 @@ def generate_books(conn, users):
     all_books_data = [] # Dane do masowego wstawienia
     book_metadata = []  # Metadane potrzebne do późniejszej generacji aktywności
     
-    title_words = ["Shadow", "Forest", "Dream", "Fire", "Storm", "Heart", "Secret", "Moon", "Whisper", "Glass"]
+    pool_books, pool_books_by_genre = _load_book_pool()
     now = datetime.now()
 
     # Pobranie mapy gatunków z repozytorium (DRY - unika duplikatów)
@@ -30,7 +57,10 @@ def generate_books(conn, users):
         # Dopasowanie puli gatunków do wieku użytkownika (segmentacja demograficzna)
         age = DateHelper.calculate_age(bd)
         cat = "junior" if age < 18 else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
-        pref_list = AGE_BASED_GENRES.get(cat, GENRES)
+        age_pref_list = AGE_BASED_GENRES.get(cat, GENRES)
+
+        # Preferencje użytkownika jeśli dostępne
+        user_favs = user.get('favorite_genres') or []
         
         # Wyliczanie stażu i szansy na to, że książka jest starsza niż data dołączenia do apki
         days_on_platform = (now - reg_date).days
@@ -44,11 +74,23 @@ def generate_books(conn, users):
             is_finished = i < total_finished
             status = 'finished' if is_finished else 'reading'
             
-            # Losowanie gatunku: 90% szans na dopasowanie do wieku, 10% na pełen los
-            genre_name = random.choice(pref_list) if random.random() < 0.90 else random.choice(GENRES)
+            # Losowanie gatunku: preferencja użytkownika, potem preferencje wiekowe
+            if user_favs:
+                genre_name = GeneratorService.generate_actual_reading_genre(bd, user_favs)
+            else:
+                genre_name = random.choice(age_pref_list)
             genre_id = genre_map.get(genre_name, 1)
 
-            total_pages = random.randint(150, 600)
+            selected_pool = None
+            if pool_books:
+                genre_pool = pool_books_by_genre.get(genre_name, [])
+                source_pool = genre_pool if genre_pool else pool_books
+                selected_pool = random.choice(source_pool)
+
+            if selected_pool and isinstance(selected_pool.get("page_count"), int) and selected_pool.get("page_count") > 0:
+                total_pages = selected_pool.get("page_count")
+            else:
+                total_pages = random.randint(150, 600)
             
             # --- LOGIKA OCENY (RATING) ---
             rating = None
@@ -63,7 +105,7 @@ def generate_books(conn, users):
 
             if is_old_import:
                 # IMPORT: Książka została przeczytana "poza aplikacją"
-                status = 'finished'  # Dla pewności, importujemy tylko skończone jako stare
+                status = 'finished'  # Dla pewności, importuje tylko skończone jako stare
                 current_page = total_pages
                 added_by_gen = 0     # Generator aktywności to pominie -> PPD wyniesie 0.0
                 rating = rating      # Rating zostaje, bo użytkownik mógł ocenić książkę przy imporcie
@@ -73,15 +115,21 @@ def generate_books(conn, users):
                 if is_finished:
                     current_page = total_pages
                 else:
-                    # Losujemy postęp dla książek w trakcie
+                    # Losuje postęp dla książek w trakcie
                     current_page = random.randint(1, total_pages - 1)
 
-            # Generowanie danych tożsamościowych książki
-            book_title = f"The {random.choice(title_words)} {random.choice(title_words)}"
-            author = f"{get_fake().first_name()} {get_fake().last_name()}"
+            # Jeśli jest pula, próbuje ją wykorzystać, ale zawsze sprawdza poprawność danych (np. page_count)
+            if selected_pool:
+                book_title = selected_pool.get("title") or f"{get_fake().word().title()} {get_fake().word().title()}"
+                author = selected_pool.get("authors") or f"{get_fake().first_name()} {get_fake().last_name()}"
+                pool_id = selected_pool.get("openlibrary_id")
+            else:
+                book_title = f"{get_fake().word().title()} {get_fake().word().title()}"
+                author = f"{get_fake().first_name()} {get_fake().last_name()}"
+                pool_id = None
             
             all_books_data.append((
-                user["id"], book_title, author, genre_id, 
+                user["id"], book_title, author, pool_id, genre_id,
                 total_pages, current_page, status, added_by_gen, rating
             ))
 
@@ -93,8 +141,8 @@ def generate_books(conn, users):
 
     # Batch insert - wstawianie wszystkich rekordów w jednej operacji
     cursor.executemany("""
-        INSERT INTO books (user_id, title, authors, genre_id, total_pages, current_page, status, added_by_generator, rating)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO books (user_id, title, authors, openlibrary_id, genre_id, total_pages, current_page, status, added_by_generator, rating)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, all_books_data)
     
     # Przypisanie wygenerowanych przez bazę ID do listy metadanych

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import traceback
-from PySide6.QtCore import Signal, Qt, QThread, QTimer
+from PySide6.QtCore import Signal, QThread, QTimer, Qt
 from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from data.utils.status_manager import StatusMsg
@@ -25,7 +25,7 @@ class ChartRenderWorker(QThread):
         """Renderuje wykresy w osobnym wątku"""
         try:
             dates, values = self.chart_data
-            # Plot w tle
+            # Renderowanie wykresu trendu (linia) - może być ciężkie przy dużej ilości danych, więc w tle
             self.canvas.plot_data(list(dates), list(values), time_filter="month")
 
             # Heatmap w tle
@@ -47,22 +47,32 @@ class DashboardView(QWidget):
 
         self.conn = conn
 
+        # Atrybuty muszą istnieć zanim pokaże loading na starcie
+        self.canvas = None
+        self.heatmap = None
+
         # Ładowanie zaktualizowanego UI
         self.ui = load_ui(self, "views/ui/DashboardView.ui")
         if not self.ui: return
+
+        # Pokazuje loading od razu po wejściu na widok, zanim dojdą dane i wykresy
+        self._set_loading_state(True)
 
         self.stats_repo = StatsRepository(conn)
         self.book_repo = BookRepository(conn)
         self.activity_repo = ActivityRepository(conn)
 
-        # Nie inicjalizuje matplotlib od razu
-        self.canvas = None
-        self.heatmap = None
-
         # Obsługa zdarzeń
         self.ui.btn_refresh.clicked.connect(self.load_view)
 
         self._current_worker = None
+        self._is_refreshing = False
+        self._last_dashboard_data = None
+        self._current_check_worker = None
+        self._last_activity_stamp = None
+        self._recheck_timer = QTimer(self)
+        self._recheck_timer.setSingleShot(True)
+        self._recheck_timer.timeout.connect(self._run_background_recheck)
 
         # Setup charts asynchronicznie na Qt event loop (po pokazaniu UI)
         QTimer.singleShot(0, self._setup_charts_deferred)
@@ -106,9 +116,6 @@ class DashboardView(QWidget):
         if self.heatmap:
             self.heatmap.draw()
 
-        # Pokazuje loading state
-        self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Dashboard"))
-        self._set_loading_state(True)
         from datetime import datetime as dt
         print(f"[TIMING] Dashboard.load_view() started at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
 
@@ -117,38 +124,135 @@ class DashboardView(QWidget):
         while parent_window and not hasattr(parent_window, '_preloaded_dashboard_data'):
             parent_window = parent_window.parent()
 
+        preloaded = None
         if parent_window and hasattr(parent_window, '_preloaded_dashboard_data') and parent_window._preloaded_dashboard_data:
-            # Używa preloaded data
+            preloaded = parent_window._preloaded_dashboard_data
+
+        # Stale-while-refresh: pokazuje ostatnie dane od razu, bez kasowania dashboardu loadingiem.
+        if self._last_dashboard_data:
+            self._update_dashboard_ui(self._last_dashboard_data)
+        elif preloaded:
             print(f"[TIMING] Using preloaded dashboard data")
-            self._on_dashboard_data_loaded(parent_window._preloaded_dashboard_data)
+            self._on_dashboard_data_loaded(preloaded)
         else:
-            # Fallback - uruchamia worker w tle
+            # Tylko przy pierwszym wejściu pokazuje loading placeholder
+            self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Dashboard"))
+            self._set_loading_state(True)
+
+        # Odświeżenie zawsze w tle, ale bez duplikacji workerów.
+        if not self._is_refreshing:
+            self._is_refreshing = True
             self._current_worker = DatabaseWorker("load_dashboard", db_connection=self.conn)
+            try:
+                self._current_worker.setParent(self)
+            except Exception:
+                pass
             self._current_worker.finished.connect(self._on_dashboard_data_loaded)
             self._current_worker.error.connect(self._on_dashboard_error)
             self._current_worker.start()
 
     def _on_dashboard_data_loaded(self, data):
         """Callback gdy worker załaduje dane."""
+        self._is_refreshing = False
         from datetime import datetime as dt
         print(f"[TIMING] Dashboard data received at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
         try:
             if data:
+                self._last_dashboard_data = data
                 self._update_dashboard_ui(data)
                 self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", "Dashboard", "Global"))
+            else:
+                # Jeśli backend zwrócił None lub pusty wynik, traktuje to jako błąd 
+                # i pokazuje komunikat, ale nie czyści dashboardu (jeśli są jakieś dane)
+                if not self._last_dashboard_data:
+                    self._update_dashboard_ui({})
             self._set_loading_state(False)
+            self._schedule_background_recheck_if_needed()
         except Exception as e:
             traceback.print_exc()
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
+            if not self._last_dashboard_data:
+                self._update_dashboard_ui({})
             self._set_loading_state(False)
+            self._schedule_background_recheck_if_needed()
 
     def _on_dashboard_error(self, error_msg):
         """Callback gdy worker napotka błąd."""
+        self._is_refreshing = False
         self.statusMessage.emit(*StatusMsg.get("DB_ERROR", error_msg))
+        if not self._last_dashboard_data:
+            self._update_dashboard_ui({})
         self._set_loading_state(False)
+        self._schedule_background_recheck_if_needed()
+
+    def _find_main_window(self):
+        # Pomocnicza metoda do znalezienia MainWindow (aby sprawdzić status generowania danych przy starcie)
+        parent_window = self.parent()
+        while parent_window and not hasattr(parent_window, '_startup_generation_done'):
+            parent_window = parent_window.parent()
+        return parent_window
+
+    def _schedule_background_recheck_if_needed(self):
+        """Podczas startupu, jeśli dane są świeże, uruchamia lekkie sprawdzanie co sekundę, 
+        aby wykryć kiedy symulacja zakończy się i wtedy przeładować dashboard."""
+        main_window = self._find_main_window()
+        startup_done = True if main_window is None else getattr(main_window, '_startup_generation_done', True)
+
+        if startup_done:
+            if self._recheck_timer.isActive():
+                self._recheck_timer.stop()
+            return
+
+        if not self._recheck_timer.isActive():
+            # Jeśli w trakcie startupu i dane są już załadowane, uruchamia timer, który co sekundę będzie sprawdzał lekkim workerem, czy aktywność się zmieniła (symulacja zakończyła się)
+            self._recheck_timer.start(1000)
+
+    def _run_background_recheck(self):
+        """Uruchamia lekkie sprawdzanie w tle, aby zobaczyć, czy ostatnia aktywność się zmieniła 
+        (co oznacza, że symulacja zakończyła się) i wtedy triggeruje pełne przeładowanie dashboardu. 
+        Ten mechanizm jest używany podczas startupu, aby automatycznie odświeżyć dashboard, 
+        gdy dane staną się dostępne, bez konieczności ręcznego klikania "Refresh".
+        """
+        if self._is_refreshing:
+            return
+
+        # Unika uruchamiania wielu workerów do sprawdzania aktywności - jeśli już jest jeden aktywny, nie startuje kolejnego
+        if self._current_check_worker and getattr(self._current_check_worker, 'isRunning', lambda: False)():
+            return
+
+        # Uruchamia lekkiego worker'a, który sprawdzi ostatni timestamp aktywności z tabeli meta (string) 
+        # i porówna go z self._last_activity_stamp. Jeśli jest inny, triggeruje load_view() do pełnego przeładowania danych.
+        self._current_check_worker = DatabaseWorker("check_activity_latest", db_connection=self.conn)
+        try:
+            self._current_check_worker.setParent(self)
+        except Exception:
+            pass
+        self._current_check_worker.finished.connect(self._on_check_activity_done)
+        self._current_check_worker.error.connect(self._on_dashboard_error)
+        self._current_check_worker.start()
+
+    def _on_check_activity_done(self, latest_stamp):
+        """Callback kiedy lekki worker sprawdzający ostatnią aktywność zwróci wynik. Jeśli timestamp jest inny niż self._last_activity_stamp, triggeruje load_view() do pełnego przeładowania danych."""
+        try:
+            if latest_stamp and latest_stamp != self._last_activity_stamp:
+                self._last_activity_stamp = latest_stamp
+                # Jeśli wykryje zmianę w aktywności (symulacja zakończyła się), triggeruje pełne przeładowanie dashboardu, ale tylko jeśli nie jest już w trakcie odświeżania (unikanie duplikacji workerów)
+                if not self._is_refreshing:
+                    self.load_view()
+            else:
+                # Jeśli nie wykryje zmiany, ponownie uruchamia timer do kolejnej próby za sekundę (kontynuacja sprawdzania co sekundę podczas startupu)
+                if not self._recheck_timer.isActive():
+                    self._recheck_timer.start(1000)
+        finally:
+            self._current_check_worker = None
 
     def _update_dashboard_ui(self, data):
         """Aktualizuje UI z załadowanymi danymi."""
+        if not data:
+            if not self._last_dashboard_data:
+                self._set_loading_state(True)
+            return
+
         total_users = data.get("total_users", 0)
         new_users = data.get("new_users", 0)
         avg_pages = data.get("avg_pages", 0)
@@ -170,20 +274,18 @@ class DashboardView(QWidget):
         streak_text += "</span>"
         self.ui.lbl_streak.setText(streak_text)
 
-        # Aktualizacja wykresów - opóźnia rendering
+        # Aktualizacja wykresów na głównym wątku Qt
         processed_data = self._prepare_30_days(activity_data)
         if processed_data:
             dates, values = zip(*processed_data) if processed_data else ([], [])
-            chart_data = (list(dates), list(values))
 
-            # Zaplanuje rendering na później (500ms) - uruchamia placeholder
+            # Renderowanie wykresów w tle, aby nie blokować UI
             def start_chart_render():
-                self._chart_worker = ChartRenderWorker(self.canvas, self.heatmap, chart_data)
-                self._chart_worker.heatmap_data = processed_data
-                self._chart_worker.finished.connect(self._on_charts_rendered)
-                self._chart_worker.start()
+                self.canvas.plot_data(list(dates), list(values), time_filter="month")
+                self.heatmap.plot_heatmap(processed_data)
+                self._on_charts_rendered()
 
-            QTimer.singleShot(500, start_chart_render)
+            QTimer.singleShot(50, start_chart_render)
 
         from datetime import datetime as dt
         print(f"[TIMING] Dashboard UI fully rendered at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
@@ -204,22 +306,38 @@ class DashboardView(QWidget):
             self.ui.lbl_pages.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
             self.ui.lbl_streak.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
 
+            # Pokazuje placeholdery wykresów zanim zostaną podmienione na canvasy matplotlib
+            if hasattr(self.ui, 'lbl_activity_chart'):
+                try:
+                    self.ui.lbl_activity_chart.setText('[LOADING CHART DATA...]')
+                    self.ui.lbl_activity_chart.setAlignment(Qt.AlignCenter)
+                except RuntimeError:
+                    pass
+            if hasattr(self.ui, 'lbl_heatmap_placeholder'):
+                try:
+                    self.ui.lbl_heatmap_placeholder.setText('[LOADING HEATMAP...]')
+                    self.ui.lbl_heatmap_placeholder.setAlignment(Qt.AlignCenter)
+                except RuntimeError:
+                    pass
+
             # Placeholder dla wykresów (tylko jeśli canvas już się zainicjalizował)
-            if self.canvas and self.canvas.axes:
-                self.canvas.axes.clear()
-                self.canvas.axes.text(0.5, 0.5, '[LOADING CHART DATA...]',
+            canvas = getattr(self, 'canvas', None)
+            if canvas and canvas.axes:
+                canvas.axes.clear()
+                canvas.axes.text(0.5, 0.5, '[LOADING CHART DATA...]',
                                   ha='center', va='center',
                                   fontsize=12, color='#999', style='italic',
-                                  transform=self.canvas.axes.transAxes)
-                self.canvas.draw()
+                                  transform=canvas.axes.transAxes)
+                canvas.draw()
 
-            if self.heatmap and self.heatmap.axes:
-                self.heatmap.axes.clear()
-                self.heatmap.axes.text(0.5, 0.5, '[LOADING HEATMAP...]',
+            heatmap = getattr(self, 'heatmap', None)
+            if heatmap and heatmap.axes:
+                heatmap.axes.clear()
+                heatmap.axes.text(0.5, 0.5, '[LOADING HEATMAP...]',
                                    ha='center', va='center',
                                    fontsize=12, color='#999', style='italic',
-                                   transform=self.heatmap.axes.transAxes)
-                self.heatmap.draw()
+                                   transform=heatmap.axes.transAxes)
+                heatmap.draw()
         else:
             # Loading state ukryty - UI będzie aktualizowany przez _update_dashboard_ui()
             pass

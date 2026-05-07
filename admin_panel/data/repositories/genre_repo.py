@@ -39,32 +39,29 @@ class GenresRepository:
         }
         
         active_filter = age_filters.get(age_group)
-        where_clause = f"WHERE {active_filter}" if active_filter else ""
+        where_clause = f"WHERE {active_filter}" if active_filter else "WHERE 1=1"
 
-        # Główne zapytanie wykorzystujące Common Table Expression (CTE) dla przejrzystości i wydajności
+        # Jedna query z CTE dla total_finished
         query = f"""
-            WITH FilteredData AS (
-                SELECT 
-                    g.name as genre_name,
-                    u.id as user_id,
-                    b.id as book_id,
-                    CAST(b.rating AS FLOAT) as book_rating
-                FROM genres g
-                JOIN books b ON g.id = b.genre_id
-                JOIN users u ON b.user_id = u.id
+            WITH FinishedBooks AS (
+                SELECT b.id, b.genre_id, b.rating, u.id as user_id
+                FROM books b
+                LEFT JOIN users u ON b.user_id = u.id
                 {where_clause}
+                AND b.status = 'finished'
             ),
             TotalCount AS (
-                SELECT COUNT(*) as total FROM FilteredData
+                SELECT COUNT(DISTINCT id) as total FROM FinishedBooks
             )
-            SELECT 
-                f.genre_name,
-                COUNT(DISTINCT f.user_id) as readers_count,
-                ROUND(AVG(f.book_rating), 2) as average_rating,
-                COUNT(f.book_id) as books_count,
-                ROUND(CAST(COUNT(f.book_id) AS FLOAT) / (SELECT MAX(1, total) FROM TotalCount) * 100, 2) as share
-            FROM FilteredData f
-            GROUP BY f.genre_name
+            SELECT
+                g.name,
+                COUNT(DISTINCT fb.user_id) as readers_count,
+                ROUND(AVG(CAST(fb.rating AS FLOAT)), 2) as average_rating,
+                COUNT(DISTINCT fb.id) as books_count,
+                ROUND(CAST(COUNT(DISTINCT fb.id) AS FLOAT) / MAX(1, (SELECT total FROM TotalCount)) * 100, 2) as share
+            FROM genres g
+            LEFT JOIN FinishedBooks fb ON g.id = fb.genre_id
+            GROUP BY g.id, g.name
             ORDER BY readers_count DESC, books_count DESC
         """
         
@@ -85,3 +82,33 @@ class GenresRepository:
         except sqlite3.Error:
             # W przypadku błędu bazy danych zwracana jest pusta lista
             return []
+
+    def count_users_by_age_group(self, age_group: str = "All") -> int:
+        """Liczy unikalnych użytkowników w wybranej grupie wiekowej"""
+        cursor = self.conn.cursor()
+
+        sql_age_calc = "(strftime('%Y', 'now') - strftime('%Y', u.birth_date))"
+
+        age_filters = {
+            "Less than 18": f"{sql_age_calc} < 18",
+            "18 - 25": f"{sql_age_calc} BETWEEN 18 AND 25",
+            "26 - 40": f"{sql_age_calc} BETWEEN 26 AND 40",
+            "41 - 60": f"{sql_age_calc} BETWEEN 41 AND 60",
+            "60+": f"{sql_age_calc} >= 60"
+        }
+
+        active_filter = age_filters.get(age_group)
+        where_clause = f"WHERE {active_filter}" if active_filter else ""
+
+        query = f"""
+            SELECT COUNT(DISTINCT u.id)
+            FROM users u
+            {where_clause}
+        """
+
+        try:
+            cursor.execute(query)
+            result = cursor.fetchone()
+            return result[0] if result else 0
+        except sqlite3.Error:
+            return 0

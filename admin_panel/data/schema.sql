@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS books (
     user_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     authors TEXT,
+    openlibrary_id TEXT,
     genre_id INTEGER,
     total_pages INTEGER,
     current_page INTEGER DEFAULT 0 CHECK(current_page <= total_pages),
@@ -130,3 +131,12 @@ CREATE INDEX IF NOT EXISTS idx_activity_user_timestamp ON activity(user_id, time
 
 -- Indeks na użytkowników: przyspiesza wyszukiwanie po nicku i mailu
 CREATE INDEX IF NOT EXISTS idx_users_search ON users(username, email, name);
+
+-- Tabela meta do przechowywania kluczowych wartości, np. ostatnia aktywność, globalne statystyki itp.
+CREATE TABLE IF NOT EXISTS meta (
+    k TEXT PRIMARY KEY,
+    v TEXT
+);
+
+-- Indeks na timestamp w activity dla szybszych zapytań czasowych (np. aktywność dzienna/tygodniowa)
+CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON activity(timestamp);

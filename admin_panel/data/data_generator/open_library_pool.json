@@ -1,0 +1,4627 @@
+{
+  "generated_at": "2026-05-02T09:10:35.555905+00:00",
+  "source": "openlibrary.org",
+  "count": 660,
+  "books": [
+    {
+      "openlibrary_id": "OL5738154W",
+      "title": "The Hero of Ages",
+      "authors": "Brandon Sanderson",
+      "page_count": 760,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL17546674W",
+      "title": "The Assassin’s Blade",
+      "authors": "Sarah J. Maas",
+      "page_count": 462,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL16597059W",
+      "title": "The Alloy of Law",
+      "authors": "Brandon Sanderson",
+      "page_count": 360,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL15358691W",
+      "title": "The Way of Kings",
+      "authors": "Brandon Sanderson",
+      "page_count": 1008,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5738147W",
+      "title": "Elantris",
+      "authors": "Brandon Sanderson",
+      "page_count": 638,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL27495W",
+      "title": "The Silmarillion",
+      "authors": "J.R.R. Tolkien",
+      "page_count": 428,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL2577486W",
+      "title": "Krew elfów",
+      "authors": "Andrzej Sapkowski, Danusia Stok",
+      "page_count": 379,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL2577472W",
+      "title": "Miecz przeznaczenia",
+      "authors": "Andrzej Sapkowski",
+      "page_count": 400,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL81594W",
+      "title": "Wolves of the Calla",
+      "authors": "Stephen King",
+      "page_count": 714,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL2577482W",
+      "title": "Ostatnie Życzenie",
+      "authors": "Andrzej Sapkowski, Danusia Stok",
+      "page_count": 342,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL20650912W",
+      "title": "House of Earth and Blood",
+      "authors": "Sarah J. Maas",
+      "page_count": 805,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5714297W",
+      "title": "Midnight",
+      "authors": "Erin Hunter",
+      "page_count": 303,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL4132752W",
+      "title": "The City of Ember (The First Book of Ember)",
+      "authors": "Jeanne DuPrau",
+      "page_count": 270,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL679333W",
+      "title": "Neverwhere",
+      "authors": "Neil Gaiman",
+      "page_count": 388,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL257939W",
+      "title": "A Clash of Kings",
+      "authors": "George R. R. Martin",
+      "page_count": 761,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453670W",
+      "title": "Equal Rites",
+      "authors": "Terry Pratchett",
+      "page_count": 255,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5714289W",
+      "title": "Fire and Ice",
+      "authors": "Erin Hunter",
+      "page_count": 344,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL81602W",
+      "title": "The Eyes of the Dragon",
+      "authors": "Stephen King",
+      "page_count": 382,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL27482W",
+      "title": "The Hobbit",
+      "authors": "J.R.R. Tolkien",
+      "page_count": 310,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453707W",
+      "title": "Interesting Times",
+      "authors": "Terry Pratchett",
+      "page_count": 352,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453659W",
+      "title": "Sourcery",
+      "authors": "Terry Pratchett",
+      "page_count": 308,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5714310W",
+      "title": "The Darkest Hour",
+      "authors": "Erin Hunter",
+      "page_count": 336,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL7924194W",
+      "title": "Knife of Dreams",
+      "authors": "Robert Jordan",
+      "page_count": 832,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL71124W",
+      "title": "The Last Battle",
+      "authors": "C. S. Lewis",
+      "page_count": 192,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5714301W",
+      "title": "Rising Storm",
+      "authors": "Erin Hunter",
+      "page_count": 320,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL27466W",
+      "title": "Unfinished Tales of Númenor and Middle-earth",
+      "authors": "J.R.R. Tolkien",
+      "page_count": 512,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL8400952W",
+      "title": "Last Argument of Kings",
+      "authors": "Joe Abercrombie",
+      "page_count": 663,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL2577481W",
+      "title": "Czas pogardy",
+      "authors": "Andrzej Sapkowski",
+      "page_count": 331,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453660W",
+      "title": "Wyrd Sisters",
+      "authors": "Terry Pratchett",
+      "page_count": 322,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL149200W",
+      "title": "Song of Susannah",
+      "authors": "Stephen King",
+      "page_count": 463,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453668W",
+      "title": "Witches Abroad",
+      "authors": "Terry Pratchett",
+      "page_count": 320,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL2577478W",
+      "title": "Wieża jaskółki",
+      "authors": "Andrzej Sapkowski, David French",
+      "page_count": 446,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL17834026W",
+      "title": "Oathbringer",
+      "authors": "Brandon Sanderson",
+      "page_count": 1243,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL73412W",
+      "title": "Dragons of Winter Night",
+      "authors": "Margaret Weis, Tracy Hickman, Paul Boehmer",
+      "page_count": 400,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453787W",
+      "title": "Lords and Ladies",
+      "authors": "Terry Pratchett",
+      "page_count": 377,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL17367560W",
+      "title": "Heir of Fire",
+      "authors": "Sarah J. Maas",
+      "page_count": 584,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL17718538W",
+      "title": "Queen of Shadows",
+      "authors": "Sarah J. Maas",
+      "page_count": 672,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL257943W",
+      "title": "A Game of Thrones",
+      "authors": "George R. R. Martin",
+      "page_count": 801,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL70988W",
+      "title": "The Chronicles of Narnia",
+      "authors": "C. S. Lewis",
+      "page_count": 768,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453680W",
+      "title": "The Light Fantastic",
+      "authors": "Terry Pratchett, Ernest Riera",
+      "page_count": 256,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL60149W",
+      "title": "Howl's Moving Castle",
+      "authors": "Diana Wynne Jones",
+      "page_count": 304,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453936W",
+      "title": "Good Omens",
+      "authors": "Neil Gaiman, Terry Pratchett",
+      "page_count": 400,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5714292W",
+      "title": "Forest of Secrets",
+      "authors": "Erin Hunter",
+      "page_count": 336,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL73410W",
+      "title": "Dragons of Autumn Twilight",
+      "authors": "Margaret Weis, Tracy Hickman, Paul Boehmer, Andrew Dabb, Steve Kurth, Stefano Raffaele, Margarett Weiss",
+      "page_count": 447,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5714312W",
+      "title": "Starlight",
+      "authors": "Erin Hunter",
+      "page_count": 321,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL14906957W",
+      "title": "The Fourth Apprentice",
+      "authors": "Erin Hunter",
+      "page_count": 357,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL18132161W",
+      "title": "Pani Jeziora",
+      "authors": "Andrzej Sapkowski",
+      "page_count": 554,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL16813053W",
+      "title": "Words of Radiance",
+      "authors": "Brandon Sanderson",
+      "page_count": 1088,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL17349393W",
+      "title": "Shadows of Self",
+      "authors": "Brandon Sanderson",
+      "page_count": 383,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL17625829W",
+      "title": "Empire of Storms",
+      "authors": "Sarah J. Maas",
+      "page_count": 704,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453661W",
+      "title": "Pyramids",
+      "authors": "Terry Pratchett",
+      "page_count": 366,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL5714284W",
+      "title": "A Dangerous Path",
+      "authors": "Erin Hunter",
+      "page_count": 325,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL16239519W",
+      "title": "Shadow and Bone",
+      "authors": "Leigh Bardugo",
+      "page_count": 352,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL275030W",
+      "title": "The Magicians' Guild",
+      "authors": "Trudi Canavan",
+      "page_count": 480,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL20924915W",
+      "title": "Siege and Storm",
+      "authors": "Leigh Bardugo",
+      "page_count": 431,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL453662W",
+      "title": "Hogfather",
+      "authors": "Terry Pratchett",
+      "page_count": 383,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL27513W",
+      "title": "The Fellowship of the Ring",
+      "authors": "J.R.R. Tolkien",
+      "page_count": 496,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL27479W",
+      "title": "The Two Towers",
+      "authors": "J.R.R. Tolkien",
+      "page_count": 436,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL2628772W",
+      "title": "Abhorsen",
+      "authors": "Garth Nix",
+      "page_count": 394,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL20656224W",
+      "title": "The house in the Cerulean Sea",
+      "authors": "T. J. Klune",
+      "page_count": 416,
+      "genre_hint": "Fantasy"
+    },
+    {
+      "openlibrary_id": "OL52260W",
+      "title": "The First Men in the Moon",
+      "authors": "H. G. Wells",
+      "page_count": 238,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL893415W",
+      "title": "Dune",
+      "authors": "Frank Herbert",
+      "page_count": 592,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL52267W",
+      "title": "The Time Machine",
+      "authors": "H. G. Wells",
+      "page_count": 120,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL64365W",
+      "title": "Brave New World",
+      "authors": "Aldous Huxley",
+      "page_count": 241,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL18412W",
+      "title": "Dorothy and the Wizard in Oz",
+      "authors": "L. Frank Baum",
+      "page_count": 134,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL1099280W",
+      "title": "Vingt mille lieues sous les mers",
+      "authors": "Jules Verne",
+      "page_count": 324,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL1168007W",
+      "title": "Animal Farm",
+      "authors": "George Orwell",
+      "page_count": 128,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL71078W",
+      "title": "The Silver Chair",
+      "authors": "C. S. Lewis",
+      "page_count": 217,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL45793W",
+      "title": "Charlie and the Great Glass Elevator",
+      "authors": "Roald Dahl",
+      "page_count": 176,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL49488W",
+      "title": "Ender's Game",
+      "authors": "Orson Scott Card",
+      "page_count": 330,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL675783W",
+      "title": "The Handmaid's Tale",
+      "authors": "Margaret Atwood",
+      "page_count": 350,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL17453W",
+      "title": "She",
+      "authors": "H. Rider Haggard",
+      "page_count": 282,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL71042W",
+      "title": "The Magician's Nephew",
+      "authors": "C. S. Lewis",
+      "page_count": 186,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL85892W",
+      "title": "Dracula",
+      "authors": "Bram Stoker",
+      "page_count": 408,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL1168083W",
+      "title": "Nineteen Eighty-Four",
+      "authors": "George Orwell",
+      "page_count": 318,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL492658W",
+      "title": "The Lightning Thief",
+      "authors": "Rick Riordan",
+      "page_count": 384,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL8193387W",
+      "title": "Hard Times",
+      "authors": "Charles Dickens",
+      "page_count": 326,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL28988W",
+      "title": "Northern Lights",
+      "authors": "Philip Pullman",
+      "page_count": 410,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL71037W",
+      "title": "The Lion, the Witch and the Wardrobe",
+      "authors": "C. S. Lewis",
+      "page_count": 186,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL1846076W",
+      "title": "The Giver",
+      "authors": "Lois Lowry",
+      "page_count": 200,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL14873315W",
+      "title": "The Lost Symbol",
+      "authors": "Dan Brown",
+      "page_count": 604,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL5735363W",
+      "title": "The Hunger Games",
+      "authors": "Suzanne Collins",
+      "page_count": 399,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL5735360W",
+      "title": "Catching Fire",
+      "authors": "Suzanne Collins",
+      "page_count": 400,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL28993W",
+      "title": "The Subtle Knife",
+      "authors": "Philip Pullman",
+      "page_count": 350,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL82563W",
+      "title": "Harry Potter and the Philosopher's Stone",
+      "authors": "J. K. Rowling",
+      "page_count": 302,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL102749W",
+      "title": "Moby Dick",
+      "authors": "Herman Melville",
+      "page_count": 452,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL5720023W",
+      "title": "Twilight",
+      "authors": "Stephenie Meyer",
+      "page_count": 498,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL82536W",
+      "title": "Harry Potter and the Prisoner of Azkaban",
+      "authors": "J. K. Rowling",
+      "page_count": 416,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL54059W",
+      "title": "Roughing It",
+      "authors": "Mark Twain",
+      "page_count": 558,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL51831W",
+      "title": "πολιτεία",
+      "authors": "Πλάτων",
+      "page_count": 397,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL81634W",
+      "title": "Misery",
+      "authors": "Stephen King",
+      "page_count": 382,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL138052W",
+      "title": "Alice's Adventures in Wonderland",
+      "authors": "Lewis Carroll",
+      "page_count": 133,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL244537W",
+      "title": "The Art of War",
+      "authors": "孙武 (Sun Tzu), Stephen F. Kaufman, Lionel Giles, Onésimo Colavidas",
+      "page_count": 90,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL362427W",
+      "title": "Romeo and Juliet",
+      "authors": "William Shakespeare",
+      "page_count": 169,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL362706W",
+      "title": "Sonnets",
+      "authors": "William Shakespeare",
+      "page_count": 168,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL14908941W",
+      "title": "Mockingjay",
+      "authors": "Suzanne Collins",
+      "page_count": 424,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL76835W",
+      "title": "Deception Point",
+      "authors": "Dan Brown",
+      "page_count": 559,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL2163655W",
+      "title": "The Restaurant at the End of the Universe",
+      "authors": "Douglas Adams",
+      "page_count": 224,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL675698W",
+      "title": "The Blind Assassin",
+      "authors": "Margaret Atwood",
+      "page_count": 628,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL5819895W",
+      "title": "Eragon",
+      "authors": "Christopher Paolini",
+      "page_count": 561,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL81630W",
+      "title": "The Dead Zone",
+      "authors": "Stephen King",
+      "page_count": 426,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL15719630W",
+      "title": "Divergent",
+      "authors": "Veronica Roth",
+      "page_count": 487,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL28996W",
+      "title": "The Amber Spyglass",
+      "authors": "Philip Pullman",
+      "page_count": 536,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL59798W",
+      "title": "A Wizard of Earthsea",
+      "authors": "Ursula K. Le Guin",
+      "page_count": 205,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL17075811W",
+      "title": "Sapiens",
+      "authors": "Yuval Noah Harari",
+      "page_count": 456,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL81618W",
+      "title": "The Stand",
+      "authors": "Stephen King",
+      "page_count": 1153,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL2172403W",
+      "title": "The Man in the High Castle",
+      "authors": "Philip K. Dick",
+      "page_count": 259,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL103128W",
+      "title": "The Illustrated Man",
+      "authors": "Ray Bradbury",
+      "page_count": 251,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL515754W",
+      "title": "Flowers for Algernon",
+      "authors": "Daniel Keyes",
+      "page_count": 274,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL46876W",
+      "title": "The Lost World",
+      "authors": "Michael Crichton",
+      "page_count": 419,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL81623W",
+      "title": "Firestarter",
+      "authors": "Stephen King",
+      "page_count": 428,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL109524W",
+      "title": "Solaris",
+      "authors": "Stanisław Lem",
+      "page_count": 224,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL59863W",
+      "title": "The Dispossessed",
+      "authors": "Ursula K. Le Guin",
+      "page_count": 352,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL17091839W",
+      "title": "The Martian",
+      "authors": "Andy Weir",
+      "page_count": 407,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL2163719W",
+      "title": "So long, and thanks for all the fish",
+      "authors": "Douglas Adams",
+      "page_count": 200,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL893526W",
+      "title": "Dune Messiah",
+      "authors": "Frank Herbert",
+      "page_count": 278,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL2172454W",
+      "title": "Ubik",
+      "authors": "Philip K. Dick",
+      "page_count": 224,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL46917W",
+      "title": "Sphere",
+      "authors": "Michael Crichton, Jacques Polanis",
+      "page_count": 385,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL40873W",
+      "title": "The Road",
+      "authors": "Cormac McCarthy",
+      "page_count": 287,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL257948W",
+      "title": "A Feast for Crows",
+      "authors": "George R. R. Martin",
+      "page_count": 792,
+      "genre_hint": "Sci-Fi"
+    },
+    {
+      "openlibrary_id": "OL20808172W",
+      "title": "Punk 57",
+      "authors": "Penelope Douglas",
+      "page_count": 363,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL24314065W",
+      "title": "The Sweetest Oblivion",
+      "authors": "Danielle Lori",
+      "page_count": 391,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL18020194W",
+      "title": "It Ends With Us",
+      "authors": "Colleen Hoover",
+      "page_count": 384,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20564687W",
+      "title": "Hopeless",
+      "authors": "Colleen Hoover, Maialen Garagarza Urkia",
+      "page_count": 416,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20068530W",
+      "title": "Verity",
+      "authors": "Colleen Hoover",
+      "page_count": 343,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL3845178W",
+      "title": "To Stay Forever",
+      "authors": "Jessica Steele",
+      "page_count": 187,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL24341413W",
+      "title": "Our Fault",
+      "authors": "Mercedes Ron",
+      "page_count": 448,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL17444354W",
+      "title": "Point Of Retreat",
+      "authors": "Colleen Hoover",
+      "page_count": 320,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL19705711W",
+      "title": "Losing hope",
+      "authors": "Colleen Hoover",
+      "page_count": 341,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20824826W",
+      "title": "A Thousand Boy Kisses",
+      "authors": "Tillie Cole",
+      "page_count": 352,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL3759186W",
+      "title": "Power Play (Mills and Boon Despatch Cycle)",
+      "authors": "Penny Jordan",
+      "page_count": 509,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL23535656W",
+      "title": "Culpa mía",
+      "authors": "Mercedes Ron",
+      "page_count": 416,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL4055729W",
+      "title": "The Devil To Pay",
+      "authors": "Jayne Ann Krentz",
+      "page_count": 192,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20684880W",
+      "title": "365 days",
+      "authors": "Blanka Lipinska",
+      "page_count": 496,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20808612W",
+      "title": "The Chase",
+      "authors": "Elle Kennedy",
+      "page_count": 419,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL19747970W",
+      "title": "All your perfects",
+      "authors": "Colleen Hoover",
+      "page_count": 320,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20669844W",
+      "title": "Archer's Voice",
+      "authors": "Mia Sheridan",
+      "page_count": 384,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL111482W",
+      "title": "Hidden Riches",
+      "authors": "Nora Roberts",
+      "page_count": 448,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL19699W",
+      "title": "Remembrance",
+      "authors": "Danielle Steel",
+      "page_count": 484,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL19800269W",
+      "title": "The Bride Test",
+      "authors": "Helen Hoang",
+      "page_count": 328,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL16550682W",
+      "title": "Fifty Shades Freed",
+      "authors": "E. L. James",
+      "page_count": 640,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL111597W",
+      "title": "Dance Upon the Air",
+      "authors": "Nora Roberts",
+      "page_count": 399,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL3931459W",
+      "title": "The Secret Woman",
+      "authors": "Eleanor Burford",
+      "page_count": 365,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL554620W",
+      "title": "The Duke and I",
+      "authors": "Julia Quinn",
+      "page_count": 432,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL16550681W",
+      "title": "Fifty Shades Darker",
+      "authors": "E. L. James",
+      "page_count": 590,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20734329W",
+      "title": "Beach Read",
+      "authors": "Emily Henry",
+      "page_count": 376,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL17886378W",
+      "title": "Heartless",
+      "authors": "Marissa Meyer",
+      "page_count": 510,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL17606111W",
+      "title": "Milk and Honey",
+      "authors": "Rupi Kaur",
+      "page_count": 226,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL274518W",
+      "title": "El amor en los tiempos del cólera",
+      "authors": "Gabriel García Márquez",
+      "page_count": 451,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL4278316W",
+      "title": "Blind to Love",
+      "authors": "Emma Goldrick, Constance Bennett, Rebecca Winters",
+      "page_count": 192,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL112332W",
+      "title": "The Paid Companion",
+      "authors": "Jayne Ann Krentz",
+      "page_count": 410,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL1882556W",
+      "title": "The Thorn Birds",
+      "authors": "Colleen McCullough, Colleen McCullough",
+      "page_count": 597,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL112341W",
+      "title": "I Thee Wed",
+      "authors": "Jayne Ann Krentz",
+      "page_count": 356,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL111635W",
+      "title": "True Betrayals",
+      "authors": "Nora Roberts",
+      "page_count": 422,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL111426W",
+      "title": "Daring to Dream",
+      "authors": "Nora Roberts",
+      "page_count": 384,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL1230715W",
+      "title": "La Peste",
+      "authors": "Albert Camus",
+      "page_count": 278,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20150260W",
+      "title": "Normal People",
+      "authors": "Sally Rooney",
+      "page_count": 304,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL19731W",
+      "title": "Passion's promise",
+      "authors": "Danielle Steel",
+      "page_count": 380,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL17344325W",
+      "title": "The Apartment",
+      "authors": "Danielle Steel",
+      "page_count": 352,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL66554W",
+      "title": "Pride and Prejudice",
+      "authors": "Jane Austen",
+      "page_count": 351,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL5683003W",
+      "title": "A Quick Bite",
+      "authors": "Lynsay Sands",
+      "page_count": 397,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20885951W",
+      "title": "Without Merit",
+      "authors": "Colleen Hoover, Candace Thaxton",
+      "page_count": 384,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL112323W",
+      "title": "Wait Until Midnight",
+      "authors": "Jayne Ann Krentz",
+      "page_count": 361,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL17339151W",
+      "title": "Carry On",
+      "authors": "Rainbow Rowell",
+      "page_count": 528,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL16813583W",
+      "title": "The Rosie Project",
+      "authors": "Graeme Simsion",
+      "page_count": 326,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL81294W",
+      "title": "Women in Love",
+      "authors": "D. H. Lawrence",
+      "page_count": 538,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL16361029W",
+      "title": "The Selection (The Selection #1)",
+      "authors": "Kiera Cass",
+      "page_count": 328,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL20670260W",
+      "title": "Most of All You",
+      "authors": "Mia Sheridan",
+      "page_count": 336,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL17104741W",
+      "title": "The Heir (The Selection #4)",
+      "authors": "Kiera Cass",
+      "page_count": 353,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL27729743W",
+      "title": "The Housemaid",
+      "authors": "Freida McFadden",
+      "page_count": 336,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL3931480W",
+      "title": "The captive",
+      "authors": "Eleanor Burford",
+      "page_count": 416,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL21084352W",
+      "title": "Good Girl, Bad Blood",
+      "authors": "Holly Jackson",
+      "page_count": 416,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL56768W",
+      "title": "Echoes",
+      "authors": "Maeve Binchy",
+      "page_count": 510,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL152356W",
+      "title": "The Outsider",
+      "authors": "Barbara Delinsky",
+      "page_count": 248,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL675722W",
+      "title": "Oryx and Crake",
+      "authors": "Margaret Atwood",
+      "page_count": 389,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL17063W",
+      "title": "Much Ado About You",
+      "authors": "Eloisa James",
+      "page_count": 391,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL111436W",
+      "title": "First Impressions",
+      "authors": "Nora Roberts",
+      "page_count": 278,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL66534W",
+      "title": "Northanger Abbey",
+      "authors": "Jane Austen",
+      "page_count": 251,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL36090166W",
+      "title": "Regretting You",
+      "authors": "Colleen Hoover",
+      "page_count": 387,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL3261153W",
+      "title": "Dragonfly in Amber",
+      "authors": "Diana Gabaldon",
+      "page_count": 864,
+      "genre_hint": "Romance"
+    },
+    {
+      "openlibrary_id": "OL76837W",
+      "title": "The Da Vinci Code",
+      "authors": "Dan Brown",
+      "page_count": 489,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL76833W",
+      "title": "Angels & Demons",
+      "authors": "Dan Brown",
+      "page_count": 576,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL76524W",
+      "title": "The Thirty-Nine Steps",
+      "authors": "John Buchan",
+      "page_count": 116,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL10834W",
+      "title": "Perfume",
+      "authors": "Patrick Süskind",
+      "page_count": 263,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL472073W",
+      "title": "Murder on the Links",
+      "authors": "Agatha Christie",
+      "page_count": 224,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL100239W",
+      "title": "An American Tragedy",
+      "authors": "Theodore Dreiser",
+      "page_count": 784,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL76487W",
+      "title": "The Man Who Was Thursday",
+      "authors": "Gilbert Keith Chesterton",
+      "page_count": 162,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL471724W",
+      "title": "Death on the Nile",
+      "authors": "Agatha Christie",
+      "page_count": 276,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL14860424W",
+      "title": "Rayuela",
+      "authors": "Julio Cortázar",
+      "page_count": 633,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL471947W",
+      "title": "The Big Four",
+      "authors": "Agatha Christie",
+      "page_count": 223,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL471789W",
+      "title": "The Secret Adversary",
+      "authors": "Agatha Christie",
+      "page_count": 272,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL472549W",
+      "title": "The Man in the Brown Suit",
+      "authors": "Agatha Christie",
+      "page_count": 225,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL76341W",
+      "title": "The Innocence of Father Brown (Father Brown Mystery)",
+      "authors": "Gilbert Keith Chesterton",
+      "page_count": 208,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL472145W",
+      "title": "Ordeal by Innocence",
+      "authors": "Agatha Christie",
+      "page_count": 249,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL471565W",
+      "title": "And Then There Were None",
+      "authors": "Agatha Christie",
+      "page_count": 223,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL8996439W",
+      "title": "Il nome della rosa",
+      "authors": "Umberto Eco",
+      "page_count": 533,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL74504W",
+      "title": "White Fang",
+      "authors": "Jack London",
+      "page_count": 237,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL471603W",
+      "title": "The Mystery of the Blue Train",
+      "authors": "Agatha Christie",
+      "page_count": 257,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL262421W",
+      "title": "The Adventures of Sherlock Holmes [12 stories]",
+      "authors": "Arthur Conan Doyle",
+      "page_count": 309,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL278437W",
+      "title": "La sombra del viento",
+      "authors": "Carlos Ruiz Zafón",
+      "page_count": 528,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81633W",
+      "title": "The Shining",
+      "authors": "Stephen King",
+      "page_count": 506,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL472215W",
+      "title": "They Came to Baghdad",
+      "authors": "Agatha Christie",
+      "page_count": 256,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81613W",
+      "title": "It",
+      "authors": "Stephen King",
+      "page_count": 1168,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81631W",
+      "title": "Pet Sematary",
+      "authors": "Stephen King",
+      "page_count": 422,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81629W",
+      "title": "The Green Mile",
+      "authors": "Stephen King",
+      "page_count": 465,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL76836W",
+      "title": "Digital Fortress",
+      "authors": "Dan Brown",
+      "page_count": 447,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL16804289W",
+      "title": "Inferno",
+      "authors": "Dan Brown",
+      "page_count": 576,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL1914088W",
+      "title": "Storm Island",
+      "authors": "Ken Follett",
+      "page_count": 338,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL1807144W",
+      "title": "Kane & Abel",
+      "authors": "Jeffrey Archer",
+      "page_count": 550,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81609W",
+      "title": "Bag of Bones",
+      "authors": "Stephen King",
+      "page_count": 608,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL1905246W",
+      "title": "Hija de la fortuna",
+      "authors": "Isabel Allende",
+      "page_count": 432,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL471898W",
+      "title": "Death Comes as the End",
+      "authors": "Agatha Christie",
+      "page_count": 224,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL134834W",
+      "title": "Flowers in the Attic",
+      "authors": "V.C. Andrews",
+      "page_count": 411,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL471928W",
+      "title": "Partners in Crime",
+      "authors": "Agatha Christie",
+      "page_count": 225,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81615W",
+      "title": "Wizard and Glass",
+      "authors": "Stephen King",
+      "page_count": 718,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL1807075W",
+      "title": "Not a Penny More, Not a Penny Less",
+      "authors": "Jeffrey Archer",
+      "page_count": 255,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81612W",
+      "title": "The Girl Who Loved Tom Gordon",
+      "authors": "Stephen King",
+      "page_count": 256,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81607W",
+      "title": "Needful Things",
+      "authors": "Stephen King",
+      "page_count": 698,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL1914091W",
+      "title": "Triple",
+      "authors": "Ken Follett",
+      "page_count": 403,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL79319W",
+      "title": "Tell No One",
+      "authors": "Harlan Coben",
+      "page_count": 353,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81606W",
+      "title": "Four Past Midnight",
+      "authors": "Stephen King",
+      "page_count": 768,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL76974W",
+      "title": "The Testament",
+      "authors": "John Grisham",
+      "page_count": 507,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL149210W",
+      "title": "Thinner",
+      "authors": "Stephen King",
+      "page_count": 318,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL85736W",
+      "title": "Doctor No",
+      "authors": "Ian Fleming",
+      "page_count": 240,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81584W",
+      "title": "Everything's Eventual. 14 Dark Tales",
+      "authors": "Stephen King",
+      "page_count": 518,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL15411113W",
+      "title": "The Odessa file",
+      "authors": "Frederick Forsyth, Frederick Davidson",
+      "page_count": 334,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81603W",
+      "title": "Insomnia",
+      "authors": "Stephen King",
+      "page_count": 719,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL76991W",
+      "title": "A Painted House",
+      "authors": "John Grisham",
+      "page_count": 445,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81593W",
+      "title": "The Tommyknockers",
+      "authors": "Stephen King",
+      "page_count": 725,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL23481W",
+      "title": "The Silence of the Lambs",
+      "authors": "Thomas Harris",
+      "page_count": 352,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL79339W",
+      "title": "The Woods",
+      "authors": "Harlan Coben",
+      "page_count": 434,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL167185W",
+      "title": "Jack & Jill",
+      "authors": "James Patterson",
+      "page_count": 432,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL167179W",
+      "title": "The Big Bad Wolf",
+      "authors": "James Patterson",
+      "page_count": 393,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81586W",
+      "title": "From a Buick 8",
+      "authors": "Stephen King",
+      "page_count": 463,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL2794726W",
+      "title": "The Regulators",
+      "authors": "Stephen King",
+      "page_count": 448,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL77016W",
+      "title": "The Summons",
+      "authors": "John Grisham",
+      "page_count": 378,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL81624W",
+      "title": "Hearts in Atlantis",
+      "authors": "Stephen King",
+      "page_count": 598,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL85747W",
+      "title": "Diamonds are Forever",
+      "authors": "Ian Fleming",
+      "page_count": 243,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL77011W",
+      "title": "The King of Torts",
+      "authors": "John Grisham",
+      "page_count": 415,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL52953W",
+      "title": "One Shot",
+      "authors": "Lee Child",
+      "page_count": 436,
+      "genre_hint": "Thriller"
+    },
+    {
+      "openlibrary_id": "OL18012166W",
+      "title": "Circe",
+      "authors": "Madeline Miller",
+      "page_count": 404,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL2746369W",
+      "title": "The Clan of the Cave Bear",
+      "authors": "Jean M. Auel",
+      "page_count": 524,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL16509148W",
+      "title": "The Song of Achilles",
+      "authors": "Madeline Miller",
+      "page_count": 385,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL40879W",
+      "title": "Blood Meridian",
+      "authors": "Cormac McCarthy",
+      "page_count": 368,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL36287W",
+      "title": "Le Comte de Monte Cristo",
+      "authors": "Alexandre Dumas",
+      "page_count": 593,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL675834W",
+      "title": "Alias Grace",
+      "authors": "Margaret Atwood",
+      "page_count": 549,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1856675W",
+      "title": "Memoirs of a Geisha",
+      "authors": "Arthur Golden",
+      "page_count": 486,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL36861W",
+      "title": "Les Trois Mousquetaires",
+      "authors": "Alexandre Dumas, Auguste Maquet",
+      "page_count": 552,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL59048W",
+      "title": "The Remains of the Day",
+      "authors": "Kazuo Ishiguro",
+      "page_count": 256,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL61867W",
+      "title": "The Last Days of Pompeii",
+      "authors": "Edward Bulwer Lytton, Baron Lytton",
+      "page_count": 412,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL468431W",
+      "title": "The Great Gatsby",
+      "authors": "F. Scott Fitzgerald",
+      "page_count": 186,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1963316W",
+      "title": "The Terror",
+      "authors": "Dan Simmons",
+      "page_count": 770,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL16821606W",
+      "title": "All the Light We Cannot See",
+      "authors": "Anthony Doerr",
+      "page_count": 544,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL77757W",
+      "title": "Rilla of Ingleside",
+      "authors": "Lucy Maud Montgomery",
+      "page_count": 284,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL19661009W",
+      "title": "The Tattooist of Auschwitz: the heart-breaking and unforgettable international bestseller",
+      "authors": "Heather Morris, Heather Morris, Morris, Heather teacher., Morris Heather, Sarah Fields",
+      "page_count": 304,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL8702048W",
+      "title": "Master and Commander",
+      "authors": "Patrick O'Brian",
+      "page_count": 412,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1253285W",
+      "title": "The Scarlet Pimpernel",
+      "authors": "Emma Orczy",
+      "page_count": 303,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL2775807W",
+      "title": "Pollyanna",
+      "authors": "Eleanor Hodgman Porter, Porter, Neil Reed, Lee Giles",
+      "page_count": 194,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL50548W",
+      "title": "Beloved",
+      "authors": "Toni Morrison",
+      "page_count": 330,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL455305W",
+      "title": "The Scarlet Letter",
+      "authors": "Nathaniel Hawthorne",
+      "page_count": 272,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1209288W",
+      "title": "Im Westen nichts Neues",
+      "authors": "Erich Maria Remarque",
+      "page_count": 248,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL23205W",
+      "title": "The Grapes of Wrath",
+      "authors": "John Steinbeck",
+      "page_count": 544,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL15833328W",
+      "title": "Stardust",
+      "authors": "Neil Gaiman",
+      "page_count": 232,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL19075624W",
+      "title": "Nevernight",
+      "authors": "Jay Kristoff",
+      "page_count": 699,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL62979W",
+      "title": "The Sun Also Rises",
+      "authors": "Ernest Hemingway",
+      "page_count": 247,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL63985W",
+      "title": "The Legend of Sleepy Hollow",
+      "authors": "Washington Irving",
+      "page_count": 39,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL9334371W",
+      "title": "The Guernsey Literary and Potato Peel Pie Society",
+      "authors": "Mary Ann Shaffer, Annie Barrows",
+      "page_count": 288,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL66544W",
+      "title": "Persuasion",
+      "authors": "Jane Austen",
+      "page_count": 268,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL804246W",
+      "title": "Sonnenfinsternis",
+      "authors": "Arthur Koestler",
+      "page_count": 254,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL38483W",
+      "title": "The Confusion. Volume II of the Baroque Cycle",
+      "authors": "Neal Stephenson, Simon Prebble, Katherine Kellgren, Kevin Pariseau",
+      "page_count": 815,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL53071W",
+      "title": "The English Patient",
+      "authors": "Michael Ondaatje",
+      "page_count": 313,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL29983W",
+      "title": "Little Women",
+      "authors": "Louisa May Alcott",
+      "page_count": 424,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL21177W",
+      "title": "Wuthering Heights",
+      "authors": "Emily Brontë",
+      "page_count": 318,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL872773W",
+      "title": "Der Steppenwolf",
+      "authors": "Hermann Hesse",
+      "page_count": 224,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL106837W",
+      "title": "Mémoires d'Hadrien",
+      "authors": "Marguerite Yourcenar",
+      "page_count": 321,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL262452W",
+      "title": "His Last Bow [8 stories]",
+      "authors": "Arthur Conan Doyle",
+      "page_count": 236,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1719805W",
+      "title": "Little Town on the Prairie",
+      "authors": "Laura Ingalls Wilder",
+      "page_count": 305,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL19908W",
+      "title": "Kim",
+      "authors": "Rudyard Kipling",
+      "page_count": 286,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL66562W",
+      "title": "Sense and Sensibility",
+      "authors": "Jane Austen",
+      "page_count": 352,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL240210W",
+      "title": "Ben Hur",
+      "authors": "Lew Wallace",
+      "page_count": 506,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL40315W",
+      "title": "One Corpse too Many",
+      "authors": "Edith Pargeter",
+      "page_count": 207,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL60085W",
+      "title": "Child of the morning",
+      "authors": "Pauline Gedge",
+      "page_count": 439,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL15653145W",
+      "title": "Il cimitero di Praga",
+      "authors": "Umberto Eco",
+      "page_count": 521,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL114967W",
+      "title": "The Jungle",
+      "authors": "Upton Sinclair",
+      "page_count": 350,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL54031W",
+      "title": "A Connecticut Yankee in King Arthur's Court",
+      "authors": "Mark Twain",
+      "page_count": 397,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1882563W",
+      "title": "Fortune's Favourites",
+      "authors": "Colleen McCullough, C McCullough, Colleen Mac Cullough",
+      "page_count": 878,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL32466W",
+      "title": "A Christmas Carol",
+      "authors": "Charles Dickens",
+      "page_count": 114,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL53908W",
+      "title": "Adventures of Huckleberry Finn",
+      "authors": "Mark Twain",
+      "page_count": 346,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL45089W",
+      "title": "Robinson Crusoe",
+      "authors": "Daniel Defoe, J. J. Grandville, Petrus Borel, Les éditions du Rey, N. C. Wyeth",
+      "page_count": 274,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL53919W",
+      "title": "The Adventures of Tom Sawyer",
+      "authors": "Mark Twain",
+      "page_count": 253,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1287903W",
+      "title": "Voyage au bout de la nuit",
+      "authors": "Louis-Ferdinand Celine",
+      "page_count": 509,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL28570037W",
+      "title": "The Wind in the Willows",
+      "authors": "Kenneth Grahame",
+      "page_count": 192,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL77958W",
+      "title": "The Last of the Mohicans",
+      "authors": "James Fenimore Cooper",
+      "page_count": 418,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL98501W",
+      "title": "Ethan Frome",
+      "authors": "Edith Wharton",
+      "page_count": 98,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL471932W",
+      "title": "The Murder of Roger Ackroyd",
+      "authors": "Agatha Christie",
+      "page_count": 256,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL40218W",
+      "title": "A Morbid Taste for Bones",
+      "authors": "Edith Pargeter",
+      "page_count": 208,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1095427W",
+      "title": "Jane Eyre",
+      "authors": "Charlotte Brontë",
+      "page_count": 480,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL112315W",
+      "title": "Mistress",
+      "authors": "Jayne Ann Krentz",
+      "page_count": 357,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL86318W",
+      "title": "Ulysses",
+      "authors": "James Joyce",
+      "page_count": 736,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL471870W",
+      "title": "Sad Cypress",
+      "authors": "Agatha Christie",
+      "page_count": 239,
+      "genre_hint": "Historical fiction"
+    },
+    {
+      "openlibrary_id": "OL1673205W",
+      "title": "The Godfather",
+      "authors": "Mario Puzo",
+      "page_count": 450,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL617847W",
+      "title": "El túnel",
+      "authors": "Ernesto Sabato",
+      "page_count": 151,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL471990W",
+      "title": "The Mirror Crack'd from Side to Side",
+      "authors": "Agatha Christie",
+      "page_count": 240,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL471702W",
+      "title": "One, Two, Buckle My Shoe",
+      "authors": "Agatha Christie",
+      "page_count": 208,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL262454W",
+      "title": "The Hound of the Baskervilles",
+      "authors": "Arthur Conan Doyle",
+      "page_count": 207,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL471895W",
+      "title": "The Murder at the Vicarage",
+      "authors": "Agatha Christie",
+      "page_count": 255,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL471832W",
+      "title": "Hallowe'en Party",
+      "authors": "Agatha Christie",
+      "page_count": 244,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL472458W",
+      "title": "A Caribbean Mystery",
+      "authors": "Agatha Christie",
+      "page_count": 224,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL471576W",
+      "title": "Murder on the Orient Express",
+      "authors": "Agatha Christie",
+      "page_count": 240,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL2965102W",
+      "title": "The Curious Incident of the Dog in the Night-Time",
+      "authors": "Mark Haddon",
+      "page_count": 256,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL9170454W",
+      "title": "Hamlet",
+      "authors": "William Shakespeare",
+      "page_count": 192,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5725956W",
+      "title": "Artemis Fowl",
+      "authors": "Eoin Colfer",
+      "page_count": 288,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5962664W",
+      "title": "The Lovely Bones",
+      "authors": "Alice Sebold",
+      "page_count": 349,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL472508W",
+      "title": "Endless Night",
+      "authors": "Agatha Christie",
+      "page_count": 239,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL471738W",
+      "title": "Destination Unknown",
+      "authors": "Agatha Christie",
+      "page_count": 212,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL857544W",
+      "title": "La ciudad y los perros",
+      "authors": "Mario Vargas Llosa",
+      "page_count": 394,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5725961W",
+      "title": "Artemis Fowl and the Eternity Code",
+      "authors": "Eoin Colfer",
+      "page_count": 344,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL81621W",
+      "title": "Different Seasons",
+      "authors": "Stephen King",
+      "page_count": 529,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL471919W",
+      "title": "The Pale Horse",
+      "authors": "Agatha Christie",
+      "page_count": 252,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL263256W",
+      "title": "The Bad Place",
+      "authors": "Dean Koontz",
+      "page_count": 398,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL455336W",
+      "title": "The Marble Faun",
+      "authors": "Nathaniel Hawthorne",
+      "page_count": 400,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5725964W",
+      "title": "Artemis Fowl and the Arctic Incident",
+      "authors": "Eoin Colfer",
+      "page_count": 320,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL52955W",
+      "title": "Persuader",
+      "authors": "Lee Child",
+      "page_count": 465,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL16820059W",
+      "title": "Mr. Mercedes",
+      "authors": "Stephen King, Stephen king, Ingah Mikhaʼeli",
+      "page_count": 484,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL52946W",
+      "title": "Tripwire",
+      "authors": "Lee Child",
+      "page_count": 422,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5725975W",
+      "title": "The Opal Deception",
+      "authors": "Eoin Colfer",
+      "page_count": 352,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL712025W",
+      "title": "2666",
+      "authors": "Roberto Bolaño",
+      "page_count": 1032,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL52942W",
+      "title": "The enemy",
+      "authors": "Lee Child",
+      "page_count": 472,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL151089W",
+      "title": "Tintin en Amérique",
+      "authors": "Hergé",
+      "page_count": 62,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL52947W",
+      "title": "Bad Luck and Trouble",
+      "authors": "Lee Child",
+      "page_count": 439,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL79329W",
+      "title": "Promise Me",
+      "authors": "Harlan Coben",
+      "page_count": 431,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL52940W",
+      "title": "The Hard Way",
+      "authors": "Lee Child",
+      "page_count": 448,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL149188W",
+      "title": "The Running Man",
+      "authors": "Stephen King",
+      "page_count": 256,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL15374110W",
+      "title": "Full Dark, No Stars",
+      "authors": "Stephen King",
+      "page_count": 448,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL20646061W",
+      "title": "A Good Girl's Guide to Murder",
+      "authors": "Holly Jackson",
+      "page_count": 431,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL81604W",
+      "title": "Nightmares & Dreamscapes",
+      "authors": "Stephen King",
+      "page_count": 702,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL3359138W",
+      "title": "We need to talk about Kevin",
+      "authors": "Lionel Shriver",
+      "page_count": 468,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL1386647W",
+      "title": "Eichmann in Jerusalem",
+      "authors": "Hannah Arendt",
+      "page_count": 312,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL119430W",
+      "title": "The Yiddish Policemen's Union",
+      "authors": "Michael Chabon",
+      "page_count": 427,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL77015W",
+      "title": "The Innocent Man",
+      "authors": "John Grisham",
+      "page_count": 416,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL84916W",
+      "title": "Cyclops",
+      "authors": "Clive Cussler, Oliver Cussler",
+      "page_count": 480,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL17610986W",
+      "title": "Dog Man",
+      "authors": "Dav Pilkey",
+      "page_count": 240,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5842017W",
+      "title": "Dark Places",
+      "authors": "Gillian Flynn",
+      "page_count": 368,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL52936W",
+      "title": "The Visitor",
+      "authors": "Lee Child",
+      "page_count": 478,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL84866W",
+      "title": "Atlantis Found",
+      "authors": "Clive Cussler",
+      "page_count": 544,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL14959778W",
+      "title": "61 hours",
+      "authors": "Lee Child",
+      "page_count": 445,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5734718W",
+      "title": "Little Brother",
+      "authors": "Cory Doctorow",
+      "page_count": 383,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5784621W",
+      "title": "Flickan som lekte med elden",
+      "authors": "Stieg Larsson",
+      "page_count": 638,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL16806826W",
+      "title": "Joyland",
+      "authors": "Stephen King, Michael Kelly.",
+      "page_count": 318,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL15369707W",
+      "title": "Worth Dying For",
+      "authors": "Lee Child",
+      "page_count": 440,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL17937105W",
+      "title": "The Outsider",
+      "authors": "Stephen King",
+      "page_count": 582,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL19341943W",
+      "title": "The City & The City",
+      "authors": "China Miéville",
+      "page_count": 384,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL17357373W",
+      "title": "End of Watch",
+      "authors": "Stephen King",
+      "page_count": 448,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL20788144W",
+      "title": "Dog Man",
+      "authors": "Dav Pilkey",
+      "page_count": 240,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL15279945W",
+      "title": "Artemis Fowl and the Atlantis Complex",
+      "authors": "Eoin Colfer",
+      "page_count": 376,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL19715138W",
+      "title": "Behind Closed Doors",
+      "authors": "B.A. Paris",
+      "page_count": 336,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL17303315W",
+      "title": "Found",
+      "authors": "Harlan Coben",
+      "page_count": 336,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL20085413W",
+      "title": "Dog Man",
+      "authors": "Dav Pilkey",
+      "page_count": 240,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL17359118W",
+      "title": "Men Explain Things To Me",
+      "authors": "Rebecca Solnit",
+      "page_count": 174,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL5725955W",
+      "title": "Artemis Fowl and the Time Paradox",
+      "authors": "Eoin Colfer",
+      "page_count": 391,
+      "genre_hint": "Crime"
+    },
+    {
+      "openlibrary_id": "OL26663382W",
+      "title": "I'm Glad My Mom Died",
+      "authors": "Jennette McCurdy",
+      "page_count": 320,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL17184556W",
+      "title": "Elon Musk",
+      "authors": "Ashlee Vance, Francisco López Martín",
+      "page_count": 402,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL81601W",
+      "title": "On Writing",
+      "authors": "Stephen King",
+      "page_count": 288,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL17802920W",
+      "title": "Leonardo da Vinci",
+      "authors": "Walter Isaacson, Jordi Ainaud i Escudero, Beruryah Ben Barukh",
+      "page_count": 599,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL23192W",
+      "title": "Travels with Charley",
+      "authors": "John Steinbeck",
+      "page_count": 256,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL86701W",
+      "title": "Terre des hommes",
+      "authors": "Antoine de Saint-Exupéry",
+      "page_count": 222,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL28809W",
+      "title": "Chronicles",
+      "authors": "Bob Dylan",
+      "page_count": 304,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL10509141W",
+      "title": "My Family and other Animals",
+      "authors": "Gerald Malcolm Durrell",
+      "page_count": 284,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL16488820W",
+      "title": "Why Be Happy When You Could Be Normal?",
+      "authors": "Jeanette Winterson",
+      "page_count": 240,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL2056818W",
+      "title": "Maus I",
+      "authors": "Art Spiegelman",
+      "page_count": 295,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL4416196W",
+      "title": "Fate is the Hunter",
+      "authors": "Ernest K. Gann",
+      "page_count": 386,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL860066W",
+      "title": "Se questo è un uomo",
+      "authors": "Primo Levi",
+      "page_count": 206,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL2969387W",
+      "title": "Kommandant in Auschwitz",
+      "authors": "Rudolf Höss",
+      "page_count": 277,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL461064W",
+      "title": "Diana, Her True Story",
+      "authors": "Andrew Morton",
+      "page_count": 288,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL1168169W",
+      "title": "Homage to Catalonia",
+      "authors": "George Orwell",
+      "page_count": 246,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL102389W",
+      "title": "Les années",
+      "authors": "Annie Ernaux",
+      "page_count": 241,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL5729418W",
+      "title": "Ishi in Two Worlds a Biogr",
+      "authors": "Theodora Kroeber, Theodora Kroeber, Lorna Raver, Karl Kroeber",
+      "page_count": 257,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL42291W",
+      "title": "It Shouldn't Happen to a Vet (All Creatures Great and Small #2)",
+      "authors": "James Herriot, Jean Nobes",
+      "page_count": 288,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL1019596W",
+      "title": "Istanbul",
+      "authors": "Orhan Pamuk",
+      "page_count": 404,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL39027W",
+      "title": "A personal record",
+      "authors": "Joseph Conrad",
+      "page_count": 138,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL702433W",
+      "title": "Histoire d'une âme",
+      "authors": "Saint Thérèse de Lisieux, John Clarke",
+      "page_count": 343,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL813733W",
+      "title": "Legenda aurea",
+      "authors": "Jacobus de Voragine, William Caxton",
+      "page_count": 641,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL274550W",
+      "title": "Relato de un náufrago",
+      "authors": "Gabriel García Márquez",
+      "page_count": 128,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL4553894W",
+      "title": "Hitler & Stalin",
+      "authors": "Alan Bullock",
+      "page_count": 1081,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL15714637W",
+      "title": "Śmierć Miasta",
+      "authors": "Władysław Szpilman",
+      "page_count": 222,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL8868108W",
+      "title": "H Is for Hawk",
+      "authors": "Helen Macdonald",
+      "page_count": 349,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL733363W",
+      "title": "La Vida de Henry Brulard",
+      "authors": "Stendhal",
+      "page_count": 394,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL14955086W",
+      "title": "Committed",
+      "authors": "Elizabeth Gilbert",
+      "page_count": 336,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL3230895W",
+      "title": "Marie Curie",
+      "authors": "Susan Quinn",
+      "page_count": 509,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL2424283W",
+      "title": "Jeszcze dzień życia",
+      "authors": "Ryszard Kapuściński",
+      "page_count": 144,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL37277W",
+      "title": "The Autobiography of Alice B. Toklas",
+      "authors": "Gertrude Stein",
+      "page_count": 268,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL19762523W",
+      "title": "The diary of a bookseller",
+      "authors": "Shaun Bythell",
+      "page_count": 314,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL1580894W",
+      "title": "סיפור על אהבה וחושך",
+      "authors": "עמוס עוז",
+      "page_count": 598,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL18237666W",
+      "title": "Słownik artystów polskich i obcych w Polsce działających",
+      "authors": "Jolanta Maurin Białostocka, Andrzej Ryszkiewicz",
+      "page_count": 300,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL802614W",
+      "title": "The Last King of Poland",
+      "authors": "Adam Zamoyski",
+      "page_count": 550,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL860022W",
+      "title": "Il sistema periodico",
+      "authors": "Primo Levi",
+      "page_count": 238,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL20803480W",
+      "title": "Unorthodox",
+      "authors": "Deborah Feldman",
+      "page_count": 272,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL492629W",
+      "title": "Birds, beasts and relatives",
+      "authors": "Gerald Malcolm Durrell",
+      "page_count": 250,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL860026W",
+      "title": "La tregua",
+      "authors": "Primo Levi",
+      "page_count": 250,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL11313831W",
+      "title": "Szachinszach",
+      "authors": "Ryszard Kapuściński",
+      "page_count": 162,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL1913924W",
+      "title": "Aimée & Jaguar",
+      "authors": "Erica Fischer",
+      "page_count": 304,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL21681588W",
+      "title": "Childhood, Youth, Dependency",
+      "authors": "Tove Ditlevsen",
+      "page_count": 352,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL8135457W",
+      "title": "Brûlée vive",
+      "authors": "Souad, Marie-Therese Cuny",
+      "page_count": 227,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL2693772W",
+      "title": "Confessions of an economic hit man",
+      "authors": "Perkins, John, John Perkins, John Perkins, Perkins, John",
+      "page_count": 295,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL1913410W",
+      "title": "Reaching out",
+      "authors": "Henri J. M. Nouwen",
+      "page_count": 167,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL19710012W",
+      "title": "My Brief History",
+      "authors": "Stephen Hawking",
+      "page_count": 144,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL112002W",
+      "title": "The Agony and the Ecstasy",
+      "authors": "Irving Stone",
+      "page_count": 710,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL3455330W",
+      "title": "Wishful Drinking",
+      "authors": "Carrie Fisher",
+      "page_count": 163,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL1913408W",
+      "title": "Adam, God's beloved",
+      "authors": "Henri J. M. Nouwen",
+      "page_count": 131,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL988551W",
+      "title": "Mein Leben",
+      "authors": "Marcel Reich-Ranicki",
+      "page_count": 416,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL23184W",
+      "title": "A Russian journal",
+      "authors": "John Steinbeck",
+      "page_count": 220,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL109517W",
+      "title": "Wysoki zamek",
+      "authors": "Stanisław Lem",
+      "page_count": 152,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL4978663W",
+      "title": "A Cambodian odyssey",
+      "authors": "Haing Ngor",
+      "page_count": 438,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL13307430W",
+      "title": "Witness to Hope",
+      "authors": "George Weigel",
+      "page_count": 1056,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL3580581W",
+      "title": "Child of the Holocaust",
+      "authors": "Jack Kuper",
+      "page_count": 283,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL273385W",
+      "title": "Native realm",
+      "authors": "Czesław Miłosz",
+      "page_count": 300,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL2657644W",
+      "title": "Power and principle",
+      "authors": "Zbigniew Brzezinski, Marz̤īyah Sāqiyān",
+      "page_count": 587,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL28098724W",
+      "title": "MS Shoes Fall Series",
+      "authors": "Alborz Azar",
+      "page_count": 300,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL2005707W",
+      "title": "Mengele",
+      "authors": "Gerald L. Posner, John Ware",
+      "page_count": 364,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL34960559W",
+      "title": "Het verstoorde leven",
+      "authors": "Etty Hillesum",
+      "page_count": 234,
+      "genre_hint": "Biography"
+    },
+    {
+      "openlibrary_id": "OL17797857W",
+      "title": "One Of Us Is Lying",
+      "authors": "Karen M. McManus",
+      "page_count": 372,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL21692056W",
+      "title": "The Inheritance Games",
+      "authors": "Jennifer Lynn Barnes",
+      "page_count": 392,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20639427W",
+      "title": "One of us is next",
+      "authors": "Karen M. McManus",
+      "page_count": 384,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17714701W",
+      "title": "The Hate U Give",
+      "authors": "Angie Thomas, Angie Thomas",
+      "page_count": 448,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17791167W",
+      "title": "Tower of Dawn",
+      "authors": "Sarah J. Maas",
+      "page_count": 680,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17323489W",
+      "title": "All the Bright Places",
+      "authors": "Jennifer Niven",
+      "page_count": 402,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL19075470W",
+      "title": "Starsight",
+      "authors": "Brandon Sanderson",
+      "page_count": 480,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17352669W",
+      "title": "A Court of Thorns and Roses",
+      "authors": "Sarah J. Maas",
+      "page_count": 452,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20354499W",
+      "title": "Heartstopper, Volume 2",
+      "authors": "Alice Oseman",
+      "page_count": 320,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20354498W",
+      "title": "Heartstopper, Volume 1",
+      "authors": "Alice Oseman",
+      "page_count": 288,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20875338W",
+      "title": "Culpa Tuya",
+      "authors": "Mercedes Ron",
+      "page_count": 448,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17842319W",
+      "title": "Turtles All the Way Down",
+      "authors": "John Green",
+      "page_count": 304,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20652083W",
+      "title": "Fetch (Five Nights at Freddy’s",
+      "authors": "Scott Cawthon, Carly Anne West, Andrea Waggener",
+      "page_count": 272,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20640195W",
+      "title": "Into the Pit (Five Nights at Freddy’s",
+      "authors": "Scott Cawthon, Elley Cooper",
+      "page_count": 224,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17203233W",
+      "title": "To All the Boys I've Loved Before",
+      "authors": "Jenny Han",
+      "page_count": 373,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17860071W",
+      "title": "The Hammer of Thor",
+      "authors": "Rick Riordan",
+      "page_count": 480,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17793648W",
+      "title": "The Silver Eyes (Five Nights At Freddy's #1)",
+      "authors": "Scott Cawthon, Kira Breed-Wrisley",
+      "page_count": 396,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL11822690W",
+      "title": "Paper Towns",
+      "authors": "John Green",
+      "page_count": 368,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL265426W",
+      "title": "Looking for Alaska",
+      "authors": "John Green",
+      "page_count": 288,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17860744W",
+      "title": "Una corte de niebla y furia",
+      "authors": "Sarah J. Maas",
+      "page_count": 640,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL28868481W",
+      "title": "The Sun and the Star",
+      "authors": "Rick Riordan, Mark Oshiro",
+      "page_count": 476,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL679358W",
+      "title": "Coraline",
+      "authors": "Neil Gaiman",
+      "page_count": 176,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20037217W",
+      "title": "Holding Up the Universe",
+      "authors": "Jennifer Niven",
+      "page_count": 400,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL16444438W",
+      "title": "The Fault in Our Stars",
+      "authors": "John Green",
+      "page_count": 318,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL16825084W",
+      "title": "Four",
+      "authors": "Veronica Roth",
+      "page_count": 261,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17843967W",
+      "title": "Everything, Everything",
+      "authors": "Nicola Yoon, Eric Chevreau (Traduction)",
+      "page_count": 336,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL59801W",
+      "title": "The Tombs of Atuan",
+      "authors": "Ursula K. Le Guin",
+      "page_count": 173,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL16282945W",
+      "title": "Cinder",
+      "authors": "Marissa Meyer",
+      "page_count": 416,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL16820266W",
+      "title": "The 5th wave (The 5th Wave #1)",
+      "authors": "Richard Yancey",
+      "page_count": 496,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL44071772W",
+      "title": "The Court of the Dead",
+      "authors": "Rick Riordan, Mark Oshiro",
+      "page_count": 448,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL24783202W",
+      "title": "Gallant",
+      "authors": "V.E. Schwab",
+      "page_count": 351,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL21659578W",
+      "title": "1:35 AM (Five Nights at Freddy's",
+      "authors": "Scott Cawthon, Andrea Waggener, Elley Cooper",
+      "page_count": 276,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL18199565W",
+      "title": "The Sun is Also a Star",
+      "authors": "Nicola Yoon, KARINE SUHARD - GUIE",
+      "page_count": 384,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL14991775W",
+      "title": "The Siren",
+      "authors": "Kiera Cass",
+      "page_count": 332,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17081977W",
+      "title": "I'll Give You the Sun",
+      "authors": "Jandy Nelson",
+      "page_count": 400,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL453807W",
+      "title": "Nation",
+      "authors": "Terry Pratchett, Stephen Briggs",
+      "page_count": 384,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17357734W",
+      "title": "The Raven King",
+      "authors": "Maggie Stiefvater",
+      "page_count": 480,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17305107W",
+      "title": "The Infinite Sea",
+      "authors": "Richard Yancey",
+      "page_count": 336,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL5819886W",
+      "title": "Eldest",
+      "authors": "Christopher Paolini",
+      "page_count": 704,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL71873W",
+      "title": "Midnight over Sanctaphrax",
+      "authors": "Paul Stewart, Chris Riddell, STEWART, PAUL, RIDDELL, CHRIS",
+      "page_count": 368,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17876066W",
+      "title": "The Language of Thorns",
+      "authors": "Leigh Bardugo, Carlos Loscertales",
+      "page_count": 304,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL30078252W",
+      "title": "The Assassin and the Pirate Lord",
+      "authors": "Sarah J. Maas",
+      "page_count": 98,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL16925622W",
+      "title": "The One (The Selection #3)",
+      "authors": "Kiera Cass",
+      "page_count": 306,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20140593W",
+      "title": "The Tyrant's Tomb",
+      "authors": "Rick Riordan",
+      "page_count": 448,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17710061W",
+      "title": "Carve the Mark",
+      "authors": "Veronica Roth",
+      "page_count": 512,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL19680664W",
+      "title": "The Fork, the Witch, and the Worm",
+      "authors": "Christopher Paolini, Angela Paolini",
+      "page_count": 288,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL16808471W",
+      "title": "Allegiant",
+      "authors": "Veronica Roth",
+      "page_count": 516,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL20112278W",
+      "title": "Pan's Labyrinth",
+      "authors": "Guillermo del Toro, Cornelia Funke",
+      "page_count": 304,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL5720027W",
+      "title": "New Moon",
+      "authors": "Stephenie Meyer",
+      "page_count": 563,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17576378W",
+      "title": "The Kissing Booth",
+      "authors": "Beth Reekles",
+      "page_count": 442,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL492647W",
+      "title": "The Titan's Curse",
+      "authors": "Rick Riordan",
+      "page_count": 316,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL492646W",
+      "title": "The Sea of Monsters",
+      "authors": "Rick Riordan",
+      "page_count": 282,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL257944W",
+      "title": "The Ice Dragon",
+      "authors": "George R. R. Martin",
+      "page_count": 120,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL5819463W",
+      "title": "I Am the Messenger",
+      "authors": "Markus Zusak",
+      "page_count": 384,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL18184356W",
+      "title": "Muse of Nightmares",
+      "authors": "Laini Taylor",
+      "page_count": 525,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL17728819W",
+      "title": "Challenger Deep",
+      "authors": "Neal Shusterman",
+      "page_count": 320,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL37833676W",
+      "title": "Wrath of the Triple Goddess",
+      "authors": "Rick Riordan",
+      "page_count": 322,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL875437W",
+      "title": "The Perks of Being a Wallflower",
+      "authors": "Stephen Chbosky",
+      "page_count": 231,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL21910682W",
+      "title": "Quantum Weirdness of the Almost-Kiss",
+      "authors": "Amy Noelle Parks",
+      "page_count": 372,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL15518787W",
+      "title": "The Hunger Games Trilogy (Hunger Games / Catching Fire / Mockingjay)",
+      "authors": "Suzanne Collins",
+      "page_count": 1155,
+      "genre_hint": "Young Adult"
+    },
+    {
+      "openlibrary_id": "OL362676W",
+      "title": "All's Well That Ends Well",
+      "authors": "William Shakespeare",
+      "page_count": 160,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL14877882W",
+      "title": "Salomé",
+      "authors": "Oscar Wilde",
+      "page_count": 66,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362687W",
+      "title": "Winter's Tale",
+      "authors": "William Shakespeare",
+      "page_count": 175,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362699W",
+      "title": "The Tempest",
+      "authors": "William Shakespeare",
+      "page_count": 144,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL259026W",
+      "title": "King Lear",
+      "authors": "William Shakespeare",
+      "page_count": 193,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362690W",
+      "title": "The Taming of the Shrew",
+      "authors": "William Shakespeare",
+      "page_count": 142,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362702W",
+      "title": "Julius Caesar",
+      "authors": "William Shakespeare",
+      "page_count": 139,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362695W",
+      "title": "Antony and Cleopatra",
+      "authors": "William Shakespeare",
+      "page_count": 206,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL258758W",
+      "title": "The Merchant of Venice",
+      "authors": "William Shakespeare",
+      "page_count": 147,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362694W",
+      "title": "Twelfth Night, or What You Will",
+      "authors": "William Shakespeare",
+      "page_count": 152,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL258902W",
+      "title": "Macbeth",
+      "authors": "William Shakespeare",
+      "page_count": 135,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL258850W",
+      "title": "Othello",
+      "authors": "William Shakespeare",
+      "page_count": 179,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL4322177W",
+      "title": "Daddy-Long-Legs",
+      "authors": "Jean Webster",
+      "page_count": 196,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL36633W",
+      "title": "Rebecca",
+      "authors": "Daphne du Maurier",
+      "page_count": 386,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL45886W",
+      "title": "The Witches",
+      "authors": "Roald Dahl",
+      "page_count": 208,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL45885W",
+      "title": "The BFG",
+      "authors": "Roald Dahl",
+      "page_count": 208,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL15155002W",
+      "title": "The Ugly Duckling",
+      "authors": "Hans Christian Andersen",
+      "page_count": 32,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL61982W",
+      "title": "Ὀδύσσεια",
+      "authors": "Όμηρος",
+      "page_count": 374,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL16280231W",
+      "title": "Aeneis",
+      "authors": "Publius Vergilius Maro",
+      "page_count": 360,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL86343W",
+      "title": "A Portrait of the Artist as a Young Man",
+      "authors": "James Joyce, James Joyce, james joyce, J Joyce",
+      "page_count": 252,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL498463W",
+      "title": "Der Proceß",
+      "authors": "Franz Kafka",
+      "page_count": 269,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL10263W",
+      "title": "Le petit prince",
+      "authors": "Antoine de Saint-Exupéry",
+      "page_count": 96,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL627084W",
+      "title": "Lolita",
+      "authors": "Vladimir Nabokov",
+      "page_count": 336,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL82560W",
+      "title": "Harry Potter and the Goblet of Fire",
+      "authors": "J. K. Rowling",
+      "page_count": 672,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL472328W",
+      "title": "Towards Zero",
+      "authors": "Agatha Christie",
+      "page_count": 224,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362684W",
+      "title": "Richard III",
+      "authors": "William Shakespeare",
+      "page_count": 178,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL1348798W",
+      "title": "Henry IV, Part 1",
+      "authors": "William Shakespeare",
+      "page_count": 160,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL857600W",
+      "title": "La Fiesta del Chivo",
+      "authors": "Mario Vargas Llosa",
+      "page_count": 506,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362679W",
+      "title": "The Comedy of Errors",
+      "authors": "William Shakespeare",
+      "page_count": 104,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL5721394W",
+      "title": "Brideshead Revisited",
+      "authors": "Evelyn Waugh",
+      "page_count": 336,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL914527W",
+      "title": "Fuente Ovejuna",
+      "authors": "Lope de Vega",
+      "page_count": 158,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL549598W",
+      "title": "The Secret Diary of Adrian Mole, Aged 13 3/4",
+      "authors": "Sue Townsend",
+      "page_count": 234,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL17076678W",
+      "title": "The Long Haul",
+      "authors": "Jeff Kinney",
+      "page_count": 218,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL1019598W",
+      "title": "Benim Adım Kırmızı",
+      "authors": "Orhan Pamuk, Orhan Pamuk, Amankeldī Qūrmet",
+      "page_count": 536,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL970122W",
+      "title": "Emil und die Detektive",
+      "authors": "Erich Kästner",
+      "page_count": 175,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL17603394W",
+      "title": "Double Down",
+      "authors": "Jeff Kinney",
+      "page_count": 224,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362697W",
+      "title": "Henry IV, Part 2",
+      "authors": "William Shakespeare",
+      "page_count": 168,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362685W",
+      "title": "Troilus and Cressida",
+      "authors": "William Shakespeare",
+      "page_count": 192,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL259509W",
+      "title": "La dame aux camélias [novel]",
+      "authors": "Alexandre Dumas fils",
+      "page_count": 252,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL453743W",
+      "title": "Feet of Clay",
+      "authors": "Terry Pratchett",
+      "page_count": 379,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362671W",
+      "title": "Two Gentlemen of Verona",
+      "authors": "William Shakespeare",
+      "page_count": 129,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL77013W",
+      "title": "The Last Juror",
+      "authors": "John Grisham",
+      "page_count": 427,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL17360811W",
+      "title": "Harry Potter and the Cursed Child",
+      "authors": "Jack Thorne, John Tiffany, J. K. Rowling",
+      "page_count": 343,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL453727W",
+      "title": "Jingo",
+      "authors": "Terry Pratchett",
+      "page_count": 415,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362223W",
+      "title": "Timon of Athens",
+      "authors": "William Shakespeare",
+      "page_count": 144,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL361246W",
+      "title": "King Henry VIII",
+      "authors": "William Shakespeare",
+      "page_count": 156,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL362680W",
+      "title": "King John",
+      "authors": "William Shakespeare",
+      "page_count": 158,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL453733W",
+      "title": "Going Postal",
+      "authors": "Terry Pratchett",
+      "page_count": 416,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL15724776W",
+      "title": "Le Cid",
+      "authors": "Pierre Corneille",
+      "page_count": 136,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL361595W",
+      "title": "The Merry Wives of Windsor",
+      "authors": "William Shakespeare",
+      "page_count": 145,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL16048229W",
+      "title": "Poems (Lover's Complaint / Passionate Pilgrim / Phoenix and the Turtle / Rape of Lucrece / Sonnets / Venus and Adonis)",
+      "authors": "William Shakespeare",
+      "page_count": 256,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL258709W",
+      "title": "King Henry VI. Part 2",
+      "authors": "William Shakespeare",
+      "page_count": 177,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL1963268W",
+      "title": "Hyperion",
+      "authors": "Dan Simmons",
+      "page_count": 481,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL258713W",
+      "title": "King Henry VI. Part 3",
+      "authors": "William Shakespeare",
+      "page_count": 168,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL3244616W",
+      "title": "Scarlett",
+      "authors": "Alexandra Ripley",
+      "page_count": 823,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL17038327W",
+      "title": "The Girl with All the Gifts",
+      "authors": "Mike Carey",
+      "page_count": 416,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL43858W",
+      "title": "Electra",
+      "authors": "Sophocles",
+      "page_count": 127,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL38815W",
+      "title": "The nigger of the \"Narcissus\"",
+      "authors": "Joseph Conrad",
+      "page_count": 199,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL17597666W",
+      "title": "Fantastic Beasts and Where to Find Them. The Original Screenplay",
+      "authors": "J. K. Rowling",
+      "page_count": 304,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL18011053W",
+      "title": "Fantastic Beasts",
+      "authors": "J. K. Rowling",
+      "page_count": 287,
+      "genre_hint": "Drama"
+    },
+    {
+      "openlibrary_id": "OL8483260W",
+      "title": "Diary of a Wimpy Kid",
+      "authors": "Jeff Kinney",
+      "page_count": 224,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL77748W",
+      "title": "Anne of the Island",
+      "authors": "Lucy Maud Montgomery",
+      "page_count": 232,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL77746W",
+      "title": "Anne of Green Gables",
+      "authors": "Lucy Maud Montgomery",
+      "page_count": 309,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL17715454W",
+      "title": "Caraval",
+      "authors": "Stephanie Garber",
+      "page_count": 436,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL77826W",
+      "title": "Interview With the Vampire",
+      "authors": "Anne Rice",
+      "page_count": 349,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL1230613W",
+      "title": "L’étranger",
+      "authors": "Albert Camus",
+      "page_count": 143,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL17812914W",
+      "title": "Diary of a Wimpy Kid",
+      "authors": "Jeff Kinney",
+      "page_count": 218,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL82537W",
+      "title": "Harry Potter and the Chamber of Secrets",
+      "authors": "J. K. Rowling",
+      "page_count": 339,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL77744W",
+      "title": "Anne of Avonlea",
+      "authors": "Lucy Maud Montgomery",
+      "page_count": 277,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL16314245W",
+      "title": "The Dark Forest (The Three-Body Problem Series Book 2)",
+      "authors": "刘慈欣",
+      "page_count": 574,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL17370186W",
+      "title": "A Little Life",
+      "authors": "Hanya Yanagihara, Oliver Wyman, Koen Tachelet, Ivo van Hove",
+      "page_count": 800,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL262505W",
+      "title": "The Valley of Fear",
+      "authors": "Arthur Conan Doyle",
+      "page_count": 206,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL14917748W",
+      "title": "Under the Dome",
+      "authors": "Stephen King",
+      "page_count": 1074,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL509183W",
+      "title": "Speak",
+      "authors": "Laurie Halse Anderson",
+      "page_count": 219,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL1963251W",
+      "title": "The Fall of Hyperion",
+      "authors": "Dan Simmons",
+      "page_count": 561,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL893508W",
+      "title": "Chapterhouse Dune",
+      "authors": "Frank Herbert",
+      "page_count": 482,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL45884W",
+      "title": "The Twits",
+      "authors": "Roald Dahl",
+      "page_count": 96,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL2271626W",
+      "title": "Momo oder Die seltsame Geschichte von den Zeit-Dieben und von dem Kind, das den Menschen die gestohlene Zeit zurückbrachte",
+      "authors": "Michael Ende",
+      "page_count": 269,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL45846W",
+      "title": "Matilda",
+      "authors": "Roald Dahl",
+      "page_count": 240,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL27696982W",
+      "title": "The Dragonet Prophecy",
+      "authors": "Tui T. Sutherland",
+      "page_count": 320,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL84919W",
+      "title": "Treasure",
+      "authors": "Clive Cussler, Justin Scott",
+      "page_count": 608,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL65430W",
+      "title": "The Awakening",
+      "authors": "Kate Chopin",
+      "page_count": 216,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL16809980W",
+      "title": "Crown of Midnight",
+      "authors": "Sarah J. Maas",
+      "page_count": 448,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL5682519W",
+      "title": "Dog Days",
+      "authors": "Jeff Kinney",
+      "page_count": 220,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL15104144W",
+      "title": "The Bad Beginning",
+      "authors": "Lemony Snicket",
+      "page_count": 176,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL893515W",
+      "title": "God Emperor of Dune",
+      "authors": "Frank Herbert",
+      "page_count": 464,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL40875W",
+      "title": "No country for old men",
+      "authors": "Cormac McCarthy",
+      "page_count": 309,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL16810620W",
+      "title": "Hard Luck",
+      "authors": "Jeff Kinney",
+      "page_count": 218,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL77751W",
+      "title": "Anne of Windy Poplars",
+      "authors": "Lucy Maud Montgomery",
+      "page_count": 258,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL16224122W",
+      "title": "Cabin Fever",
+      "authors": "Jeff Kinney",
+      "page_count": 218,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL5720025W",
+      "title": "Eclipse",
+      "authors": "Stephenie Meyer",
+      "page_count": 629,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL17267881W",
+      "title": "三体",
+      "authors": "刘慈欣, Vincent Schmitt, Gwennaël Gaffric, Marc Simonetti",
+      "page_count": 417,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL3511459W",
+      "title": "Stoner",
+      "authors": "John Williams",
+      "page_count": 291,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL59858W",
+      "title": "The Lathe of Heaven",
+      "authors": "Ursula K. Le Guin",
+      "page_count": 184,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL16806877W",
+      "title": "Doctor Sleep",
+      "authors": "Stephen King, José Óscar Hernández Sendin",
+      "page_count": 560,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL27455W",
+      "title": "The Return of the King",
+      "authors": "J.R.R. Tolkien",
+      "page_count": 505,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL20465177W",
+      "title": "Wrecking Ball",
+      "authors": "Jeff Kinney",
+      "page_count": 220,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL17267509W",
+      "title": "Old School",
+      "authors": "Jeff Kinney",
+      "page_count": 221,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL265501W",
+      "title": "Into the Wild",
+      "authors": "Erin Hunter",
+      "page_count": 295,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL71069W",
+      "title": "Prince Caspian",
+      "authors": "C. S. Lewis",
+      "page_count": 216,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL1963279W",
+      "title": "Endymion",
+      "authors": "Dan Simmons",
+      "page_count": 588,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL52939W",
+      "title": "Die Trying",
+      "authors": "Lee Child",
+      "page_count": 434,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL17334243W",
+      "title": "채식주의자",
+      "authors": "Han Kang",
+      "page_count": 190,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL29914687W",
+      "title": "Altered Carbon. Vol. 1",
+      "authors": "Richard K. Morgan",
+      "page_count": 496,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL16915199W",
+      "title": "The Elite (The Selection #2)",
+      "authors": "Kiera Cass",
+      "page_count": 336,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL46913W",
+      "title": "Congo",
+      "authors": "Michael Crichton",
+      "page_count": 348,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL16361049W",
+      "title": "Keeper of the Lost Cities",
+      "authors": "Shannon Messenger",
+      "page_count": 512,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL2944469W",
+      "title": "One Flew Over the Cuckoo's Nest",
+      "authors": "Ken Kesey",
+      "page_count": 311,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL71058W",
+      "title": "The Horse and His Boy",
+      "authors": "C. S. Lewis",
+      "page_count": 208,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL1052133W",
+      "title": "The God of Small Things",
+      "authors": "Arundhati Roy",
+      "page_count": 357,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL149119W",
+      "title": "Duma Key",
+      "authors": "Stephen King",
+      "page_count": 687,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL5738150W",
+      "title": "The Well of Ascension",
+      "authors": "Brandon Sanderson",
+      "page_count": 784,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL27448W",
+      "title": "The Lord of the Rings",
+      "authors": "J.R.R. Tolkien",
+      "page_count": 1193,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL679266W",
+      "title": "Anansi Boys",
+      "authors": "Neil Gaiman",
+      "page_count": 384,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL893502W",
+      "title": "Heretics of Dune",
+      "authors": "Frank Herbert",
+      "page_count": 510,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL471500W",
+      "title": "4:50 from Paddington",
+      "authors": "Agatha Christie",
+      "page_count": 253,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL20890488W",
+      "title": "Diary of a Wimpy Kid",
+      "authors": "Jeff Kinney",
+      "page_count": 224,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL15104140W",
+      "title": "The Grim Grotto",
+      "authors": "Lemony Snicket, Brett Helquist, Michael Kupperman",
+      "page_count": 323,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL81611W",
+      "title": "Desperation",
+      "authors": "Stephen King",
+      "page_count": 616,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL1846069W",
+      "title": "Gathering Blue",
+      "authors": "Lois Lowry",
+      "page_count": 219,
+      "genre_hint": "Fiction"
+    },
+    {
+      "openlibrary_id": "OL45804W",
+      "title": "Fantastic Mr Fox",
+      "authors": "Roald Dahl",
+      "page_count": 96,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL17181541W",
+      "title": "The Sword of Summer",
+      "authors": "Rick Riordan",
+      "page_count": 512,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL16810944W",
+      "title": "The School for Good and Evil",
+      "authors": "Soman Chainani",
+      "page_count": 496,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL45790W",
+      "title": "Charlie and the Chocolate Factory",
+      "authors": "Roald Dahl",
+      "page_count": 173,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL14955039W",
+      "title": "The Demigod Files",
+      "authors": "Rick Riordan",
+      "page_count": 152,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL151411W",
+      "title": "Alice's Adventures in Wonderland / Through the Looking Glass",
+      "authors": "Lewis Carroll",
+      "page_count": 277,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL14872925W",
+      "title": "Pippi Långstrump",
+      "authors": "Astrid Lindgren",
+      "page_count": 158,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL476641W",
+      "title": "Winnie-the-Pooh",
+      "authors": "A. A. Milne",
+      "page_count": 158,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL5717079W",
+      "title": "The Penderwicks",
+      "authors": "Jeanne Birdsall",
+      "page_count": 262,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL2195990W",
+      "title": "Trollkarlens hatt",
+      "authors": "Tove Jansson",
+      "page_count": 170,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1932895W",
+      "title": "Amelia Bedelia and the Shower Surprise",
+      "authors": "Peggy Parish",
+      "page_count": 64,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL2195985W",
+      "title": "Kometen kommer (Kometjakten)",
+      "authors": "Tove Jansson",
+      "page_count": 175,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL27079W",
+      "title": "Bridge to Terabithia",
+      "authors": "Katherine Paterson",
+      "page_count": 152,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL45876W",
+      "title": "The Magic Finger",
+      "authors": "Roald Dahl",
+      "page_count": 64,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL19669249W",
+      "title": "Percy Jackson's Greek heroes",
+      "authors": "Rick Riordan",
+      "page_count": 528,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL76482W",
+      "title": "Heretics",
+      "authors": "Gilbert Keith Chesterton",
+      "page_count": 166,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL941684W",
+      "title": "Tintenblut",
+      "authors": "Cornelia Funke",
+      "page_count": 655,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL476737W",
+      "title": "Winnie-the-Pooh / The House at Pooh Corner",
+      "authors": "A. A. Milne",
+      "page_count": 314,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL476471W",
+      "title": "The House at Pooh Corner",
+      "authors": "A. A. Milne",
+      "page_count": 178,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL108735W",
+      "title": "The Tale of Peter Rabbit",
+      "authors": "Beatrix Potter",
+      "page_count": 55,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL15505465W",
+      "title": "The Last Straw",
+      "authors": "Jeff Kinney",
+      "page_count": 217,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1449046W",
+      "title": "The Story of Doctor Dolittle",
+      "authors": "Hugh Lofting",
+      "page_count": 156,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL15221508W",
+      "title": "How to Speak Dragonese",
+      "authors": "Cressida Cowell",
+      "page_count": 235,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL2510290W",
+      "title": "The street of crocodiles",
+      "authors": "Bruno Schulz",
+      "page_count": 160,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL13716952W",
+      "title": "Fantastic Beasts and Where to Find Them",
+      "authors": "J. K. Rowling",
+      "page_count": 114,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL13716951W",
+      "title": "The Tales of Beedle the Bard",
+      "authors": "J. K. Rowling",
+      "page_count": 128,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL453885W",
+      "title": "The Amazing Maurice and His Educated Rodents",
+      "authors": "Terry Pratchett",
+      "page_count": 270,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1932991W",
+      "title": "Thank You, Amelia Bedelia",
+      "authors": "Peggy Parish, Fritz Siebel",
+      "page_count": 64,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL85731W",
+      "title": "Chitty-Chitty-Bang-Bang, the magical car",
+      "authors": "Ian Fleming",
+      "page_count": 115,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL17262607W",
+      "title": "The Enchantress Returns",
+      "authors": "Chris Colfer",
+      "page_count": 528,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL19659659W",
+      "title": "Cat Kid Comic Club",
+      "authors": "Dav Pilkey",
+      "page_count": 176,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL766052W",
+      "title": "The complete poetical works",
+      "authors": "Robert Burns",
+      "page_count": 366,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL941691W",
+      "title": "Nacht van inkt",
+      "authors": "Cornelia Funke",
+      "page_count": 704,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL20033197W",
+      "title": "Hotel Valhalla guide to the Norse worlds",
+      "authors": "Rick Riordan",
+      "page_count": 160,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL82586W",
+      "title": "Harry Potter and the Deathly Hallows",
+      "authors": "J. K. Rowling",
+      "page_count": 701,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL17812652W",
+      "title": "Real Friends",
+      "authors": "Shannon Hale",
+      "page_count": 224,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1932974W",
+      "title": "Come Back, Amelia Bedelia",
+      "authors": "Peggy Parish",
+      "page_count": 64,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL17200793W",
+      "title": "The Storybook of Legends",
+      "authors": "Shannon Hale",
+      "page_count": 352,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL817946W",
+      "title": "The Truth About Stacey",
+      "authors": "Ann M. Martin",
+      "page_count": 167,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL2775806W",
+      "title": "Pollyanna Grows Up",
+      "authors": "Eleanor Hodgman Porter",
+      "page_count": 206,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL457179W",
+      "title": "Midnight's Children",
+      "authors": "Salman Rushdie",
+      "page_count": 556,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL35093658W",
+      "title": "Platero y yo",
+      "authors": "Juan Ramón Jiménez",
+      "page_count": 188,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1719746W",
+      "title": "Little House in the Big Woods",
+      "authors": "Laura Ingalls Wilder",
+      "page_count": 228,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL16585191W",
+      "title": "The Wishing Spell",
+      "authors": "Chris Colfer",
+      "page_count": 448,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL14872944W",
+      "title": "Pippi Långstrump går ombord",
+      "authors": "Astrid Lindgren",
+      "page_count": 140,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL20867W",
+      "title": "Middlemarch",
+      "authors": "George Eliot, Jessica Hische, Francine Prose, ReadinGreat, Claire Jarvis, Margot Everett",
+      "page_count": 795,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1719794W",
+      "title": "On the Banks of Plum Creek",
+      "authors": "Laura Ingalls Wilder",
+      "page_count": 338,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL17081542W",
+      "title": "El Monstre De Colors",
+      "authors": "Anna Llenas",
+      "page_count": 40,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL45869W",
+      "title": "Esio Trot",
+      "authors": "Roald Dahl",
+      "page_count": 64,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL941672W",
+      "title": "Drachenreiter",
+      "authors": "Cornelia Funke",
+      "page_count": 449,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL134890W",
+      "title": "Petals on the Wind",
+      "authors": "V.C. Andrews",
+      "page_count": 439,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL25397W",
+      "title": "Fairy Tales and Stories",
+      "authors": "Hans Christian Andersen",
+      "page_count": 277,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL14872903W",
+      "title": "Madicken",
+      "authors": "Astrid Lindgren",
+      "page_count": 156,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL20600W",
+      "title": "Gulliver's Travels",
+      "authors": "Jonathan Swift",
+      "page_count": 278,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1724583W",
+      "title": "Métaphysique des tubes",
+      "authors": "Amélie Nothomb",
+      "page_count": 144,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL1949799W",
+      "title": "The Rockingdown Mystery",
+      "authors": "Enid Blyton",
+      "page_count": 208,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL82700W",
+      "title": "Olivia",
+      "authors": "Ian Falconer",
+      "page_count": 35,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL813843W",
+      "title": "Oh, wie schön ist Panama",
+      "authors": "Janosch",
+      "page_count": 48,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL14873023W",
+      "title": "Lotta på Bråkmakargatan",
+      "authors": "Astrid Lindgren",
+      "page_count": 60,
+      "genre_hint": "Childrens literature"
+    },
+    {
+      "openlibrary_id": "OL39093W",
+      "title": "Chance",
+      "authors": "Joseph Conrad",
+      "page_count": 406,
+      "genre_hint": "Childrens literature"
+    }
+  ]
+}

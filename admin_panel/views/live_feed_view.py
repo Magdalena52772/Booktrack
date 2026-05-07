@@ -10,20 +10,22 @@ class LiveFeedView(QWidget):
 
     def __init__(self, conn):
         super().__init__()
-        
+
+        self.conn = conn
+
         # Ładowanie interfejsu z pliku .ui
         self.ui = load_ui(self, "views/ui/LiveFeedView.ui")
-        
+
         if not self.ui:
             print("Błąd ładowania UI LiveFeed!")
             return
 
         # Konfiguracja
         self.setup_tooltips()
-        
+
         # Sygnały
         self.ui.btn_refresh_live.clicked.connect(self.load_view)
-        
+
         # Inicjalizacja danych
         self.load_view()
 
@@ -50,11 +52,25 @@ class LiveFeedView(QWidget):
 
     def refresh_event_log(self):
         """
-        Miejsce do pobierania i wyświetlania najnowszych logów z bazy danych.
+        Pobiera i wyświetla ostatnie logi aktywności z bazy danych.
         """
-        # Jeśli lista jest pusta, wyświetla komunikat powitalny
-        if self.ui.list_events.count() == 0:
-            item = QListWidgetItem("ℹ️ Monitoring system is ready...")
+        from data.repositories.activity_repo import ActivityRepository
+
+        # czyści listę
+        self.ui.list_events.clear()
+
+        # Pobiera ostatnie 50 logów
+        activity_repo = ActivityRepository(self.conn)
+        logs = activity_repo.get_recent_activity_logs(limit=50)
+
+        if logs:
+            # Dodaje każdy log do listy (w chronologicznym porządku) z timestamp z bazy
+            for time_str, message in logs:
+                self.add_log_entry(message, timestamp=time_str)
+        else:
+            # Jeśli brak logów, pokazuje placeholder
+            from PySide6.QtWidgets import QListWidgetItem
+            item = QListWidgetItem("ℹ️ Monitoring system is ready... Waiting for activity logs.")
             self.ui.list_events.addItem(item)
         
 
@@ -66,13 +82,16 @@ class LiveFeedView(QWidget):
         )
         self.ui.lbl_cluster_info.setStyleSheet("color: #7f8c8d; font-style: italic;")
 
-    def add_log_entry(self, message):
+
+    def add_log_entry(self, message, timestamp=None):
         """Dodaje log i dba o porządek na liście."""
-        timestamp = datetime.now().strftime("%H:%M:%S")
+        if timestamp is None:
+            timestamp = datetime.now().strftime("%H:%M:%S")
+
         item = QListWidgetItem(f"[{timestamp}] {message}")
-        
+
         self.ui.list_events.insertItem(0, item)
-        
+
         # Ogranicza listę do ostatnich 50 wpisów
         if self.ui.list_events.count() > 50:
             self.ui.list_events.takeItem(self.ui.list_events.count() - 1)
