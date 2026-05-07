@@ -5,3 +5,4 @@ faker
 python-dateutil
 reportlab
 sqlite-utils
+requests

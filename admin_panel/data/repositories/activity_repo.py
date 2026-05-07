@@ -165,6 +165,43 @@ class ActivityRepository:
 
         return peak_val
 
+    def get_recent_activity_logs(self, limit=50):
+        """
+        Pobiera ostatnie X logów aktywności z formatowaniem dla LiveFeed.
+        Zwraca listę tuples: (timestamp_str, formatted_message)
+        Np: ("16:03:33", "📖 User123 read 25 pages of 'Harry Potter'")
+        """
+        cursor = self.conn.cursor()
+
+        query = """
+            SELECT
+                a.timestamp,
+                u.username,
+                b.title,
+                a.pages_read
+            FROM activity a
+            JOIN users u ON a.user_id = u.id
+            JOIN books b ON a.book_id = b.id
+            ORDER BY a.timestamp DESC
+            LIMIT ?
+        """
+
+        cursor.execute(query, (limit,))
+        results = cursor.fetchall()
+
+        # Formatowanie wyników
+        formatted_logs = []
+        for timestamp, username, title, pages in reversed(results):  # Reverse dla chronologicznego porządku
+            # Ekstraktuje czas z timestamp
+            time_str = timestamp.split(" ")[1][:8] if " " in timestamp else "??:??:??"
+
+            # Sformatuje wiadomość ze statusem czytania
+            message = f"📖 {username} read {pages} pages of '{title}'"
+
+            formatted_logs.append((time_str, message))
+
+        return formatted_logs
+
     def get_trend_analysis(self, time_filter="week"):
         """Pobiera dane trendu z analizą porównawczą okresu.
         Zwraca: trend_current, trend_previous, growth_percent, peak_value

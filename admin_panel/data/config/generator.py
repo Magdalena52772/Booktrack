@@ -30,6 +30,22 @@ AGE_BASED_GENRES = {
     "senior": ["Historical fiction", "Biography", "Crime", "Drama"]
 }
 
+# Preferencje ulubień wobec grupy wiekowej (przy generowaniu favorite_genres)
+FAVORITE_GENRE_BIAS = {
+    "age_based_ratio": 0.90,  # 90% ulubień z age group genres
+    "random_ratio": 0.10      # 10% ulubień z globalnego rozkładu (GENRE_WEIGHTS)
+}
+
+# Anomalie między deklarowanymi a rzeczywistymi gatunkami (szum w danych)
+READING_ANOMALY = {
+    "enabled": True,
+    "junior_under_16": {"anomaly_ratio": 0.0, "adult_genres": []},  # Brak anomalii dla <16
+    "junior_16_17": {"anomaly_ratio": 0.15, "adult_genres": ["Thriller", "Crime"]},  # 15% dorosłych
+    "young_adult": {"anomaly_ratio": 0.25, "swap_to": ["Thriller", "Romance", "Fiction"]},  # Declaruje Sci-Fi, czyta Thriller
+    "adult": {"anomaly_ratio": 0.20, "swap_to": ["Thriller", "Crime", "Fiction"]},  # Declaruje Biography, czyta Thriller
+    "senior": {"anomaly_ratio": 0.10, "swap_to": ["Childrens literature"]}  # 10% dla dziadków, którzy czytają bajki wnukom
+}
+
 # ============== AKTYWNOŚĆ ==============
 INACTIVE_PROBABILITY = 0.07   # 7% użytkowników to konta porzucone
 SIX_MONTHS_INACTIVITY = 180   # Po ilu dniach bezaktywności konto jest nieaktywne

@@ -56,7 +56,6 @@ class GenresView(QWidget):
             "cb_age_group": "Filter statistics by reader age category.",
             "btn_refresh_genres": "Force refresh of genre statistics and popularity chart.",
             "table_genres": "Summary of reader engagement and ratings per genre.",
-            "chart_genres_popularity": "Visual representation of most read genres for the selected group.",
             "frame_stats_box": "Quick summary of user-declared preferences.",
             "lbl_total_declarations": "Total number of users who chose their favorite genres.",
             "lbl_most_declared": "The current leading genre based on user profile settings."
@@ -79,7 +78,10 @@ class GenresView(QWidget):
         try:
             # Pobieranie danych z warstwy repozytorium
             genres = self.repo.get_all(age_group=age_group)
-            
+
+            # Sortowanie po procencie przed wypełnieniem tabeli
+            genres = sorted(genres, key=lambda x: x.percent_of_total_time, reverse=True)
+
             # Tymczasowe zablokowanie sortowania na czas wypełniania tabeli
             self.ui.table_genres.setSortingEnabled(False)
             self.ui.table_genres.setRowCount(0)
@@ -93,12 +95,13 @@ class GenresView(QWidget):
 
             # Aktualizacja komponentu wykresu
             self.canvas.update_chart(genres, age_group)
-            
+
             # Obliczanie sumarycznych statystyk deklaratywnych
             total_users_declared = sum(g.readers for g in genres)
+            total_unique_users = self.repo.count_users_by_age_group(age_group)
             top_genre = max(genres, key=lambda x: x.readers)
-            
-            self.ui.lbl_total_declarations.setText(f"Total picks: {total_users_declared}")
+
+            self.ui.lbl_total_declarations.setText(f"Total picks: {total_users_declared}\nUsers: {total_unique_users}")
             self.ui.lbl_most_declared.setText(f"Favorite: {top_genre.name}")
 
             # Wypełnianie tabeli danymi o realnej aktywności
@@ -128,16 +131,15 @@ class GenresView(QWidget):
                 progress.setFormat(f"{genre.percent_of_total_time}%")
                 progress.setTextVisible(True)
                 # Wykorzystanie helpera stylów
-                progress.setStyleSheet(get_progress_bar_style()) 
-                
+                progress.setStyleSheet(get_progress_bar_style())
+
                 # Dodanie tooltipa bezpośrednio do widgetu paska postępu w tabeli
                 progress.setToolTip(f"This genre accounts for {genre.percent_of_total_time}% of total reading time.")
-                
+
                 self.ui.table_genres.setCellWidget(row, 4, progress)
 
             # Przywrócenie sortowania i dopasowanie rozmiaru kolumn
             self.ui.table_genres.setSortingEnabled(True)
-            self.ui.table_genres.sortByColumn(4, Qt.DescendingOrder)
             self.ui.table_genres.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             
             self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", f"Genres for {age_group}"))

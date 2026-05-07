@@ -11,6 +11,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         _t_start = time.perf_counter()
         self.conn = conn
+        # Flaga do kontrolowania, czy sekwencja startowa została zakończona (używana do optymalizacji sprawdzania aktualizacji podczas startupu)
+        self._startup_generation_done = False
         print(f"[TIMING] MainWindow.__init__ START", file=sys.stderr, flush=True)
 
         # Inicjalizacja ładowania głównego interfejsu użytkownika
@@ -65,12 +67,12 @@ class MainWindow(QMainWindow):
         print(f"[TIMING] MainWindow.__init__ DONE: {(time.perf_counter()-_t_start)*1000:.0f}ms")
 
         # Opóźnia Dashboard loading (50ms) - Qt wyrenderuje template, potem matplotlib
-        # (Preload worker runs in background, nie blokuje main thread)
+        # (Preload worker działa w tle, nie blokuje main thread)
         from PySide6.QtCore import QTimer
         QTimer.singleShot(50, self._deferred_load_dashboard)
 
     def _preload_dashboard_data(self):
-        """Startuj ładowanie dashboard danych w tle zaraz (nie czekaj na UI)"""
+        """Startuje ładowanie dashboard danych w tle (nie czeka na UI)"""
         # Przechowywuje dane tymczasowo (będą użyte w _on_dashboard_data_loaded)
         self._preloaded_dashboard_data = None
 
@@ -98,6 +100,7 @@ class MainWindow(QMainWindow):
         }
 
         if class_name in view_modules:
+            # Importowanie modułu i klasy dynamicznie
             module_name, class_to_import = view_modules[class_name]
             module = __import__(module_name, fromlist=[class_to_import])
             return getattr(module, class_to_import)

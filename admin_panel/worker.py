@@ -23,7 +23,7 @@ class DatabaseWorker(QThread):
                     import matplotlib.pyplot as plt
                     self.finished.emit(True)
                 except Exception as e:
-                    self.error.emit(f"Matplotlib preload failed: {str(e)}")
+                    self.error.emit(f"Wstępne załadowanie matplotlib'a nie powiodło się: {str(e)}")
             elif self.task_type == "fetch_books":
                 result = self._get_books_from_api(self.params)
                 self.finished.emit(result)
@@ -50,11 +50,15 @@ class DatabaseWorker(QThread):
                 # Załadowanie wszystkich danych Dashboard'a w osobnym wątku
                 result = self._load_dashboard_data()
                 self.finished.emit(result)
+            elif self.task_type == "check_activity_latest":
+                # Lekki check: zwraca ostatni timestamp z tabeli activity (string) lub None
+                result = self._check_latest_activity()
+                self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
 
     def _load_dashboard_data(self):
-        """Załaduj wszystkie dane dla Dashboard'a."""
+        """Załadowanie wszystkich danych dla Dashboard'a."""
         from data.repositories.statistics_repo import StatsRepository
         from data.repositories.book_repo import BookRepository
         from data.repositories.activity_repo import ActivityRepository
@@ -102,7 +106,34 @@ class DatabaseWorker(QThread):
             worker_conn.close()
 
     def _get_books_from_api(self, query):
-        # Integracja z Google Books API
+        # Integracja z Open Library API
         import time
-        time.sleep(2) # Symulacja opóźnienia sieci
+        time.sleep(2)  # Symulacja opóźnienia sieci
         return [{"title": f"Wynik dla {query}", "author": "Unknown"}]
+
+    def _check_latest_activity(self):
+        """Szybkie zapytanie zwracające ostatni timestamp aktywności (bez ciężkich agregacji)."""
+        from data.database import get_connection
+        from datetime import datetime as dt
+
+        worker_conn = get_connection()
+        try:
+            cur = worker_conn.cursor()
+            # Najpierw sprawdza lekki meta.last_activity jeśli dostępny
+            try:
+                cur.execute("SELECT v FROM meta WHERE k = 'last_activity'")
+                m = cur.fetchone()
+                if m and m[0]:
+                    return m[0]
+            except Exception:
+                # Jeśli tabela meta lub klucz nie istnieje, przechodzi do fallbacku bez przerywania działania
+                pass
+
+            # Fallback: jeśli meta nie jest dostępne, wykonuje szybkie zapytanie do activity, ale bez ciężkich agregacji (np. bez JOINów)
+            cur.execute("SELECT MAX(timestamp) FROM activity")
+            row = cur.fetchone()
+            if row:
+                return row[0]
+            return None
+        finally:
+            worker_conn.close()

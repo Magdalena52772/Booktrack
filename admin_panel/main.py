@@ -62,6 +62,9 @@ def main():
     log_time("Matplotlib pre-imported (heavy init done early)")
 
     window = MainWindow(conn)
+    # Przechowywanie workerów i timerów na oknie, aby nie były usunięte podczas działania
+    window._bg_workers = []
+    window._genre_timer = None
     log_time("MainWindow.__init__ completed")
 
     window.setWindowState(Qt.WindowMaximized)
@@ -142,6 +145,8 @@ def main():
             print(f"[STARTUP ERROR] {e}")
             thread_conn.rollback()
         finally:
+            # Zamknięcie połączenia wątku po zakończeniu startupa (nie zamyka głównego połączenia używanego przez UI)
+            QTimer.singleShot(0, lambda: setattr(window, "_startup_generation_done", True))
             thread_conn.close()
 
     # ==================== TIMER DLA SYMULACJI AKTYWNOŚCI (REAL-TIME) ============
@@ -247,7 +252,7 @@ def main():
         finally:
             timer_cursor.close()
 
-    activity_timer = QTimer()
+    activity_timer = QTimer(window)
     activity_timer.timeout.connect(run_timer_update)
     activity_timer.start(60000)  # 1 minuta
 
@@ -255,18 +260,34 @@ def main():
     def run_genre_stats_worker():
         """Uruchamia DatabaseWorker dla update_genre_stats."""
         worker = DatabaseWorker("update_genre_stats", db_connection=conn)
-        worker.finished.connect(lambda: print(f"[GENRES] {datetime.now().strftime('%H:%M:%S')} | Genre stats updated."))
+        # Każdy worker tworzy własne połączenie do bazy, więc przekazuje tylko informację o tasku, a worker sam się połączy.
+        try:
+            worker.setParent(window)
+        except Exception:
+            pass
+        window._bg_workers.append(worker)
+        def _on_genre_done(_res=None):
+            print(f"[GENRES] {datetime.now().strftime('%H:%M:%S')} | Genre stats updated.")
+            try:
+                worker.deleteLater()
+            except Exception:
+                pass
+            if worker in window._bg_workers:
+                window._bg_workers.remove(worker)
+        worker.finished.connect(_on_genre_done)
         worker.error.connect(lambda err: print(f"[GENRES ERROR] {err}"))
         worker.start()
 
     def start_recurring_genre_timer():
         """Uruchamia recurring timer co 5 minut."""
-        genre_timer = QTimer()
+        genre_timer = QTimer(window)
         genre_timer.timeout.connect(run_genre_stats_worker)
         genre_timer.start(300000)  # 5 minut = 300000ms
+        # Przechowywanie referencji do timera na oknie, aby nie został GC'd (usunięty podczas działania)
+        window._genre_timer = genre_timer
         return genre_timer
 
-    # Delay 1 minuta, potem recurring co 5 minut
+    # Pierwsze uruchomienie po 1 minucie, potem co 5 minut
     QTimer.singleShot(60000, start_recurring_genre_timer)
     print("[GENRES] Timer zaplanowany: first run za 1 min, potem co 5 min")
 
