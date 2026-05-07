@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List
 from data.models.user import User
 from data.utils.time_periods import period_start

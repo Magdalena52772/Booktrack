@@ -4,6 +4,8 @@ from data.config import get_fake, ARCHETYPE_SETTINGS, SEASONAL_IMPACT, SIM_SETTI
 from data.services.generator_service import GeneratorService
 from data.repositories.genre_repo import GenresRepository
 from data.services.user_service import update_user_ppd
+from data.data_generator.books import _load_book_pool
+from data.data_generator.openlib_api import get_book_live_or_fallback
 
 
 # =================== GENEROWANIE AKTYWNOŚCI ===================
@@ -108,6 +110,16 @@ def generate_activity(conn, users, books):
         INSERT INTO activity (user_id, book_id, timestamp, pages_read, session_minutes)
         VALUES (?, ?, ?, ?, ?)
     """, activity_data)
+
+    # Aktualizacja meta.last_activity na podstawie najnowszej sesji (jeśli są nowe dane)
+    try:
+        if activity_data:
+            # activity_data: (user_id, book_id, timestamp, pages_read, session_minutes)
+            latest_ts = max(a[2] for a in activity_data)
+            cursor.execute("REPLACE INTO meta (k, v) VALUES ('last_activity', ?)", (latest_ts,))
+    except Exception:
+        # Jeśli meta nie istnieje lub jest problem, ignoruje (będzie utworzone przy inicjalizacji DB)
+        pass
     
     # Synchronizacja dat zakończenia w tabeli books
     cursor.executemany("UPDATE books SET finish_date = ? WHERE id = ?", book_updates)
@@ -129,13 +141,16 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
     # Pobranie mapy gatunków (DRY - z repozytorium)
     genre_map = GenresRepository.get_genre_map(cursor)
 
+    # Ładowanie puli książek z Open Library (z cache) - będzie używane jako fallback
+    pool_books, pool_books_by_genre = _load_book_pool()
+
     active_users = [u for u in users_meta if u['status'] == 'active']
     if not active_users: return []
 
     for _ in range(count):
         user = random.choice(active_users)
         
-        # --- Pobieram username, jeśli nie ma to name ---
+        # --- Pobiera username, jeśli nie ma to name ---
         user_name = user.get('username') or user.get('name') or f"User {user['id']}"
         
         # Lista pomocnicza na logi z tej konkretnej iteracji dla jednego użytkownika
@@ -156,20 +171,37 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
             cat = "junior" if age < 18 else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
             pref_list = AGE_BASED_GENRES.get(cat, GENRES)
             
-            genre_name = random.choice(pref_list) if random.random() < 0.90 else random.choice(GENRES)
+            # Pobieranie ulubionych gatunków użytkownika
+            try:
+                cursor.execute("SELECT g.name FROM user_favorite_genres ufg JOIN genres g ON g.id = ufg.genre_id WHERE ufg.user_id = ?", (user['id'],))
+                fav_rows = [r[0] for r in cursor.fetchall()]
+            except Exception:
+                fav_rows = []
+
+            if fav_rows:
+                genre_name = GeneratorService.generate_actual_reading_genre(bday, fav_rows)
+            else:
+                genre_name = random.choice(pref_list)
             genre_id = genre_map.get(genre_name, 1)
-            title = f"The {random.choice(['Secret', 'Lost', 'Forgotten'])} {get_fake().word().capitalize()}"
-            total_p = random.randint(150, 600)
+
+            # Pobieranie książki z Open Library API (fallback do pool jeśli API fail)
+            book_data = get_book_live_or_fallback(genre_name=genre_name, fallback_pool=(pool_books, pool_books_by_genre), force_api=True)
             
+            title = book_data["title"]
+            total_p = book_data.get("page_count", 300)
+            pool_id = book_data.get("openlibrary_id")
+            author_name = book_data["authors"]
+            source = book_data.get("source", "unknown")
+
             cursor.execute("""
-                INSERT INTO books (user_id, title, authors, genre_id, total_pages, current_page, status, added_by_generator)
-                VALUES (?, ?, ?, ?, ?, 0, 'reading', 1)
-            """, (user['id'], title, get_fake().name(), genre_id, total_p))
+                INSERT INTO books (user_id, title, authors, openlibrary_id, genre_id, total_pages, current_page, status, added_by_generator)
+                VALUES (?, ?, ?, ?, ?, ?, 0, 'reading', 1)
+            """, (user['id'], title, author_name, pool_id, genre_id, total_p))
             
             book_id, curr_p, total_p = cursor.lastrowid, 0, total_p
             
-            # Zapamiętuje log o starcie, ale jeszcze nie dodajem do głównej listy
-            user_iteration_logs.append(f"🆕 {user_name} started reading '{title}'")
+            # Zapamiętuje log o starcie, ale jeszcze nie dodaje do głównej listy
+            user_iteration_logs.append(f"🆕 {user_name} started reading '{title}' ({source})")
         else:
             book_id, title, curr_p, total_p = current_book
 
@@ -190,6 +222,13 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
             VALUES (?, ?, ?, ?, ?)
         """, (user['id'], book_id, timestamp, pages_read, duration))
 
+        # Aktualizacja książki, ale jeszcze nie dodaje logu o zakończeniu (bo może być więcej sesji)
+        try:
+            cursor.execute("REPLACE INTO meta (k, v) VALUES ('last_activity', ?)", (timestamp,))
+        except Exception:
+            # Tabela meta może nie istnieć, ignoruje jeśli jest problem (będzie utworzona przy inicjalizacji DB)
+            pass
+
         if is_done:
             rating = random.randint(3, 5)
             cursor.execute("""
@@ -200,7 +239,7 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
             cursor.execute("UPDATE books SET current_page = ? WHERE id = ?", (new_page, book_id))
             user_iteration_logs.append(f"📖 {user_name} read {pages_read} pages of '{title}'")
 
-        # --- KOLEJNOŚĆ: Dodaje logi użytkownika do głównej listy ---
+        # --- Dodaje logi użytkownika do głównej listy ---
         logs.extend(user_iteration_logs)
 
         # Aktualizacja PPD użytkownika

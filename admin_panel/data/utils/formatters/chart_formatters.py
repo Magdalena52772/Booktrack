@@ -1,6 +1,5 @@
 from PySide6.QtWidgets import QToolTip
 from PySide6.QtGui import QCursor
-import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 
 class ChartTooltipHelper:
@@ -25,7 +24,7 @@ class ChartTooltipHelper:
             xpixel = event.x
             ypixel = event.y
 
-            # Transform axes to display coordinates
+            # Sprawdzenie odległości do wszystkich markerów na wykresie
             ax = event.inaxes
             try:
                 # Sprawdzenie czy jest blisko linii/markerów
@@ -35,17 +34,17 @@ class ChartTooltipHelper:
                     xdata = line.get_xdata()
                     ydata = line.get_ydata()
                     if len(xdata) > 0:
-                        # Transform danych na pixel coords
+                        # Przekształcenie danych do pikseli
                         points_px = transform(list(zip(xdata, ydata)))
 
-                        # Sprawdzenie odległości do wszystkich markerów
+                        # Obliczenie odległości od kursora do każdego punktu i znalezienie minimalnej
                         min_dist = float('inf')
                         for px, py in points_px:
                             dist = ((xpixel - px)**2 + (ypixel - py)**2)**0.5
                             if dist < min_dist:
                                 min_dist = dist
 
-                        # Pokaz tooltip TYLKO jeśli blisko markera
+                        # Pokaże tooltip tylko jeśli blisko markera
                         if min_dist > tolerance:
                             QToolTip.hideText()
                             return
@@ -81,7 +80,8 @@ class ChartStyler:
 
     @staticmethod
     def set_date_axis(ax, time_filter="week"):
-        """Dostosowuje ticków i formatowanie osi X."""
+        """Konfiguruje oś X dla danych czasowych, dostosowując 
+        formatowanie i interwały ticków do wybranego filtra czasu"""
         ax.tick_params(axis='x', rotation=30, labelsize=9)
         ax.tick_params(axis='y', labelsize=9)
 

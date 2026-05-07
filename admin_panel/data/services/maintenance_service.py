@@ -1,18 +1,17 @@
 """
 MAINTENANCE SERVICE
 -------------------
-Ten moduł odpowiada za spójność danych i przeliczanie statystyk w tle.
+Moduł odpowiada za spójność danych i przeliczanie statystyk w tle.
 Główne zadania:
-1. Aktualizacja profili użytkowników (streaki, PPD, licznik książek).
-2. Synchronizacja postępów wyzwań czytelniczych.
-3. Przeliczanie globalnych trendów dla gatunków literackich.
+    Aktualizacja profili użytkowników (streaki, PPD, licznik książek).
+    Synchronizacja postępów wyzwań czytelniczych.
+    Przeliczanie globalnych trendów dla gatunków literackich.
 
 Wywoływane cyklicznie przez timer aplikacji (w main.py).
 """
 
 from datetime import datetime, timedelta
 from data.utils.helpers.date_helpers import DateHelper
-from data.config import USER_COUNT
 from data.repositories.statistics_repo import StatsRepository
 
 # =============== AKTUALIZACJA STATYSTYK GATUNKÓW ===================
@@ -70,9 +69,9 @@ def update_challenges_progress(conn):
     Synchronizuje postępy w wyzwaniach z faktyczną aktywnością użytkowników.
     
     Logika:
-    1. Sprawdza, ile książek użytkownik ukończył w czasie trwania swojego wyzwania.
-    2. Automatycznie oznacza wyzwania jako 'finished', jeśli osiągnięto cel.
-    3. Oznacza wyzwania jako 'failed', jeśli minął termin końcowy, a cel nie został spełniony.
+    Sprawdza, ile książek użytkownik ukończył w czasie trwania swojego wyzwania.
+    Automatycznie oznacza wyzwania jako 'finished', jeśli osiągnięto cel.
+    Oznacza wyzwania jako 'failed', jeśli minął termin końcowy, a cel nie został spełniony.
     """
     cursor = conn.cursor()
 
@@ -155,11 +154,13 @@ def update_all_user_streaks(cursor):
 
         streak_updates.append((streak, user_id))
 
-    # Batch update zamiast 1000+ individual execute
+    # Batch update streaków dla wszystkich użytkowników
     cursor.executemany("UPDATE users SET current_streak = ? WHERE id = ?", streak_updates)
 
 def run_maintenance(conn):
-    """Główny punkt wejścia do konserwacji danych."""
+    """Główny punkt wejścia do konserwacji danych. 
+    Wywołuje wszystkie funkcje aktualizujące statystyki i 
+    synchronizujące postępy w wyzwaniach."""
     cursor = conn.cursor()
     try:
         # Licznik przeczytanych książek
