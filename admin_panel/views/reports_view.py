@@ -60,31 +60,49 @@ class ReportsView(QWidget):
         Analiza metryk pod kątem obecności rekordów w bazie danych.
         """
         try:
+            def _fmt_pct(v):
+                try:
+                    f = float(v)
+                except Exception:
+                    return str(v)
+                f = max(0.0, min(100.0, round(f, 1)))
+                return f"{f}%"
+
             report_type = self.ui.cb_report_type.currentText()
             period = self.ui.cb_time.currentText()
             
             self.statusMessage.emit(*StatusMsg.get("LOAD_START", f"{report_type} Report"))
             
+            # Ensure table has space for new columns: Metric, Value, Prev, Retained, Churn, Period, Notes
             self.ui.table_reports.setRowCount(0)
+            self.ui.table_reports.setColumnCount(7)
+            headers = ["Metric", "Value", "Prev", "Retained", "Churn", "Period", "Notes"]
+            try:
+                self.ui.table_reports.setHorizontalHeaderLabels(headers)
+            except Exception:
+                pass
             rows = []
             is_empty = True
 
             # Pobieranie danych z odpowiednich repozytoriów
             if report_type == "Activity":
                 total_p, retention, avg_s = self.act_repo.get_activity_kpi(period.lower())
+                churn = self.act_repo.get_user_churn(period.lower())
+                prev_count, retained_count, now_inactive_count, _ = self.act_repo.get_retention_details(period.lower())
                 rows = [
-                    ("Total Volume", f"{total_p} pages", "Dynamic", period, "Sum of all reading logs"),
-                    ("User Retention", f"{retention}%", "Engagement", period, "% of active users in period"),
-                    ("Session Density", f"{avg_s} p/session", "Quality", period, "Average intensity per entry")
+                    ("Total Volume", f"{total_p} pages", "", "", "", period, "Sum of all reading logs"),
+                    ("User Retention", _fmt_pct(retention), str(prev_count), str(retained_count), "", period, "% retained from previous period"),
+                    ("Churn", _fmt_pct(churn), str(prev_count), "", str(now_inactive_count), period, "Previously active now inactive"),
+                    ("Session Density", f"{avg_s} p/session", "", "", "", period, "Average intensity per entry")
                 ]
                 is_empty = (total_p == 0)
                 
             elif report_type == "Users":
                 total_u, growth_u, avg_day = self.user_repo.get_user_report_metrics(period.lower())
                 rows = [
-                    ("Total Registered", str(total_u), "Cumulative", "Total", "Total accounts in DB"),
-                    ("New Acquisitions", f"+{growth_u}", "Growth", period, f"New sign-ups in period: {period}"),
-                    ("Global Performance", f"{avg_day} p/day", "Engagement", period, "Average pages per user")
+                    ("Total Registered", str(total_u), "", "", "", "Total", "Total accounts in DB"),
+                    ("New Acquisitions", f"+{growth_u}", "", "", "", period, f"New sign-ups in period: {period}"),
+                    ("Global Performance", f"{avg_day} p/day", "", "", "", period, "Average pages per user")
                 ]
                 is_empty = (total_u == 0)
 
@@ -94,8 +112,8 @@ class ReportsView(QWidget):
 
                 top_genre, genre_count = self.genre_repo.get_report_summary(period.lower())
                 rows = [
-                    ("Top Performing Genre", str(top_genre), "Leader", period, "Based on total pages read"),
-                    ("Genre Diversity", f"{genre_count} active", "Stable", period, "Unique genres in period")
+                    ("Top Performing Genre", str(top_genre), "", "", "", period, "Based on total pages read"),
+                    ("Genre Diversity", f"{genre_count} active", "", "", "", period, "Unique genres in period")
                 ]
                 is_empty = (genre_count == 0)
 
@@ -104,12 +122,18 @@ class ReportsView(QWidget):
                 rows = []
                 for rank, user_data in enumerate(top_users, 1):
                     username, pages_period, streak, consistency = user_data
+                    try:
+                        consistency_val = max(0, min(100, int(round(float(consistency)))))
+                    except Exception:
+                        consistency_val = consistency
                     rows.append((
                         f"#{rank} {username}",
                         f"{pages_period} pages",
                         f"Streak: {streak}d",
+                        "",
+                        "",
                         period,
-                        f"Consistency: {int(consistency)}%"
+                        f"Consistency: {consistency_val}%"
                     ))
                 is_empty = (len(rows) == 0)
 
@@ -117,19 +141,27 @@ class ReportsView(QWidget):
                 trend_data, total_sum, growth, peak = self.act_repo.get_trend_analysis(period.lower())
                 growth_indicator = "📈" if growth > 0 else "📉" if growth < 0 else "→"
                 rows = [
-                    ("Period Total", f"{total_sum} pages", "Volume", period, "Sum of all activities"),
-                    ("vs Previous Period", f"{growth_indicator} {abs(growth)}%", "Growth", period, "Change from previous period"),
-                    ("Peak Activity", f"{peak} pages", "Maximum", period, "Highest activity recorded")
+                    ("Period Total", f"{total_sum} pages", "", "", "", period, "Sum of all activities"),
+                    ("vs Previous Period", f"{growth_indicator} {abs(round(growth,1))}%", "", "", "", period, "Change from previous period"),
+                    ("Peak Activity", f"{peak} pages", "", "", "", period, "Highest activity recorded")
                 ]
                 is_empty = (total_sum == 0)
 
-            # Weryfikacja statusu i wyświetlanie danych w interfejsie
+            # Normalize rows to table width (7 cols) and display
+            def _pad_row(r):
+                r = list(r)
+                # Ensure at least Metric and Value exist
+                while len(r) < 7:
+                    r.insert(2, "")
+                return r[:7]
+
             if not rows or is_empty:
                 self.statusMessage.emit(*StatusMsg.get("NO_DATA", f"{report_type} ({period})"))
             else:
                 for row_idx, row_data in enumerate(rows):
+                    row_norm = _pad_row(row_data)
                     self.ui.table_reports.insertRow(row_idx)
-                    for col_idx, value in enumerate(row_data):
+                    for col_idx, value in enumerate(row_norm):
                         self.ui.table_reports.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
                 
                 self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", f"{report_type} Report"))

@@ -36,14 +36,17 @@ def update_genre_stats(conn):
     stats = cursor.fetchall()
 
     # Oblicza sumę wszystkich przeczytanych książek do udziału procentowego
-    total_finished = sum(row[3] for row in stats) or 1
+    total_finished = sum(row[3] for row in stats)
 
     # Przygotowanie danych do batch update
     try:
         updates = []
         for row in stats:
             g_id, readers, avg_rating, books_read = row
-            share = round((books_read / total_finished) * 100, 2)
+            if total_finished > 0:
+                share = round((books_read / total_finished) * 100, 2)
+            else:
+                share = 0.0
             updates.append((readers, avg_rating, books_read, share, g_id))
 
         # Batch update zamiast pętli

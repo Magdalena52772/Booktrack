@@ -42,24 +42,67 @@ class ActivityRepository:
     def get_user_retention(self, time_filter="week"):
         """
         Oblicza % użytkowników którzy byli aktywni w wybranym okresie.
-        Retention = (unique active users / total users) * 100
+        For non-'all' periods (week/month/year) retention is computed as
+        the share of users active in the previous comparable period who
+        remained active in the current period (period-to-period retention).
+        For 'all' we fall back to active_users / total_active_users as before.
         """
         cursor = self.conn.cursor()
+        p_lower = time_filter.lower()
 
-        # Pobieranie total users
-        cursor.execute("SELECT COUNT(*) FROM users WHERE status = 'active'")
-        total_users = cursor.fetchone()[0] or 1
+        # For 'all' behave like before: active users in activity / total active users
+        if p_lower == "all":
+            # Pobieranie total users
+            cursor.execute("SELECT COUNT(*) FROM users WHERE status = 'active'")
+            total_users = cursor.fetchone()[0] or 0
 
-        # Pobieranie unique active users w okresie
-        condition, params = TimeFilterService.build_time_filter(time_filter)
-        where_clause = f"WHERE 1=1 {condition}" if condition else ""
+            # unique active users in activity period (join to users to ensure existence)
+            condition, params = TimeFilterService.build_time_filter(time_filter)
+            where_clause = f"WHERE 1=1 {condition}" if condition else ""
+            query = f"SELECT COUNT(DISTINCT a.user_id) FROM activity a JOIN users u ON a.user_id = u.id AND u.status = 'active' {where_clause}"
+            cursor.execute(query, params)
+            active_users = cursor.fetchone()[0] or 0
 
-        query = f"SELECT COUNT(DISTINCT user_id) FROM activity {where_clause}"
-        cursor.execute(query, params)
-        active_users = cursor.fetchone()[0] or 0
+            if total_users == 0:
+                return 0.0
 
-        # Obliczanie procentu
-        retention = (active_users / total_users) * 100 if total_users > 0 else 0
+            retention = (active_users / total_users) * 100
+            retention = max(0.0, min(100.0, retention))
+            return round(retention, 1)
+
+        # For periodic retention compute period-to-period retention:
+        # retention = (users_active_current_period ∩ users_active_previous_period) / users_active_previous_period
+        from data.utils.time_periods import period_start
+        from datetime import datetime, timedelta
+
+        since_current = period_start(p_lower)
+        # Number of days in period (approximate for week/month/year)
+        period_days = (datetime.now() - since_current).days or 1
+        since_prev = since_current - timedelta(days=period_days)
+
+        since_prev_str = since_prev.strftime("%Y-%m-%d %H:%M:%S")
+        since_curr_str = since_current.strftime("%Y-%m-%d %H:%M:%S")
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Users active in previous period
+        q_prev = "SELECT DISTINCT a.user_id FROM activity a JOIN users u ON a.user_id = u.id WHERE a.timestamp >= ? AND a.timestamp < ?"
+        cursor.execute(q_prev, (since_prev_str, since_curr_str))
+        prev_rows = cursor.fetchall()
+        prev_users = set(r[0] for r in prev_rows)
+        prev_count = len(prev_users)
+
+        if prev_count == 0:
+            return 0.0
+
+        # Users active in current period
+        q_curr = "SELECT DISTINCT a.user_id FROM activity a JOIN users u ON a.user_id = u.id WHERE a.timestamp >= ? AND a.timestamp <= ?"
+        cursor.execute(q_curr, (since_curr_str, now_str))
+        curr_rows = cursor.fetchall()
+        curr_users = set(r[0] for r in curr_rows)
+
+        retained = len(prev_users.intersection(curr_users))
+        retention = (retained / prev_count) * 100.0
+        retention = max(0.0, min(100.0, retention))
         return round(retention, 1)
 
     def get_activity_kpi_core(self, time_filter="week"):
@@ -244,3 +287,97 @@ class ActivityRepository:
         peak_value = self.get_peak_activity(current_trend)
 
         return current_trend, current_sum, round(growth_percent, 1), peak_value
+
+    def get_user_churn(self, time_filter="week"):
+        """
+        Oblicza % użytkowników, którzy byli aktywni w poprzednim okresie,
+        a obecnie mają status != 'active' (przeszli w inactive) — czyli churn.
+        Churn = (previous_active_users_now_inactive / previous_active_users) * 100
+        """
+        cursor = self.conn.cursor()
+        p_lower = time_filter.lower()
+
+        if p_lower == "all":
+            # For 'all' churn isn't well-defined; return 0.0
+            return 0.0
+
+        from data.utils.time_periods import period_start
+        from datetime import datetime, timedelta
+
+        since_current = period_start(p_lower)
+        period_days = (datetime.now() - since_current).days or 1
+        since_prev = since_current - timedelta(days=period_days)
+
+        since_prev_str = since_prev.strftime("%Y-%m-%d %H:%M:%S")
+        since_curr_str = since_current.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Users active in previous period
+        q_prev = "SELECT DISTINCT a.user_id FROM activity a JOIN users u ON a.user_id = u.id WHERE a.timestamp >= ? AND a.timestamp < ?"
+        cursor.execute(q_prev, (since_prev_str, since_curr_str))
+        prev_rows = cursor.fetchall()
+        prev_users = [r[0] for r in prev_rows]
+        prev_count = len(prev_users)
+
+        if prev_count == 0:
+            return 0.0
+
+        # Count how many of those users now have status != 'active'
+        placeholders = ','.join(['?'] * prev_count)
+        q_inactive = f"SELECT COUNT(*) FROM users WHERE id IN ({placeholders}) AND status != 'active'"
+        cursor.execute(q_inactive, prev_users)
+        now_inactive = cursor.fetchone()[0] or 0
+
+        churn = (now_inactive / prev_count) * 100.0
+        churn = max(0.0, min(100.0, churn))
+        return round(churn, 1)
+
+    def get_retention_details(self, time_filter="week"):
+        """
+        Returns detailed retention metrics: (prev_count, retained_count, now_inactive_count, churn_pct).
+        For 'all' returns (0, 0, 0, 0.0) as period-to-period metrics are not applicable.
+        """
+        cursor = self.conn.cursor()
+        p_lower = time_filter.lower()
+
+        if p_lower == "all":
+            return 0, 0, 0, 0.0
+
+        from data.utils.time_periods import period_start
+        from datetime import datetime, timedelta
+
+        since_current = period_start(p_lower)
+        period_days = (datetime.now() - since_current).days or 1
+        since_prev = since_current - timedelta(days=period_days)
+
+        since_prev_str = since_prev.strftime("%Y-%m-%d %H:%M:%S")
+        since_curr_str = since_current.strftime("%Y-%m-%d %H:%M:%S")
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Users active in previous period
+        q_prev = "SELECT DISTINCT a.user_id FROM activity a JOIN users u ON a.user_id = u.id WHERE a.timestamp >= ? AND a.timestamp < ?"
+        cursor.execute(q_prev, (since_prev_str, since_curr_str))
+        prev_rows = cursor.fetchall()
+        prev_users = [r[0] for r in prev_rows]
+        prev_count = len(prev_users)
+
+        if prev_count == 0:
+            return 0, 0, 0, 0.0
+
+        # Users active in current period
+        q_curr = "SELECT DISTINCT a.user_id FROM activity a JOIN users u ON a.user_id = u.id WHERE a.timestamp >= ? AND a.timestamp <= ?"
+        cursor.execute(q_curr, (since_curr_str, now_str))
+        curr_rows = cursor.fetchall()
+        curr_users = set(r[0] for r in curr_rows)
+
+        retained_count = len([u for u in prev_users if u in curr_users])
+
+        # Count how many of prev users now have status != 'active'
+        placeholders = ','.join(['?'] * prev_count)
+        q_inactive = f"SELECT COUNT(*) FROM users WHERE id IN ({placeholders}) AND status != 'active'"
+        cursor.execute(q_inactive, prev_users)
+        now_inactive = cursor.fetchone()[0] or 0
+
+        churn = (now_inactive / prev_count) * 100.0 if prev_count > 0 else 0.0
+        churn = max(0.0, min(100.0, round(churn, 1)))
+
+        return prev_count, retained_count, now_inactive, churn
