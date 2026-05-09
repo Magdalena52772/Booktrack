@@ -79,7 +79,8 @@ class StatsRepository:
                           (start_dt.strftime("%Y-%m-%d %H:%M:%S"),))
             new_users = cursor.fetchone()[0] or 0
         else:
-            new_users = total_users
+            # Jeśli okres to "all", traktuje wszystkich użytkowników jako "nowych" dla celów analizy
+            new_users = 0
 
         # Obliczanie średniego PPD z uwzględnieniem przekazanego okresu
         avg_engagement = self.get_system_wide_ppd(period)
