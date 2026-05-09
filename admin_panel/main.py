@@ -55,12 +55,6 @@ def main():
     app = QApplication(sys.argv)
     log_time("QApplication created")
 
-    # Pre-import matplotlib aby uniknąć opóźnień podczas pierwszego użycia w widoku Dashboard
-    import matplotlib
-    matplotlib.use('Qt5Agg')
-    import matplotlib.pyplot as plt
-    log_time("Matplotlib pre-imported (heavy init done early)")
-
     window = MainWindow(conn)
     # Przechowywanie workerów i timerów na oknie, aby nie były usunięte podczas działania
     window._bg_workers = []
@@ -141,12 +135,15 @@ def main():
             cursor.close()
             log_time("Startup data generation completed")
             print("[STARTUP] Zakończone! UI odświeży się automatycznie.")
+            # Ustawia flagę natychmiast (bezpośrednio) zamiast QTimer, aby nie było opóźnień
+            window._startup_generation_done = True
+            print("[STARTUP-FLAG] _startup_generation_done = True")
         except Exception as e:
             print(f"[STARTUP ERROR] {e}")
             thread_conn.rollback()
+            window._startup_generation_done = True  # Ustawiamy flagę nawet w case erroru
         finally:
             # Zamknięcie połączenia wątku po zakończeniu startupa (nie zamyka głównego połączenia używanego przez UI)
-            QTimer.singleShot(0, lambda: setattr(window, "_startup_generation_done", True))
             thread_conn.close()
 
     # ==================== TIMER DLA SYMULACJI AKTYWNOŚCI (REAL-TIME) ============
@@ -174,6 +171,10 @@ def main():
         """
         Cykliczna symulacja aktywności i odświeżanie statystyk globalnych.
         """
+        # Jeśli trwa startowa generacja bazy, nie wykonuje żadnych ciężkich operacji
+        if not getattr(window, '_startup_generation_done', False):
+            return
+
         from data.services.maintenance_service import run_maintenance, update_all_user_streaks
 
         timer_cursor = conn.cursor()
@@ -287,9 +288,10 @@ def main():
         window._genre_timer = genre_timer
         return genre_timer
 
-    # Pierwsze uruchomienie po 1 minucie, potem co 5 minut
-    QTimer.singleShot(60000, start_recurring_genre_timer)
-    print("[GENRES] Timer zaplanowany: first run za 1 min, potem co 5 min")
+    # Opóźni start genre timera do zakończenia startowej generacji (5 minut)
+    # To unika dodatkowego obciążenia podczas bootstrapu bazy danych
+    QTimer.singleShot(300000, start_recurring_genre_timer)
+    print("[GENRES] Timer zaplanowany: first run za 5 min (po startup generation), potem co 5 min")
 
     exit_code = app.exec() 
     conn.close()

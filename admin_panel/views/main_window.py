@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         }
 
         if class_name in view_modules:
-            # Importowanie modułu i klasy dynamicznie
+            # Dynamiczny import modułu i klasy
             module_name, class_to_import = view_modules[class_name]
             module = __import__(module_name, fromlist=[class_to_import])
             return getattr(module, class_to_import)
@@ -113,15 +113,15 @@ class MainWindow(QMainWindow):
             self.switch_page(config)
 
     def _deferred_load_dashboard(self):
-        """Ładuje Dashboard po tym jak UI się pokazał (non-blocking startup)."""
+        """Pokazuje Dashboard view natychmiast z placeholderami, dane ładują się w tle."""
         from datetime import datetime as dt
         print(f"[TIMING] _deferred_load_dashboard START at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
 
-        # Startuje preload w tle
-        self._preload_dashboard_data()
-
-        # Wołuje switch_page() zaraz - bez opóźnienia
+        # Switch page natychmiast pokazuje view z placeholderami
         self.switch_page(self.view_config[self.ui.btn_dashboard])
+
+        # Preload w tle, bez czekania na startup
+        self._preload_dashboard_data()
 
         print(f"[TIMING] _deferred_load_dashboard DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
 
