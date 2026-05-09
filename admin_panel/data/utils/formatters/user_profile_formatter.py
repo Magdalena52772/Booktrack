@@ -46,7 +46,8 @@ class UserProfileFormatter:
         reading_potential = profile["potential_ppd"]
         progress = profile['avg_progress']
         total_pages = profile['total_pages']
-        reading_str = ", ".join(profile["reading_now"]) if profile["reading_now"] else "None"
+        reading_list = profile["reading_now"] if profile["reading_now"] else []
+        reading_str = ", ".join(f"{i+1}. {book}" for i, book in enumerate(reading_list)) if reading_list else "None"
         filter_label = f"({current_filter.upper()})" if current_filter.lower() != "all" else "(ALL TIME)"
 
         return (

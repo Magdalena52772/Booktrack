@@ -50,6 +50,7 @@ class DatabaseWorker(QThread):
                 # Załadowanie wszystkich danych Dashboard'a w osobnym wątku
                 result = self._load_dashboard_data()
                 self.finished.emit(result)
+
             elif self.task_type == "check_activity_latest":
                 # Lekki check: zwraca ostatni timestamp z tabeli activity (string) lub None
                 result = self._check_latest_activity()

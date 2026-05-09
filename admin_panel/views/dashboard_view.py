@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import traceback
 from PySide6.QtCore import Signal, QThread, QTimer, Qt
 from PySide6.QtWidgets import QWidget, QSizePolicy
-
 from data.utils.status_manager import StatusMsg
 from data.repositories.book_repo import BookRepository
 from data.repositories.statistics_repo import StatsRepository
@@ -12,30 +11,42 @@ from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
 from worker import DatabaseWorker
 
 class ChartRenderWorker(QThread):
-    """Renderuje wykresy matplotlib w tle (nie blokuje UI)"""
-    finished = Signal()
+    """Przetwarza dane wykresów w tle i zwraca przetworzone pakiety do rysowania na wątku UI.
 
-    def __init__(self, canvas, heatmap, chart_data):
+    Rzeczywiste rysowanie (wywołania do canvas/heatmap) musi odbyć się na wątku głównym.
+    Ten worker wykonuje tylko przetwarzanie ciężkich danych (np. serializację/formatowanie)
+    i emituje gotowy payload, który następnie jest rysowany w main thread.
+    """
+    finished = Signal(object)
+
+    def __init__(self, chart_data):
         super().__init__()
-        self.canvas = canvas
-        self.heatmap = heatmap
         self.chart_data = chart_data
 
     def run(self):
-        """Renderuje wykresy w osobnym wątku"""
         try:
-            dates, values = self.chart_data
-            # Renderowanie wykresu trendu (linia) - może być ciężkie przy dużej ilości danych, więc w tle
-            self.canvas.plot_data(list(dates), list(values), time_filter="month")
-
-            # Heatmap w tle
-            if hasattr(self, 'heatmap_data'):
-                self.heatmap.plot_heatmap(self.heatmap_data)
-        finally:
-            self.finished.emit()
+            # Przetwarzanie danych wykresu
+            processed = self.chart_data
+            # Przygotowanie payloadu do rysowania (rozpakowanie dat i wartości do osobnych list)
+            if processed and isinstance(processed, (list, tuple)) and len(processed) and isinstance(processed[0], tuple):
+                dates, values = zip(*processed)
+                dates_list = list(dates)
+                values_list = list(values)
+                payload = (dates_list, values_list, processed)
+            else:
+                # fallback
+                payload = ([], [], processed)
+            self.finished.emit(payload)
+        except Exception:
+            # W razie błędu zwraca pusty payload
+            try:
+                self.finished.emit(([], [], []))
+            except Exception:
+                pass
 
 class DashboardView(QWidget):
-    """Główny panel z dynamicznym skalowaniem i optymalnym wykorzystaniem przestrzeni."""
+    """Główny panel z dynamicznym skalowaniem i optymalnym wykorzystaniem przestrzeni 
+    do prezentacji kluczowych statystyk i trendów czytelniczych"""
     statusMessage = Signal(str, str)
     renderingFinished = Signal()  # Wyemituje się kiedy wykresy się wyrenderują
 
@@ -50,6 +61,7 @@ class DashboardView(QWidget):
         # Atrybuty muszą istnieć zanim pokaże loading na starcie
         self.canvas = None
         self.heatmap = None
+        self._charts_initialized = False
 
         # Ładowanie zaktualizowanego UI
         self.ui = load_ui(self, "views/ui/DashboardView.ui")
@@ -68,6 +80,10 @@ class DashboardView(QWidget):
         self._current_worker = None
         self._is_refreshing = False
         self._last_dashboard_data = None
+        self._last_render_signature = None
+        self._chart_render_pending = False
+        self._chart_worker = None
+        self._has_seen_valid_data = False
         self._current_check_worker = None
         self._last_activity_stamp = None
         self._recheck_timer = QTimer(self)
@@ -77,23 +93,54 @@ class DashboardView(QWidget):
         # Setup charts asynchronicznie na Qt event loop (po pokazaniu UI)
         QTimer.singleShot(0, self._setup_charts_deferred)
 
+        # Załaduje dane dashboardu od razu
+        QTimer.singleShot(50, self.load_view)
+
         print(f"[DASHBOARD_INIT] DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]} ({(dt.now()-t_init).total_seconds()*1000:.0f}ms)")
 
     def setup_charts(self):
         """Inicjalizacja wykresów z wymuszeniem elastyczności rozmiaru."""
+        if self._charts_initialized and self.canvas is not None and self.heatmap is not None:
+            return
+
         # Wykres Trendu
         self.canvas = ActivityChart(self.ui.frame_chart)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        if hasattr(self.ui, 'lbl_activity_chart'):
-            self.ui.verticalLayout_3.replaceWidget(self.ui.lbl_activity_chart, self.canvas)
-            self.ui.lbl_activity_chart.deleteLater()
+        self.canvas.setMinimumHeight(240)
+        lbl_activity = getattr(self.ui, 'lbl_activity_chart', None)
+        if lbl_activity is not None:
+            self.ui.verticalLayout_3.replaceWidget(lbl_activity, self.canvas)
+            lbl_activity.hide()
+            lbl_activity.deleteLater()
+            self.ui.lbl_activity_chart = None
+        # Dodatkowe ustawienia i zabezpieczenia przy rysowaniu
+        try:
+            self.canvas.updateGeometry()
+            if hasattr(self.ui, 'frame_chart'):
+                self.ui.frame_chart.update()
+            self.canvas.draw()
+        except Exception:
+            pass
 
         # Heatmapa (30 kafli)
         self.heatmap = ActivityHeatmap(self.ui.heatmap_container)
         self.heatmap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        if hasattr(self.ui, 'lbl_heatmap_placeholder'):
-            self.ui.verticalLayout_heatmap.replaceWidget(self.ui.lbl_heatmap_placeholder, self.heatmap)
-            self.ui.lbl_heatmap_placeholder.deleteLater()
+        self.heatmap.setMinimumHeight(200)
+        lbl_heatmap = getattr(self.ui, 'lbl_heatmap_placeholder', None)
+        if lbl_heatmap is not None:
+            self.ui.verticalLayout_heatmap.replaceWidget(lbl_heatmap, self.heatmap)
+            lbl_heatmap.hide()
+            lbl_heatmap.deleteLater()
+            self.ui.lbl_heatmap_placeholder = None
+        try:
+            self.heatmap.updateGeometry()
+            if hasattr(self.ui, 'heatmap_container'):
+                self.ui.heatmap_container.update()
+            self.heatmap.draw()
+        except Exception:
+            pass
+
+        self._charts_initialized = True
 
     def _setup_charts_deferred(self):
         """Setup charts w tle po pokazaniu UI (nie blokuje startup)."""
@@ -104,42 +151,48 @@ class DashboardView(QWidget):
         print(f"[DASHBOARD_CHARTS] SETUP DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
 
     def load_view(self):
-        """Załaduje dane Dashboard'a w tle (worker thread)."""
+        """Załaduje dane Dashboard'a w tle (worker thread) — pokazuje placeholdery natychmiast."""
+        # Jeśli refresh już trwa i są poprzednie dane, nie resetuje widoku ponownie
+        if self._is_refreshing and self._last_dashboard_data:
+            print("[TIMING] Dashboard refresh already in progress - keeping current data")
+            return
+
+        from datetime import datetime as dt
+        print(f"[TIMING] Dashboard.load_view() started at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
+
         # Safety check - jeśli charts nie istnieją, trigger setup
         if self.canvas is None or self.heatmap is None:
             print("[WARNING] Charts missing on load_view(), re-initializing...")
             self.setup_charts()
 
-        # Force redraw na canvasach (w przypadku gdy widget był ukryty, może nie renderować poprawnie)
-        if self.canvas:
-            self.canvas.draw()
-        if self.heatmap:
-            self.heatmap.draw()
+        # Pokaż placeholdery natychmiast, zanim worker załaduje dane
+        if not self._has_seen_valid_data:
+            self._set_loading_state(True)
 
-        from datetime import datetime as dt
-        print(f"[TIMING] Dashboard.load_view() started at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
-
-        # Jeśli dane są już preloaded (z MainWindow) - używa ich od razu
+        # Jeśli dane są już preloaded (z MainWindow), użyje ich natychmiast (stale-while-refresh), 
+        # ale zawsze triggeruje odświeżenie w tle, żeby mieć aktualne dane po starcie.
         parent_window = self.parent()
         while parent_window and not hasattr(parent_window, '_preloaded_dashboard_data'):
             parent_window = parent_window.parent()
 
         preloaded = None
         if parent_window and hasattr(parent_window, '_preloaded_dashboard_data') and parent_window._preloaded_dashboard_data:
-            preloaded = parent_window._preloaded_dashboard_data
+            # Sprawdzenie czy preloaded zawiera rzeczywiste dane (nie jest pusty lub zerowy)
+            preloaded_data = parent_window._preloaded_dashboard_data
+            has_real_data = (preloaded_data.get("total_users", 0) > 0 or 
+                            preloaded_data.get("books_month", 0) > 0 or
+                            len(preloaded_data.get("activity_data", [])) > 0)
+            if has_real_data:
+                preloaded = preloaded_data
 
-        # Stale-while-refresh: pokazuje ostatnie dane od razu, bez kasowania dashboardu loadingiem.
+        # Jeśli już jest cached dane, pokaże je (stale-while-refresh)
         if self._last_dashboard_data:
             self._update_dashboard_ui(self._last_dashboard_data)
         elif preloaded:
-            print(f"[TIMING] Using preloaded dashboard data")
+            print(f"[TIMING] Using preloaded dashboard data (has real data)")
             self._on_dashboard_data_loaded(preloaded)
-        else:
-            # Tylko przy pierwszym wejściu pokazuje loading placeholder
-            self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Dashboard"))
-            self._set_loading_state(True)
 
-        # Odświeżenie zawsze w tle, ale bez duplikacji workerów.
+        # Odświeżenie zawsze w tle, bez czekania na startup
         if not self._is_refreshing:
             self._is_refreshing = True
             self._current_worker = DatabaseWorker("load_dashboard", db_connection=self.conn)
@@ -158,12 +211,29 @@ class DashboardView(QWidget):
         print(f"[TIMING] Dashboard data received at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
         try:
             if data:
-                self._last_dashboard_data = data
-                self._update_dashboard_ui(data)
-                self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", "Dashboard", "Global"))
+                # Dodatkowa walidacja: sprawdzenie, czy dane zawierają rzeczywiste wartości (nie są puste lub zerowe), zanim pokaże je na UI.
+                total_users = data.get("total_users", 0)
+                books_month = data.get("books_month", 0)
+                activity_data = data.get("activity_data", []) or []
+                if total_users == 0 and books_month == 0 and len(activity_data) == 0:
+                    print("[TIMING] Worker returned empty data - keeping placeholder")
+                    self._set_loading_state(True)
+                    self._schedule_background_recheck_if_needed()
+                    return
+                
+                new_signature = self._make_dashboard_signature(data)
+                if new_signature != self._last_render_signature:
+                    self._last_dashboard_data = data
+                    self._last_render_signature = new_signature
+                    self._update_dashboard_ui(data)
+                    # Ustawia flagę, że pokazały się już ważne dane, więc przy kolejnych 
+                    # odświeżeniach można pokazywać placeholdery tylko dla wykresów, a nie dla całego UI.
+                    self._has_seen_valid_data = True
+                    self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", "Dashboard", "Global"))
+                else:
+                    print("[TIMING] Dashboard data unchanged - skipping redraw")
             else:
-                # Jeśli backend zwrócił None lub pusty wynik, traktuje to jako błąd 
-                # i pokazuje komunikat, ale nie czyści dashboardu (jeśli są jakieś dane)
+                # Jeśli backend zwrócił None lub pusty wynik
                 if not self._last_dashboard_data:
                     self._update_dashboard_ui({})
             self._set_loading_state(False)
@@ -192,20 +262,19 @@ class DashboardView(QWidget):
             parent_window = parent_window.parent()
         return parent_window
 
-    def _schedule_background_recheck_if_needed(self):
-        """Podczas startupu, jeśli dane są świeże, uruchamia lekkie sprawdzanie co sekundę, 
-        aby wykryć kiedy symulacja zakończy się i wtedy przeładować dashboard."""
+    def _is_startup_generation_in_progress(self):
+        """Zwraca True, gdy aplikacja nadal generuje startową bazę danych."""
         main_window = self._find_main_window()
-        startup_done = True if main_window is None else getattr(main_window, '_startup_generation_done', True)
+        return bool(main_window) and not getattr(main_window, '_startup_generation_done', True)
 
-        if startup_done:
-            if self._recheck_timer.isActive():
-                self._recheck_timer.stop()
+    def _schedule_background_recheck_if_needed(self):
+        """Uruchamia lekkie sprawdzanie co pół sekundy, aby wykryć zmiany w aktywności."""
+        # Jeśli timer już działa, nie restartuje go ponownie
+        if self._recheck_timer.isActive():
             return
 
-        if not self._recheck_timer.isActive():
-            # Jeśli w trakcie startupu i dane są już załadowane, uruchamia timer, który co sekundę będzie sprawdzał lekkim workerem, czy aktywność się zmieniła (symulacja zakończyła się)
-            self._recheck_timer.start(1000)
+        # Uruchamia timer — zawsze, niezależnie od startupu
+        self._recheck_timer.start(500)
 
     def _run_background_recheck(self):
         """Uruchamia lekkie sprawdzanie w tle, aby zobaczyć, czy ostatnia aktywność się zmieniła 
@@ -232,17 +301,17 @@ class DashboardView(QWidget):
         self._current_check_worker.start()
 
     def _on_check_activity_done(self, latest_stamp):
-        """Callback kiedy lekki worker sprawdzający ostatnią aktywność zwróci wynik. Jeśli timestamp jest inny niż self._last_activity_stamp, triggeruje load_view() do pełnego przeładowania danych."""
+        """Callback kiedy lekki worker sprawdzający ostatnią aktywność zwróci wynik."""
         try:
             if latest_stamp and latest_stamp != self._last_activity_stamp:
                 self._last_activity_stamp = latest_stamp
-                # Jeśli wykryje zmianę w aktywności (symulacja zakończyła się), triggeruje pełne przeładowanie dashboardu, ale tylko jeśli nie jest już w trakcie odświeżania (unikanie duplikacji workerów)
+                # Zmiana w aktywności — triggeruje refresh
                 if not self._is_refreshing:
                     self.load_view()
             else:
-                # Jeśli nie wykryje zmiany, ponownie uruchamia timer do kolejnej próby za sekundę (kontynuacja sprawdzania co sekundę podczas startupu)
+                # Brak zmiany — czeka i spróbuje ponownie
                 if not self._recheck_timer.isActive():
-                    self._recheck_timer.start(1000)
+                    self._recheck_timer.start(500)
         finally:
             self._current_check_worker = None
 
@@ -263,7 +332,8 @@ class DashboardView(QWidget):
         # Formatowanie tekstu
         accent = "#daa520"
         style = f"color:{accent}; font-weight:bold; font-size:16pt;"
-        self.ui.lbl_users.setText(f"Users: <br><span style='{style}'>{total_users}</span>")
+        users_text = f"{total_users}" if new_users == 0 else f"{total_users}<span style='font-size:11pt; color:#90ee90;'>(+{new_users})</span>"
+        self.ui.lbl_users.setText(f"Users: <br><span style='{style}'>{users_text}</span>")
         self.ui.lbl_books.setText(f"Books read: <br><span style='{style}'>{books_month or 0}</span>")
         self.ui.lbl_pages.setText(f"Pages / day: <br><span style='{style}'>{round(avg_pages, 1)}</span>")
 
@@ -274,18 +344,35 @@ class DashboardView(QWidget):
         streak_text += "</span>"
         self.ui.lbl_streak.setText(streak_text)
 
-        # Aktualizacja wykresów na głównym wątku Qt
+        # Aktualizacja wykresów: pokaże placeholder natychmiast i przetworzy dane w tle
         processed_data = self._prepare_30_days(activity_data)
         if processed_data:
-            dates, values = zip(*processed_data) if processed_data else ([], [])
+            # Jeśli nie było jeszcze widocznych danych, pokazuje placeholder natychmiast
+            if not self._has_seen_valid_data:
+                self._set_loading_state(True, charts_only=True)
 
-            # Renderowanie wykresów w tle, aby nie blokować UI
-            def start_chart_render():
-                self.canvas.plot_data(list(dates), list(values), time_filter="month")
-                self.heatmap.plot_heatmap(processed_data)
-                self._on_charts_rendered()
+            # Debounce: nie uruchamia wielu równoległych workerów do renderu
+            if self._chart_worker and getattr(self._chart_worker, 'isRunning', lambda: False)():
+                print("[TIMING] Chart worker already running - skipping spawn")
+            else:
+                # Uruchamia worker, który przygotuje payload do rysowania
+                self._chart_worker = ChartRenderWorker(processed_data)
 
-            QTimer.singleShot(50, start_chart_render)
+                def _on_chart_payload_ready(payload):
+                    try:
+                        dates_list, values_list, processed = payload
+                        # Rysowanie już na wątku UI
+                        try:
+                            self.canvas.plot_data(list(dates_list), list(values_list), time_filter="month")
+                            self.heatmap.plot_heatmap(processed)
+                        except Exception:
+                            pass
+                        self._on_charts_rendered()
+                    finally:
+                        self._chart_worker = None
+
+                self._chart_worker.finished.connect(_on_chart_payload_ready)
+                self._chart_worker.start()
 
         from datetime import datetime as dt
         print(f"[TIMING] Dashboard UI fully rendered at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
@@ -296,51 +383,92 @@ class DashboardView(QWidget):
         print(f"[DASHBOARD_READY] Charts fully rendered at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
         self.renderingFinished.emit()
 
-    def _set_loading_state(self, is_loading):
-        """Pokazuje/ukrywa loading state z placeholderem."""
+    def _set_loading_state(self, is_loading, charts_only: bool = False):
+        """Pokazuje/ukrywa loading state z placeholderem
+
+        Jeśli `charts_only` jest True, nie modyfikuje metryk (Users/Books/Pages),
+        pokazuje tylko placeholdery wykresów — używane przy odświeżeniu kiedy
+        są już istniejące dane
+        """
         if is_loading:
-            # Loading placeholders dla metryk
             loading_style = "color: #999; font-style: italic;"
-            self.ui.lbl_users.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
-            self.ui.lbl_books.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
-            self.ui.lbl_pages.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
-            self.ui.lbl_streak.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
+            if not charts_only:
+                # Loading placeholders dla metryk (tylko gdy full loading)
+                try:
+                    self.ui.lbl_users.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
+                    self.ui.lbl_books.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
+                    self.ui.lbl_pages.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
+                    self.ui.lbl_streak.setText(f"<span style='{loading_style}'>[LOADING...]</span>")
+                except RuntimeError:
+                    # QLabel mogło zostać usunięte; ignoruje błędy związane z aktualizacją UI, 
+                    # które mogą wystąpić podczas szybkiego przełączania widoków
+                    pass
 
             # Pokazuje placeholdery wykresów zanim zostaną podmienione na canvasy matplotlib
-            if hasattr(self.ui, 'lbl_activity_chart'):
+            lbl_activity = getattr(self.ui, 'lbl_activity_chart', None)
+            if lbl_activity is not None:
                 try:
-                    self.ui.lbl_activity_chart.setText('[LOADING CHART DATA...]')
-                    self.ui.lbl_activity_chart.setAlignment(Qt.AlignCenter)
+                    lbl_activity.setText('[LOADING CHART DATA...]')
+                    lbl_activity.setAlignment(Qt.AlignCenter)
                 except RuntimeError:
                     pass
-            if hasattr(self.ui, 'lbl_heatmap_placeholder'):
+
+            lbl_heatmap = getattr(self.ui, 'lbl_heatmap_placeholder', None)
+            if lbl_heatmap is not None:
                 try:
-                    self.ui.lbl_heatmap_placeholder.setText('[LOADING HEATMAP...]')
-                    self.ui.lbl_heatmap_placeholder.setAlignment(Qt.AlignCenter)
+                    lbl_heatmap.setText('[LOADING HEATMAP...]')
+                    lbl_heatmap.setAlignment(Qt.AlignCenter)
                 except RuntimeError:
                     pass
 
             # Placeholder dla wykresów (tylko jeśli canvas już się zainicjalizował)
             canvas = getattr(self, 'canvas', None)
-            if canvas and canvas.axes:
-                canvas.axes.clear()
-                canvas.axes.text(0.5, 0.5, '[LOADING CHART DATA...]',
-                                  ha='center', va='center',
-                                  fontsize=12, color='#999', style='italic',
-                                  transform=canvas.axes.transAxes)
-                canvas.draw()
+            if canvas and getattr(canvas, 'axes', None):
+                try:
+                    canvas.axes.clear()
+                    canvas.axes.text(0.5, 0.5, '[LOADING CHART DATA...]',
+                                      ha='center', va='center',
+                                      fontsize=12, color='#999', style='italic',
+                                      transform=canvas.axes.transAxes)
+                    canvas.draw()
+                except Exception:
+                    pass
 
             heatmap = getattr(self, 'heatmap', None)
-            if heatmap and heatmap.axes:
-                heatmap.axes.clear()
-                heatmap.axes.text(0.5, 0.5, '[LOADING HEATMAP...]',
-                                   ha='center', va='center',
-                                   fontsize=12, color='#999', style='italic',
-                                   transform=heatmap.axes.transAxes)
-                heatmap.draw()
+            if heatmap and getattr(heatmap, 'axes', None):
+                try:
+                    heatmap.axes.clear()
+                    heatmap.axes.text(0.5, 0.5, '[LOADING HEATMAP...]',
+                                       ha='center', va='center',
+                                       fontsize=12, color='#999', style='italic',
+                                       transform=heatmap.axes.transAxes)
+                    heatmap.draw()
+                except Exception:
+                    pass
         else:
             # Loading state ukryty - UI będzie aktualizowany przez _update_dashboard_ui()
-            pass
+            try:
+                # Resetuje placeholdery, ale tylko jeśli nie było jeszcze ważnych danych (przy pierwszym załadowaniu)
+                pass
+            except Exception:
+                pass
+
+    def _make_dashboard_signature(self, data):
+        """Tworzy lekki podpis danych, żeby wykryć realną zmianę przed redraw."""
+        if not data:
+            return None
+
+        activity_data = data.get("activity_data", []) or []
+        top_3_streaks = data.get("top_3_streaks", []) or []
+
+        return (
+            data.get("total_users", 0),
+            data.get("new_users", 0),
+            data.get("avg_pages", 0),
+            data.get("books_month", 0),
+            tuple(top_3_streaks),
+            tuple(activity_data),
+        )
 
     def _prepare_30_days(self, data):
         """Generuje listę 30 ostatnich dni."""
