@@ -6,7 +6,10 @@ from PySide6.QtWidgets import QApplication
 
 # --- USTAWIANIE ŚCIEŻEK ---
 current_path = Path(__file__).resolve()
-base_dir = next((p for p in current_path.parents if (p / 'data').exists()), current_path.parent.parent)
+base_dir = next(
+    (p for p in current_path.parents if (p / "data").exists()),
+    current_path.parent.parent,
+)
 sys.path.insert(0, str(base_dir))
 
 from data.database import get_connection
@@ -14,6 +17,7 @@ from data.repositories.activity_repo import ActivityRepository
 from views.main_window import MainWindow
 
 app = QApplication.instance() or QApplication(sys.argv)
+
 
 class TestActivityPerformance(unittest.TestCase):
     def setUp(self):
@@ -36,20 +40,24 @@ class TestActivityPerformance(unittest.TestCase):
         - Trend Time: zapytania SQL dla wykresu
         - Total Time: cały czas ładowania filtra (SQL + render)
         """
-        print("\n" + "="*95)
+        print("\n" + "=" * 95)
         print("          AUDYT WYDAJNOŚCI MODUŁU ANALITYCZNEGO (ACTIVITY)")
-        print("="*95)
-        print(f"{'Filtr':<10} | {'KPI [s]':<15} | {'Trend [s]':<15} | {'Total [s]':<12} | {'Verdict'}")
+        print("=" * 95)
+        print(
+            f"{'Filtr':<10} | {'KPI [s]':<15} | {'Trend [s]':<15} | {'Total [s]':<12} | {'Verdict'}"
+        )
         print("-" * 100)
 
         # Pobiera opcje z ComboBoxa
-        filters = [self.view.ui.cb_time_filter.itemText(i)
-                   for i in range(self.view.ui.cb_time_filter.count())]
+        filters = [
+            self.view.ui.cb_time_filter.itemText(i)
+            for i in range(self.view.ui.cb_time_filter.count())
+        ]
 
         for f_text in filters:
             # Mierzy KPI queries
             t_kpi_start = time.perf_counter()
-            total_pages, real_active_days, _ = self.repo.get_activity_kpi(f_text)
+            total_pages, real_active_days = self.repo.get_activity_kpi(f_text)
             unique_readers = self.repo.get_unique_active_users(f_text)
             kpi_time = time.perf_counter() - t_kpi_start
 
@@ -92,18 +100,30 @@ class TestActivityPerformance(unittest.TestCase):
             else:
                 trend_verdict = "VERY SLOW"
 
-            print(f"{f_text:<10} | {kpi_time:8.4f}s ({kpi_verdict:<10}) | {trend_time:8.4f}s ({trend_verdict:<10}) | {total_time:8.4f}s | {total_verdict}")
+            print(
+                f"{f_text:<10} | {kpi_time:8.4f}s ({kpi_verdict:<10}) | {trend_time:8.4f}s ({trend_verdict:<10}) | {total_time:8.4f}s | {total_verdict}"
+            )
 
             # ASERCJA: Całkowity czas < 1.2s (łączy SQL + render matplotlib)
-            self.assertLess(total_time, 1.2,
-                f"Filter '{f_text}' exceeded 1.2s threshold (Total: {total_time:.3f}s, KPI: {kpi_time:.3f}s, Trend: {trend_time:.3f}s)")
+            self.assertLess(
+                total_time,
+                1.2,
+                f"Filter '{f_text}' exceeded 1.2s threshold (Total: {total_time:.3f}s, KPI: {kpi_time:.3f}s, Trend: {trend_time:.3f}s)",
+            )
 
         print("-" * 100)
         print("NORMY WYDAJNOŚCI:")
-        print("  KPI Time:   < 0.2s = SUPER,  < 0.5s = OK,     < 1.0s = SLOW,      >= 1.0s = VERY SLOW")
-        print("  Trend Time: < 0.1s = SUPER,  < 0.2s = OK,     < 0.5s = SLOW,      >= 0.5s = VERY SLOW")
-        print("  TOTAL:      < 0.3s = WYBITNY, < 1.0s = AKCEPTOWALNY, >= 1.0s = OPÓŹNIENIE (LAG)")
-        print("="*100)
+        print(
+            "  KPI Time:   < 0.2s = SUPER,  < 0.5s = OK,     < 1.0s = SLOW,      >= 1.0s = VERY SLOW"
+        )
+        print(
+            "  Trend Time: < 0.1s = SUPER,  < 0.2s = OK,     < 0.5s = SLOW,      >= 0.5s = VERY SLOW"
+        )
+        print(
+            "  TOTAL:      < 0.3s = WYBITNY, < 1.0s = AKCEPTOWALNY, >= 1.0s = OPÓŹNIENIE (LAG)"
+        )
+        print("=" * 100)
+
 
 if __name__ == "__main__":
     unittest.main()

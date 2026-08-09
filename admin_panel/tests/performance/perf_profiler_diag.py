@@ -10,13 +10,13 @@ from PySide6.QtWidgets import QApplication
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(message)s",
-    datefmt="%H:%M:%S"
+    datefmt="%H:%M:%S",
 )
 
 log = logging.getLogger(__name__)
 
 # Ścieżka projektu
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 # Importy
 from data.database import get_connection, initialize_database
@@ -38,9 +38,7 @@ def log_top_stats(stats, limit=15):
 
         func_name = f"{name} ({os.path.basename(filename)}:{line})"
 
-        log.info(
-            f"{func_name[:45]:45} | {nc:6} | {tt:9.3f} | {ct:9.3f}"
-        )
+        log.info(f"{func_name[:45]:45} | {nc:6} | {tt:9.3f} | {ct:9.3f}")
 
 
 # ================= MAIN =================
@@ -80,7 +78,7 @@ def diagnoza_bez_blokady():
     profiler.disable()
 
     log.info("=== WYNIKI PROFILERA (TOP CUMULATIVE TIME) ===")
-    stats = pstats.Stats(profiler).sort_stats('cumulative')
+    stats = pstats.Stats(profiler).sort_stats("cumulative")
     log_top_stats(stats, 15)
 
     window.close()
