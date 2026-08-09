@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class ChallengeRepository:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
