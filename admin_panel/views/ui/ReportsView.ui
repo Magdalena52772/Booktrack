@@ -75,17 +75,12 @@
            </item>
            <item>
             <property name="text">
-             <string>Users</string>
+             <string>Books</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>Top Users</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Trend Analysis</string>
+             <string>Top Readers</string>
             </property>
            </item>
           </widget>

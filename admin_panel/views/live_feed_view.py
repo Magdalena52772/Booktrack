@@ -5,6 +5,7 @@ from datetime import datetime
 from data.utils.status_manager import StatusMsg
 from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
 
+
 class LiveFeedView(QWidget):
     statusMessage = Signal(str, str)
 
@@ -34,7 +35,7 @@ class LiveFeedView(QWidget):
         tooltips = {
             "frame_clusters": "Future AI module: grouping users by reading patterns.",
             "list_events": "Real-time log of recent database changes and user actions.",
-            "btn_refresh_live": "Manually refresh to see the latest events."
+            "btn_refresh_live": "Manually refresh to see the latest events.",
         }
         apply_tooltips(self.ui, tooltips)
 
@@ -44,11 +45,10 @@ class LiveFeedView(QWidget):
         try:
             self.refresh_event_log()
             self.update_clustering_status()
-            
+
             self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", "Live Feed"))
         except Exception as e:
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
-
 
     def refresh_event_log(self):
         """
@@ -70,21 +70,21 @@ class LiveFeedView(QWidget):
         else:
             # Jeśli brak logów, pokazuje placeholder
             from PySide6.QtWidgets import QListWidgetItem
-            item = QListWidgetItem("ℹ️ Monitoring system is ready... Waiting for activity logs.")
+
+            item = QListWidgetItem(
+                "ℹ️ Monitoring system is ready... Waiting for activity logs."
+            )
             self.ui.list_events.addItem(item)
-        
 
     def update_clustering_status(self):
-        """Miejsce na logikę przyszłej klasteryzacji."""
+        """TODO. Miejsce na logikę przyszłej klasteryzacji."""
         self.ui.lbl_cluster_info.setText(
-            "Gathering data points for K-Means analysis... \n"
-            "Status: [Pending]"
+            "Gathering data points for K-Means analysis... \n" "Status: [Pending]"
         )
         self.ui.lbl_cluster_info.setStyleSheet("color: #7f8c8d; font-style: italic;")
 
-
     def add_log_entry(self, message, timestamp=None):
-        """Dodaje log i dba o porządek na liście."""
+        """Dodaje wpis logu do listy w widoku Live Feed"""
         if timestamp is None:
             timestamp = datetime.now().strftime("%H:%M:%S")
 
