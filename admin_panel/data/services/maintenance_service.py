@@ -10,36 +10,35 @@ Główne zadania:
 Wywoływane cyklicznie przez timer aplikacji (w main.py).
 """
 
+import traceback
 from datetime import datetime, timedelta
 from data.utils.helpers.date_helpers import DateHelper
 from data.repositories.statistics_repo import StatsRepository
 
-# =============== AKTUALIZACJA STATYSTYK GATUNKÓW ===================
+
 def update_genre_stats(conn):
-    """
-    Aktualizacja globalnych statystyk popularności gatunków w bazie danych.
-    Oblicza zasięg czytelniczy, średnie oceny oraz procentowy udział w rynku.
+    """Aktualizacja globalnych statystyk popularności gatunków w bazie danych.
+    Oblicza zasięg czytelniczy, średnie oceny oraz procentowy udział w przeczytanych stronach dla każdego gatunku.
     """
     cursor = conn.cursor()
 
-    # Oblicza wszystko jednym zapytaniem agregującym
-    cursor.execute("""
-        SELECT
-            g.id,
-            COUNT(DISTINCT b.user_id) as readers,
-            ROUND(IFNULL(AVG(CASE WHEN b.status = 'finished' THEN b.rating END), 0.0), 2) as avg_rating,
-            COUNT(CASE WHEN b.status = 'finished' THEN 1 END) as books_read
-        FROM genres g
-        LEFT JOIN books b ON g.id = b.genre_id
-        GROUP BY g.id
-    """)
-    stats = cursor.fetchall()
-
-    # Oblicza sumę wszystkich przeczytanych książek do udziału procentowego
-    total_finished = sum(row[3] for row in stats)
-
-    # Przygotowanie danych do batch update
     try:
+        # Agregacja statystyk poprzez złączenie tabeli gatunków, katalogu książek oraz relacji użytkowników
+        cursor.execute("""
+            SELECT
+                g.id,
+                COUNT(DISTINCT ub.user_id) as readers,
+                ROUND(IFNULL(AVG(CASE WHEN ub.status = 'finished' THEN ub.rating END), 0.0), 2) as avg_rating,
+                COUNT(CASE WHEN ub.status = 'finished' THEN 1 END) as books_read
+            FROM genres g
+            LEFT JOIN books b ON g.id = b.genre_id
+            LEFT JOIN user_books ub ON b.id = ub.book_id
+            GROUP BY g.id
+        """)
+        stats = cursor.fetchall()
+
+        total_finished = sum(row[3] for row in stats)
+
         updates = []
         for row in stats:
             g_id, readers, avg_rating, books_read = row
@@ -49,70 +48,74 @@ def update_genre_stats(conn):
                 share = 0.0
             updates.append((readers, avg_rating, books_read, share, g_id))
 
-        # Batch update zamiast pętli
-        cursor.executemany("""
+        cursor.executemany(
+            """
             UPDATE genres
             SET readers = ?, avg_rating = ?, books_read = ?, reading_time_share = ?
             WHERE id = ?
-        """, updates)
+        """,
+            updates,
+        )
 
         conn.commit()
         print("[STATS] Batch update zakończony sukcesem.")
     except Exception as e:
         conn.rollback()
         print(f"[STATS ERROR] {e}")
+        traceback.print_exc()
     finally:
         cursor.close()
 
-    
-# ================== AKTUALIZACJA POSTĘPU WYZWAŃ ================= 
 
 def update_challenges_progress(conn):
-    """
-    Synchronizuje postępy w wyzwaniach z faktyczną aktywnością użytkowników.
-    
-    Logika:
+    """Synchronizuje postępy w wyzwaniach z faktyczną aktywnością użytkowników.
+
     Sprawdza, ile książek użytkownik ukończył w czasie trwania swojego wyzwania.
     Automatycznie oznacza wyzwania jako 'finished', jeśli osiągnięto cel.
     Oznacza wyzwania jako 'failed', jeśli minął termin końcowy, a cel nie został spełniony.
     """
     cursor = conn.cursor()
 
-    # Synchronizacja 'current_value' na podstawie tabeli 'books'
-    # Uwzględnia tylko książki ukończone w widełkach czasowych wyzwania
-    cursor.execute("""
-        UPDATE challenges
-        SET current_value = (
-            SELECT COUNT(*) 
-            FROM books 
-            WHERE books.user_id = challenges.user_id 
-              AND books.status = 'finished'
-              AND books.finish_date BETWEEN challenges.start_date AND challenges.end_date
-        )
-        WHERE status = 'active' AND type = 'quantity'
-    """)
+    try:
+        # Aktualizacja postępów na podstawie rekordów ukończenia przypisanych do tabeli user_books
+        cursor.execute("""
+            UPDATE challenges
+            SET current_value = (
+                SELECT COUNT(*) 
+                FROM user_books 
+                WHERE user_books.user_id = challenges.user_id 
+                  AND user_books.status = 'finished'
+                  AND user_books.finish_date BETWEEN challenges.start_date AND challenges.end_date
+            )
+            WHERE status = 'active' AND type = 'quantity'
+        """)
 
-    # Masowa aktualizacja statusów na 'finished' (osiągnięcie celu)
-    cursor.execute("""
-        UPDATE challenges 
-        SET status = 'finished' 
-        WHERE status = 'active' AND current_value >= target_value
-    """)
+        cursor.execute("""
+            UPDATE challenges 
+            SET status = 'finished' 
+            WHERE status = 'active' AND current_value >= target_value
+        """)
 
-    # Masowa aktualizacja statusów na 'failed' (przekroczenie terminu)
-    cursor.execute("""
-        UPDATE challenges 
-        SET status = 'failed' 
-        WHERE status = 'active' AND end_date < datetime('now')
-    """)
+        cursor.execute("""
+            UPDATE challenges 
+            SET status = 'failed' 
+            WHERE status = 'active' AND end_date < datetime('now')
+        """)
 
-    conn.commit()
-    print("[CHALLENGES] Zsynchronizowano postępy i statusy wyzwań.")
+        conn.commit()
+        print("[CHALLENGES] Zsynchronizowano postępy i statusy wyzwań.")
+    except Exception as e:
+        conn.rollback()
+        print(f"[CHALLENGES ERROR] {e}")
+        traceback.print_exc()
+    finally:
+        cursor.close()
+
 
 def update_all_user_streaks(cursor):
-    """
-    LOGIKA SERWISOWA: Przelicza i zapisuje streaki dla wszystkich użytkowników.
-    Nowe konta (registered today) mają automatycznie 1 dzień streaki bez liczenia.
+    """LOGIKA SERWISOWA: Przelicza i zapisuje streaki dla wszystkich użytkowników.
+
+    Nowe konta (registered today) mają automatycznie 1 dzień streak bez liczenia.
     """
     cursor.execute("SELECT id, date_joined FROM users")
     users = cursor.fetchall()
@@ -121,16 +124,14 @@ def update_all_user_streaks(cursor):
     streak_updates = []
 
     for user in users:
-        user_id = user['id']
-        date_joined_dt = DateHelper.to_datetime(user['date_joined'])
+        user_id = user["id"]
+        date_joined_dt = DateHelper.to_datetime(user["date_joined"])
         date_joined = date_joined_dt.date() if date_joined_dt else current_date
 
-        # Nowe konto (registered today) - automatycznie 1 dzień
         if date_joined == current_date:
             streak_updates.append((1, user_id))
             continue
 
-        # Logika obliczania streaka (limit 100 dni)
         query = """
             SELECT DISTINCT date(timestamp) as activity_date
             FROM activity
@@ -157,25 +158,25 @@ def update_all_user_streaks(cursor):
 
         streak_updates.append((streak, user_id))
 
-    # Batch update streaków dla wszystkich użytkowników
-    cursor.executemany("UPDATE users SET current_streak = ? WHERE id = ?", streak_updates)
+    cursor.executemany(
+        "UPDATE users SET current_streak = ? WHERE id = ?", streak_updates
+    )
+
 
 def run_maintenance(conn):
-    """Główny punkt wejścia do konserwacji danych. 
-    Wywołuje wszystkie funkcje aktualizujące statystyki i 
-    synchronizujące postępy w wyzwaniach."""
+    """Główny punkt wejścia do konserwacji danych Wywołuje wszystkie funkcje 
+    aktualizujące statystyki i synchronizujące postępy w wyzwaniach.
+    """
     cursor = conn.cursor()
     try:
-        # Licznik przeczytanych książek
+        # Przeliczanie ogólnej liczby ukończonych książek z poziomu tabeli user_books
         cursor.execute("""
             UPDATE users 
             SET books_read = (
-                SELECT COUNT(*) FROM books 
-                WHERE books.user_id = users.id AND status = 'finished'
+                SELECT COUNT(*) FROM user_books 
+                WHERE user_books.user_id = users.id AND user_books.status = 'finished'
             )
         """)
-
-        # Dynamiczne PPD (ostatnie 30 dni)
         cursor.execute("""
             UPDATE users 
             SET pages_per_day = COALESCE(
@@ -193,17 +194,24 @@ def run_maintenance(conn):
         """)
         cursor.execute("UPDATE users SET pages_per_day = 0.0 WHERE status = 'inactive'")
 
-        # Streaki
         update_all_user_streaks(cursor)
 
-        # Globalne KPI - SSOT: zawsze z ostatnich 30 dni (ta sama logika co dashboard i details)
+        conn.commit()
+
+        update_challenges_progress(conn)
+        update_genre_stats(conn)
+
         stats_repo = StatsRepository(conn)
         global_avg = stats_repo.get_system_wide_ppd("month")
 
-        conn.commit()
-        print(f"✅ Maintenance complete. Global Avg PPD (last 30 days): {global_avg:.2f}")
+        print(
+            f"Maintenance complete. Global Avg PPD (last 30 days): {global_avg:.2f}"
+        )
         return global_avg
     except Exception as e:
         conn.rollback()
-        print(f"❌ Maintenance failed: {e}")
+        print(f"Maintenance failed: {e}")
+        traceback.print_exc()
         raise
+    finally:
+        cursor.close()

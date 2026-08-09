@@ -1,100 +1,133 @@
 import random
 from datetime import datetime
 from data.config import get_fake
+from data.utils.helpers.date_helpers import DateHelper
 
 # =================== GENEROWANIE WYZWAŃ ===================
 
+
 def generate_challenges(conn, users, count_per_user=2):
-    """
-    Generuje losowe wyzwania czytelnicze ograniczone ramami roku kalendarzowego.
-    
-    Logika:
-    - Start: losowy moment między 1 stycznia a dzisiaj (max 6 miesięcy wstecz, ale w tym samym roku).
-    - Koniec: zawsze 31 grudnia roku rozpoczęcia.
-    - Status: automatycznie wyliczany na podstawie postępu i daty końcowej.
+    """Generuje losowe wyzwania czytelnicze ograniczone ramami bieżącego roku kalendarzowego.
+
+    Postęp wyzwania (current_value) jest wyliczany na podstawie rzeczywistej liczby
+    książek ukończonych przez użytkownika w bieżącym roku z tabeli user_books.
     """
     cursor = conn.cursor()
     challenges_list = []
     now = datetime.now()
+    current_year = now.year
 
-    # Współczynnik partycypacji - nie każdy użytkownik musi mieć wyzwania (realizm Dashboardu)
-    participation_chance = 0.4 
+    # Współczynnik partycypacji - nie każdy użytkownik musi mieć wyzwania
+    participation_chance = 0.4
 
     for user in users:
-        # Obsługa ID użytkownika (wyciągnięcie ze słownika meta lub bezpośrednio z ID)
-        user_id = user.get('id') if isinstance(user, dict) else user
-        
-        # --- FILTR REALIZMU ---
-        # Losuje, czy dany użytkownik w ogóle bierze udział w wyzwaniach
+        # Obsługa ID oraz daty rejestracji użytkownika
+        if isinstance(user, dict):
+            user_id = user.get("id")
+            reg_date = user.get("date_joined")
+        else:
+            user_id = user
+            reg_date = None
+
+        # Konwersja reg_date na obiekt datetime, jeśli jest stringiem
+        if isinstance(reg_date, str):
+            reg_date = DateHelper.to_datetime(reg_date)
+
+        # Losowanie, czy użytkownik bierze udział w wyzwaniach
         if random.random() > participation_chance:
             continue
 
-        # Losuje liczbę wyzwań dla chętnego użytkownika (od 1 do count_per_user)
+        # Pobranie liczby książek ukończonych w bieżącym roku
+        cursor.execute(
+            """
+            SELECT COUNT(*) FROM user_books 
+            WHERE user_id = ? 
+              AND status = 'finished' 
+              AND strftime('%Y', finish_date) = ?
+            """,
+            (user_id, str(current_year)),
+        )
+        real_finished_this_year = cursor.fetchone()[0]
+
+        # Losuje liczbę wyzwań dla chętnego użytkownika
         num_to_gen = random.randint(1, count_per_user)
 
         for _ in range(num_to_gen):
-            # --- PARAMETRY ILOŚCIOWE ---
-            # cel: 5 - 20 książek
-            target_val = random.randint(5, 20)
-            current_val = random.randint(0, target_val)
-            
-            # --- LOGIKA CZASOWA (ROK KALENDARZOWY) ---
-            # Losuje start z ostatnich 6 miesięcy, ale nie poza bieżący rok
-            start_date_raw = get_fake().date_time_between(start_date='-6M', end_date='now')
-            
-            # Ustawia start na wylosowany dzień, ale wymusza ten sam rok dla całego wyzwania
-            if start_date_raw.year < now.year:
-                start_date = datetime(now.year, 1, 1, random.randint(0, 23), random.randint(0, 59))
+            target_val = max(
+                random.randint(5, 20), real_finished_this_year + random.randint(0, 3)
+            )
+            current_val = real_finished_this_year
+
+            # Ustala datę rozpoczęcia wyzwania: jeśli użytkownik zarejestrował się w bieżącym roku, 
+            # start jest losowany od daty rejestracji; w przeciwnym razie start jest losowany od początku roku.
+            if reg_date and reg_date.year == current_year:
+                year_start = reg_date
             else:
-                start_date = start_date_raw
+                year_start = datetime(current_year, 1, 1, 0, 0, 0)
 
-            # Data zakończenia to zawsze koniec roku, w którym wyzwanie się zaczęło
-            end_date = datetime(start_date.year, 12, 31, 23, 59, 59)
+            # Losuje start między wyznaczoną datą a momentem obecnym
+            start_date = get_fake().date_time_between(
+                start_date=year_start, end_date="now"
+            )
 
-            # --- KREACJA TYTUŁU ---
-            # Tytuł zawiera rok i losowe słowo dla unikalności
-            title = f"{start_date.year} {get_fake().word().capitalize()} Challenge"
-            
-            # --- DETERMINACJA STATUSU ---
-            # Czy cel został osiągnięty?
+            # Data zakończenia to zawsze koniec bieżącego roku
+            end_date = datetime(current_year, 12, 31, 23, 59, 59)
+
+            # Bezpieczne parsowanie obiektów dat zwracanych przez Faker do obiektów datetime
+            start_date_dt = (
+                DateHelper.to_datetime(start_date)
+                if isinstance(start_date, str)
+                else start_date
+            )
+            end_date_dt = (
+                DateHelper.to_datetime(end_date)
+                if isinstance(end_date, str)
+                else end_date
+            )
+
+            # Generuje tytuł wyzwania w formacie "rok [Losowe słowo] Challenge"
+            title = f"{current_year} {get_fake().word().capitalize()} Challenge"
+
+            # Określa status wyzwania na podstawie bieżącej wartości i daty zakończenia
             if current_val >= target_val:
-                status = 'finished'
-            # Czy termin już minął?
-            elif end_date < now:
-                status = 'failed'
-            # W innym wypadku: Wyzwanie wciąż trwa
+                status = "finished"
+            elif end_date_dt < now:
+                status = "failed"
             else:
-                status = 'active'
+                status = "active"
 
-            # --- ZAPIS DO BAZY DANYCH ---
+            # Dodaje wyzwanie do bazy danych
             try:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO challenges (
                         user_id, title, type, target_value, current_value,
                         start_date, end_date, status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    user_id,
-                    title,
-                    'quantity',  # Typ ilościowy
-                    target_val,
-                    current_val,
-                    start_date.strftime("%Y-%m-%d"),
-                    end_date.strftime("%Y-%m-%d"),
-                    status
-                ))
-                
-                # Rejestracja wyzwania na liście do celów informacyjnych/logów
-                challenges_list.append({
-                    "user_id": user_id,
-                    "title": title,
-                    "status": status
-                })
-            except Exception as e:
-                print(f"[ERROR] Błąd przy dodawaniu wyzwania dla użytkownika {user_id}: {e}")
+                """,
+                    (
+                        user_id,
+                        title,
+                        "quantity",
+                        target_val,
+                        current_val,
+                        start_date_dt.strftime("%Y-%m-%d") if start_date_dt else None,
+                        end_date_dt.strftime("%Y-%m-%d") if end_date_dt else None,
+                        status,
+                    ),
+                )
 
-    # Zatwierdzenie wszystkich rekordów w jednej transakcji
+                challenges_list.append(
+                    {"user_id": user_id, "title": title, "status": status}
+                )
+            except Exception as e:
+                print(
+                    f"[ERROR] Błąd przy dodawaniu wyzwania dla użytkownika {user_id}: {e}"
+                )
+
     conn.commit()
-    print(f"[SUCCESS] Wygenerowano {len(challenges_list)} wyzwań dla {len(users)} użytkowników.")
-    
+    print(
+        f"[SUCCESS] Wygenerowano {len(challenges_list)} wyzwań dla {len(users)} użytkowników."
+    )
+
     return challenges_list

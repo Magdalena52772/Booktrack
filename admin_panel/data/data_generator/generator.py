@@ -1,6 +1,6 @@
 # Importy techniczne
 from data.config import USER_COUNT
-from data.database import get_connection
+from data.database import get_connection, initialize_database
 
 # Importy modułów generatora
 from data.data_generator.users import generate_users
@@ -10,38 +10,46 @@ from data.data_generator.challenges import generate_challenges
 
 from data.services.user_service import finalize_database_consistency
 
+
 def run_data_generation():
     """
-    Główny proces generowania danych: Users -> Books -> Challenges -> Activity -> Stats.
+    Główny proces generowania danych: Users -> Books -> Activity -> Challenges -> Stats.
     """
     # Połączenie z bazą
+    initialize_database()
     conn = get_connection()
-    
+
     try:
         print(f"--- [START] Generowanie danych dla {USER_COUNT} użytkowników ---")
 
         # Generowanie użytkowników
         users = generate_users(conn, count=USER_COUNT)
+        conn.commit()  
         print(f"[OK] Wygenerowano {len(users)} użytkowników.")
 
         # Generowanie książek
         books = generate_books(conn, users)
+        conn.commit()  
         print(f"[OK] Wygenerowano wolumen książek.")
-
-        # Generowanie wyzwań
-        generate_challenges(conn, users)
-        print(f"[OK] Wyzwania przypisane.")
 
         # Generowanie historycznej aktywności (sesje czytania)
         generate_activity(conn, users, books)
+        conn.commit()  
         print(f"[OK] Historia aktywności naniesiona.")
+
+        # Generowanie wyzwań 
+        generate_challenges(conn, users)
+        conn.commit()  
+        print(f"[OK] Wyzwania przypisane i zsynchronizowane z aktywnościami.")
 
         # Aktualizacja statystyk gatunkowych i postępów w wyzwaniach
         print("[PROCESS] Finalizowanie spójności bazy danych...")
-        finalize_database_consistency(conn) 
-        
+        finalize_database_consistency(conn)
+
         conn.commit()
-        print("\n--- [SUCCESS] Baza danych została w pełni zasilona i zsynchronizowana! ---")
+        print(
+            "\n--- [SUCCESS] Baza danych została w pełni zasilona i zsynchronizowana! ---"
+        )
 
     except Exception as e:
         conn.rollback()
@@ -50,6 +58,7 @@ def run_data_generation():
     finally:
         conn.close()
         print("[INFO] Połączenie z bazą zamknięte.")
+
 
 if __name__ == "__main__":
     run_data_generation()

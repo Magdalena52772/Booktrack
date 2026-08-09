@@ -3,6 +3,7 @@
 Zawiera kalkulacje i logikę biznesową związaną z wydajnością czytelnika
 """
 
+
 class UserPerformanceService:
     """Serwis do obliczania wskaźników wydajności użytkownika"""
 
@@ -24,11 +25,7 @@ class UserPerformanceService:
             status = "<b style='color: #3498db;'>≈ ON PAR</b>"
             color = "#3498db"
 
-        return {
-            "status": status,
-            "color": color,
-            "diff": diff
-        }
+        return {"status": status, "color": color, "diff": diff}
 
     @staticmethod
     def format_streak_display(streak: int) -> dict:
@@ -38,10 +35,7 @@ class UserPerformanceService:
         streak_text = f"🔥 {streak} DAYS" if streak > 0 else "❄️ NO STREAK"
         streak_color = "#e67e22" if streak > 0 else "#95a5a6"
 
-        return {
-            "text": streak_text,
-            "color": streak_color
-        }
+        return {"text": streak_text, "color": streak_color}
 
     @staticmethod
     def calculate_consistency_score(active_days: int, total_days: int = 30) -> float:
@@ -63,11 +57,14 @@ class UserPerformanceService:
         Pobiera liczbę unikalnych dni aktywności w danym przedziale czasowym
         Pomocnicza metoda do obliczania consistency score
         """
-        res = cursor.execute("""
+        res = cursor.execute(
+            """
             SELECT COUNT(DISTINCT date(timestamp))
             FROM activity
             WHERE user_id = ? AND timestamp >= date('now', ?)
-        """, (user_id, f"-{days_limit} days")).fetchone()
+        """,
+            (user_id, f"-{days_limit} days"),
+        ).fetchone()
         return res[0] if res else 0
 
     @staticmethod
@@ -75,7 +72,7 @@ class UserPerformanceService:
         """
         Oblicza Potential PPD (Activity-based Pages Per Day)
         Wskaźnik wydajności tylko dla dni, w których faktycznie była aktywność
-        Odzwierciedla prawdziwą moc przerobową użytkownika 
+        Odzwierciedla prawdziwą moc przerobową użytkownika
         (ignoruje dni bez aktywności)
         """
         if active_reading_days <= 0:
@@ -124,7 +121,7 @@ class UserPerformanceService:
             # Dla "all" - liczy rzeczywiste dni od rejestracji
             cursor.execute(
                 "SELECT (julianday('now') - julianday(date_joined)) FROM users WHERE id = ?",
-                (user_id,)
+                (user_id,),
             )
             result = cursor.fetchone()
             days_in_filter = max(int(result[0]) if result and result[0] else 1, 1)
@@ -141,22 +138,20 @@ class UserPerformanceService:
         Łączy: consistency_score, potential_ppd, performance_status
         """
         consistency = UserPerformanceService.calculate_consistency_score(
-            profile_data.get("active_days_30", 0),
-            total_days=30
+            profile_data.get("active_days_30", 0), total_days=30
         )
 
         potential_ppd = UserPerformanceService.get_potential_ppd(
             profile_data.get("total_pages", 0),
-            profile_data.get("active_reading_days", 1)
+            profile_data.get("active_reading_days", 1),
         )
 
         performance_status = UserPerformanceService.calculate_performance_status(
-            profile_data.get("user_ppd", 0.0),
-            profile_data.get("system_avg", 0.0)
+            profile_data.get("user_ppd", 0.0), profile_data.get("system_avg", 0.0)
         )
 
         return {
             "consistency_score": consistency,
             "potential_ppd": potential_ppd,
-            "performance_status": performance_status
+            "performance_status": performance_status,
         }

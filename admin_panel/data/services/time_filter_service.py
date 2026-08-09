@@ -1,8 +1,10 @@
 """Filtrowanie czasowe dla repozytoriów
-    dla różnych zakresów czasowych (week, month, year, all).
+dla różnych zakresów czasowych (week, month, year, all).
 """
+
 from datetime import datetime, timedelta
 from data.utils.time_periods import period_start
+
 
 class TimeFilterService:
     """Serwis logiki filtrowania czasowego"""
