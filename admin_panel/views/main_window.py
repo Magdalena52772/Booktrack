@@ -6,6 +6,7 @@ from data.utils.status_manager import StatusMsg
 import time
 import sys
 
+
 class MainWindow(QMainWindow):
     def __init__(self, conn):
         super().__init__()
@@ -24,35 +25,67 @@ class MainWindow(QMainWindow):
         print(f"[TIMING] UI file opened: {(time.perf_counter()-_t_start)*1000:.0f}ms")
 
         self.ui = loader.load(ui_file, self)
-        print(f"[TIMING] UI loaded from file: {(time.perf_counter()-_t_start)*1000:.0f}ms")
+        print(
+            f"[TIMING] UI loaded from file: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+        )
         ui_file.close()
 
         # Konfiguracja głównego widgetu okna
-        if hasattr(self.ui, 'centralwidget'):
+        if hasattr(self.ui, "centralwidget"):
             self.setCentralWidget(self.ui.centralwidget)
         else:
             self.setCentralWidget(self.ui)
 
-        print(f"[TIMING] Central widget set: {(time.perf_counter()-_t_start)*1000:.0f}ms")
+        print(
+            f"[TIMING] Central widget set: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+        )
 
         # Konfiguracja mapowania nawigacji (Lazy Loading views)
         # Klasy viewów będą importowane dynamicznie w switch_page()
         self.view_config = {
-            self.ui.btn_dashboard: {"class_name": "DashboardView", "container": self.ui.page_dashboard, "instance": None},
-            self.ui.btn_users:     {"class_name": "UsersView",     "container": self.ui.page_users,     "instance": None},
-            self.ui.btn_genres:    {"class_name": "GenresView",    "container": self.ui.page_genres,    "instance": None},
-            self.ui.btn_activity:  {"class_name": "ActivityView",  "container": self.ui.page_activity,  "instance": None},
-            self.ui.btn_reports:   {"class_name": "ReportsView",   "container": self.ui.page_reports,   "instance": None},
-            self.ui.btn_live_feed: {"class_name": "LiveFeedView", "container": self.ui.page_live_feed, "instance": None}
+            self.ui.btn_dashboard: {
+                "class_name": "DashboardView",
+                "container": self.ui.page_dashboard,
+                "instance": None,
+            },
+            self.ui.btn_users: {
+                "class_name": "UsersView",
+                "container": self.ui.page_users,
+                "instance": None,
+            },
+            self.ui.btn_genres: {
+                "class_name": "GenresView",
+                "container": self.ui.page_genres,
+                "instance": None,
+            },
+            self.ui.btn_activity: {
+                "class_name": "ActivityView",
+                "container": self.ui.page_activity,
+                "instance": None,
+            },
+            self.ui.btn_reports: {
+                "class_name": "ReportsView",
+                "container": self.ui.page_reports,
+                "instance": None,
+            },
+            self.ui.btn_live_feed: {
+                "class_name": "LiveFeedView",
+                "container": self.ui.page_live_feed,
+                "instance": None,
+            },
         }
 
-        print(f"[TIMING] View config created: {(time.perf_counter()-_t_start)*1000:.0f}ms")
+        print(
+            f"[TIMING] View config created: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+        )
 
         # Rejestracja zdarzeń dla przycisków nawigacyjnych
         for btn in self.view_config.keys():
             btn.clicked.connect(self.handle_navigation)
 
-        print(f"[TIMING] Navigation buttons connected: {(time.perf_counter()-_t_start)*1000:.0f}ms")
+        print(
+            f"[TIMING] Navigation buttons connected: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+        )
 
         self.load_styles()
         print(f"[TIMING] Styles loaded: {(time.perf_counter()-_t_start)*1000:.0f}ms")
@@ -64,11 +97,14 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1100, 750)
         self.ui.btn_dashboard.setChecked(True)
 
-        print(f"[TIMING] MainWindow.__init__ DONE: {(time.perf_counter()-_t_start)*1000:.0f}ms")
+        print(
+            f"[TIMING] MainWindow.__init__ DONE: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+        )
 
         # Opóźnia Dashboard loading (50ms) - Qt wyrenderuje template, potem matplotlib
         # (Preload worker działa w tle, nie blokuje main thread)
         from PySide6.QtCore import QTimer
+
         QTimer.singleShot(50, self._deferred_load_dashboard)
 
     def _preload_dashboard_data(self):
@@ -77,7 +113,9 @@ class MainWindow(QMainWindow):
         self._preloaded_dashboard_data = None
 
         # Startuje worker
-        self._preload_worker = __import__('worker', fromlist=['DatabaseWorker']).DatabaseWorker("load_dashboard", db_connection=self.conn)
+        self._preload_worker = __import__(
+            "worker", fromlist=["DatabaseWorker"]
+        ).DatabaseWorker("load_dashboard", db_connection=self.conn)
         self._preload_worker.finished.connect(self._on_preload_finished)
         self._preload_worker.start()
 
@@ -85,7 +123,10 @@ class MainWindow(QMainWindow):
         """Callback kiedy preload się skończy"""
         self._preloaded_dashboard_data = data
         from datetime import datetime as dt
-        print(f"[TIMING] Dashboard preload FINISHED at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
+
+        print(
+            f"[TIMING] Dashboard preload FINISHED at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
+        )
 
     def _get_view_class(self, class_name):
         """Importuje view class dynamicznie (lazy loading)"""
@@ -115,7 +156,10 @@ class MainWindow(QMainWindow):
     def _deferred_load_dashboard(self):
         """Pokazuje Dashboard view natychmiast z placeholderami, dane ładują się w tle."""
         from datetime import datetime as dt
-        print(f"[TIMING] _deferred_load_dashboard START at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
+
+        print(
+            f"[TIMING] _deferred_load_dashboard START at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
+        )
 
         # Switch page natychmiast pokazuje view z placeholderami
         self.switch_page(self.view_config[self.ui.btn_dashboard])
@@ -123,7 +167,9 @@ class MainWindow(QMainWindow):
         # Preload w tle, bez czekania na startup
         self._preload_dashboard_data()
 
-        print(f"[TIMING] _deferred_load_dashboard DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]}")
+        print(
+            f"[TIMING] _deferred_load_dashboard DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
+        )
 
     def switch_page(self, config):
         """Zarządzanie przełączaniem stron i leniwą inicjalizacją widoków."""
@@ -144,7 +190,9 @@ class MainWindow(QMainWindow):
                 layout.setContentsMargins(0, 0, 0, 0)
                 layout.setSpacing(0)
 
-            view_instance.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            view_instance.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            )
             container.layout().addWidget(view_instance)
 
             # Rejestracja sygnałów statusu
@@ -162,11 +210,13 @@ class MainWindow(QMainWindow):
         active_view = config["instance"]
         # Import ReportsView dynamicznie do sprawdzenia typu
         from views.reports_view import ReportsView
+
         if isinstance(active_view, ReportsView):
             active_view.generate_report()
         elif hasattr(active_view, "load_view"):
             # Opóźnienie load_view() o 1ms, żeby UI zdążyło się odświeżyć
             from PySide6.QtCore import QTimer
+
             QTimer.singleShot(1, active_view.load_view)
 
         active_view.updateGeometry()
@@ -196,8 +246,10 @@ class MainWindow(QMainWindow):
     def handle_logout(self):
         """Obsługa zamknięcia aplikacji."""
         confirm = QMessageBox.question(
-            self, "Logout", "Are you sure you want to exit?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            self,
+            "Logout",
+            "Are you sure you want to exit?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if confirm == QMessageBox.StandardButton.Yes:
             self.close()

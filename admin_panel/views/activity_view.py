@@ -8,24 +8,29 @@ from charts.activity_charts import ActivityChart
 from data.repositories.activity_repo import ActivityRepository
 from data.repositories.challenge_repo import ChallengeRepository
 
+
 class ActivityView(QWidget):
     """Widok analityczny z wykresem trendu i kluczowymi wskaźnikami aktywności."""
+
     statusMessage = Signal(str, str)
 
     def __init__(self, conn):
         super().__init__()
         # Inicjalizacja interfejsu użytkownika
         self.ui = load_ui(self, "views/ui/ActivityView.ui")
-        if not self.ui: return
+        if not self.ui:
+            return
 
         # Inicjalizacja repozytoriów danych
         self.repo = ActivityRepository(conn)
         self.challenge_repo = ChallengeRepository(conn)
-        
+
         # Konfiguracja i osadzenie wykresu aktywności
         self.canvas = ActivityChart(self.ui.activity_chart)
-        if hasattr(self.ui, 'lbl_chart_placeholder'):
-            self.ui.verticalLayout_4.replaceWidget(self.ui.lbl_chart_placeholder, self.canvas)
+        if hasattr(self.ui, "lbl_chart_placeholder"):
+            self.ui.verticalLayout_4.replaceWidget(
+                self.ui.lbl_chart_placeholder, self.canvas
+            )
             self.ui.lbl_chart_placeholder.deleteLater()
         else:
             self.ui.verticalLayout_4.addWidget(self.canvas)
@@ -49,25 +54,39 @@ class ActivityView(QWidget):
             trend_data = self.repo.get_activity_trend(selected_filter)
 
             # Pobranie kluczowych wskaźników wydajności (KPI)
-            total_pages, real_active_days = self.repo.get_activity_kpi_core(selected_filter)
+            total_pages, real_active_days = self.repo.get_activity_kpi_core(
+                selected_filter
+            )
             unique_readers = self.repo.get_unique_active_users(selected_filter)
             active_challenges = self.challenge_repo.count_active()
 
             # Aktualizacja komponentów wizualnych
             if trend_data:
                 dates, values = zip(*trend_data)
-                self.canvas.plot_data(list(dates), list(values), time_filter=selected_filter)
+                self.canvas.plot_data(
+                    list(dates), list(values), time_filter=selected_filter
+                )
 
                 # Odświeżenie etykiet w panelu bocznym
-                self.ui.lbl_books_count.setText(f"Total pages:<br><b style='color:#daa520; font-size:14pt;'>{total_pages:,}</b>")
-                self.ui.lbl_active_days.setText(f"Active days:<br><b style='color:#daa520; font-size:14pt;'>{real_active_days}</b>")
-                self.ui.lbl_challenges.setText(f"Active challenges:<br><b style='color:#daa520; font-size:14pt;'>{active_challenges or 0}</b>")
+                self.ui.lbl_books_count.setText(
+                    f"Total pages:<br><b style='color:#daa520; font-size:14pt;'>{total_pages:,}</b>"
+                )
+                self.ui.lbl_active_days.setText(
+                    f"Active days:<br><b style='color:#daa520; font-size:14pt;'>{real_active_days}</b>"
+                )
+                self.ui.lbl_challenges.setText(
+                    f"Active challenges:<br><b style='color:#daa520; font-size:14pt;'>{active_challenges or 0}</b>"
+                )
 
                 # Aktualizacja dolnego podsumowania
                 self._update_summary(trend_data, unique_readers)
-                
-                # Status sukcesu z użyciem Twojego helpera
-                self.statusMessage.emit(*StatusMsg.get("ACTIVITY_UPDATED", selected_filter, f"{total_pages:,} pages"))
+
+                # Status sukcesu z użyciem helpera
+                self.statusMessage.emit(
+                    *StatusMsg.get(
+                        "ACTIVITY_UPDATED", selected_filter, f"{total_pages:,} pages"
+                    )
+                )
             else:
                 self._clear_view()
                 self.statusMessage.emit(*StatusMsg.get("NO_DATA", selected_filter))
@@ -82,7 +101,9 @@ class ActivityView(QWidget):
         try:
             # Pobranie wartości szczytowej
             peak_data = self.repo.get_peak_activity(trend_data)
-            peak_val = peak_data[0] if isinstance(peak_data, (tuple, list)) else peak_data
+            peak_val = (
+                peak_data[0] if isinstance(peak_data, (tuple, list)) else peak_data
+            )
 
             accent_color = "#b8860b"
 
@@ -109,7 +130,7 @@ class ActivityView(QWidget):
                 f"</table>"
                 f"</div>"
             )
-            
+
             self.ui.lbl_summary_placeholder.setText(summary_html)
         except Exception as e:
             print(f"Summary UI Error: {e}")
@@ -127,6 +148,6 @@ class ActivityView(QWidget):
             "lbl_active_days": "Number of unique days with activity in the database.",
             "lbl_challenges": "Current community challenges count.",
             "btn_refresh_activity": "Reload data from database.",
-            "lbl_summary_placeholder": "Key performance indicators for selected timeframe."
+            "lbl_summary_placeholder": "Key performance indicators for selected timeframe.",
         }
         apply_tooltips(self.ui, tooltips)
