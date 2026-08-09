@@ -2,11 +2,11 @@ from pathlib import Path
 import sys
 
 # Zapewnienie UTF-8 dla stdout, aby poprawnie wyświetlać polskie znaki i emoji w konsoli
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DB_FILE = Path(__file__).resolve().parent / 'test_booktrack.db'
+DB_FILE = Path(__file__).resolve().parent / "test_booktrack.db"
 
 sys.path.insert(0, str(REPO_ROOT))
 
@@ -18,6 +18,7 @@ dbmod.DB_PATH = DB_FILE
 cfg_db.DB_PATH = DB_FILE
 
 from data.database import initialize_database, get_connection
+
 
 def run():
     if DB_FILE.exists():
@@ -41,11 +42,11 @@ def run():
 
     # Podsumowanie wyników i walidacja danych w bazie po symulacji
     cur = conn.cursor()
-    cur.execute('SELECT COUNT(*) FROM books')
+    cur.execute("SELECT COUNT(*) FROM books")
     books_total = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM books WHERE openlibrary_id IS NOT NULL")
     books_with_pool = cur.fetchone()[0]
-    cur.execute('SELECT COUNT(*) FROM activity')
+    cur.execute("SELECT COUNT(*) FROM activity")
     activity_total = cur.fetchone()[0]
 
     # Sprawdzenie meta.last_activity dla szybkiego wglądu w ostatnią aktywność (testuje mechanizm aktualizacji meta podczas symulacji)
@@ -68,7 +69,8 @@ def run():
     cur.execute("""
         SELECT u.id, u.username, u.birth_date, COUNT(b.id) as book_count
         FROM users u
-        LEFT JOIN books b ON u.id = b.user_id
+        LEFT JOIN user_books ub ON u.id = ub.user_id
+        LEFT JOIN books b ON ub.book_id = b.id
         GROUP BY u.id
         LIMIT 10
     """)
@@ -80,17 +82,27 @@ def run():
             continue
 
         # Pobranie ulubionych gatunków użytkownika
-        cur.execute("SELECT g.name FROM user_favorite_genres ufg JOIN genres g ON ufg.genre_id = g.id WHERE ufg.user_id = ?", (uid,))
+        cur.execute(
+            "SELECT g.name FROM user_favorite_genres ufg JOIN genres g ON ufg.genre_id = g.id WHERE ufg.user_id = ?",
+            (uid,),
+        )
         fav_genres = [row[0] for row in cur.fetchall()]
 
         # Dopasowanie puli gatunków do wieku użytkownika (segmentacja demograficzna)
         bd = DateHelper.to_datetime(birth_date_str)
         age = DateHelper.calculate_age(bd)
-        cat = "junior" if age < 18 else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
+        cat = (
+            "junior"
+            if age < 18
+            else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
+        )
         age_genres = AGE_BASED_GENRES.get(cat, [])
 
         # Pobranie gatunków książek przeczytanych przez użytkownika
-        cur.execute("SELECT g.name FROM books b JOIN genres g ON b.genre_id = g.id WHERE b.user_id = ?", (uid,))
+        cur.execute(
+            "SELECT g.name FROM user_books ub JOIN books b ON ub.book_id = b.id JOIN genres g ON b.genre_id = g.id WHERE ub.user_id = ?",
+            (uid,),
+        )
         book_genres = [row[0] for row in cur.fetchall()]
 
         fav_match = sum(1 for g in book_genres if g in fav_genres) if fav_genres else 0
@@ -98,56 +110,67 @@ def run():
         other_match = book_count - fav_match - age_match + min(fav_match, age_match)
 
         # Analiza biasu wyboru gatunków: ile książek pochodzi z ulubionych gatunków, ile z gatunków dopasowanych do wieku, a ile innych
-        genre_bias_checks.append({
-            'user': username,
-            'age': age,
-            'age_category': cat,
-            'favorite_genres': fav_genres,
-            'age_based_genres': age_genres,
-            'total_books': book_count,
-            'books_from_favorites': fav_match,
-            'books_from_age_group': age_match - min(fav_match, age_match),
-            'books_other': book_count - fav_match - (age_match - min(fav_match, age_match)),
-            'pct_favorite': round(100.0 * fav_match / book_count, 1) if book_count else 0,
-        })
+        genre_bias_checks.append(
+            {
+                "user": username,
+                "age": age,
+                "age_category": cat,
+                "favorite_genres": fav_genres,
+                "age_based_genres": age_genres,
+                "total_books": book_count,
+                "books_from_favorites": fav_match,
+                "books_from_age_group": age_match - min(fav_match, age_match),
+                "books_other": book_count
+                - fav_match
+                - (age_match - min(fav_match, age_match)),
+                "pct_favorite": (
+                    round(100.0 * fav_match / book_count, 1) if book_count else 0
+                ),
+            }
+        )
 
     # Podsumowanie wyników testu integracyjnego w formie czytelnej dla konsoli, z kluczowymi metrykami i przykładowymi danymi do weryfikacji poprawności działania symulacji i integracji z bazą danych
     out = {
-        'pool_count': len(pool_all),
-        'books_total': books_total,
-        'books_with_openlibrary_id': books_with_pool,
-        'activity_total': activity_total,
-        'meta_last_activity': meta_val,
-        'sample_books': [dict(zip(['id','title','openlibrary_id'], row)) for row in sample_books],
-        'logs_count': len(logs),
-        'recent_activities': logs,
-        'genre_selection_bias_samples': genre_bias_checks
+        "pool_count": len(pool_all),
+        "books_total": books_total,
+        "books_with_openlibrary_id": books_with_pool,
+        "activity_total": activity_total,
+        "meta_last_activity": meta_val,
+        "sample_books": [
+            dict(zip(["id", "title", "openlibrary_id"], row)) for row in sample_books
+        ],
+        "logs_count": len(logs),
+        "recent_activities": logs,
+        "genre_selection_bias_samples": genre_bias_checks,
     }
 
     # Wyświetlenie wyników w czytelnym formacie konsolowym
-    print('--- Podsumowanie integracji ---')
+    print("--- Podsumowanie integracji ---")
     print(f"Liczba pozycji w puli: {out['pool_count']}")
     print(f"Liczba książek w bazie: {out['books_total']}")
     print(f"Książki z openlibrary_id: {out['books_with_openlibrary_id']}")
     print(f"Liczba aktywności: {out['activity_total']}")
     print(f"Ostatnia aktywność w meta: {out['meta_last_activity']}")
 
-    print('\nPrzykładowe książki:')
-    for b in out['sample_books']:
+    print("\nPrzykładowe książki:")
+    for b in out["sample_books"]:
         print(f"  - {b['id']}: {b['title']} (openlibrary_id={b['openlibrary_id']})")
 
-    print('\nOstatnie aktywności:')
-    for log in out['recent_activities']:
+    print("\nOstatnie aktywności:")
+    for log in out["recent_activities"]:
         print(f"  - {log}")
 
-    print('\nPróbki biasu wyboru gatunków:')
-    for s in out['genre_selection_bias_samples']:
-        print(f"  - {s['user']} (wiek {s['age']}, pct_favorite={s['pct_favorite']}%): ulubione={s['favorite_genres']}")
+    print("\nPróbki biasu wyboru gatunków:")
+    for s in out["genre_selection_bias_samples"]:
+        print(
+            f"  - {s['user']} (wiek {s['age']}, pct_favorite={s['pct_favorite']}%): ulubione={s['favorite_genres']}"
+        )
 
     print(f"\nLiczba logów: {out['logs_count']}")
 
     conn.close()
-    print('\nUruchomienie integracyjne zakończone.')
+    print("\nUruchomienie integracyjne zakończone.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run()

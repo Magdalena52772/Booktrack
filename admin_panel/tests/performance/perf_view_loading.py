@@ -6,7 +6,10 @@ from PySide6.QtWidgets import QApplication
 
 # Automatyczne ustawianie ścieżek projektu
 current_path = Path(__file__).resolve()
-base_dir = next((p for p in current_path.parents if (p / 'data').exists()), current_path.parent.parent)
+base_dir = next(
+    (p for p in current_path.parents if (p / "data").exists()),
+    current_path.parent.parent,
+)
 sys.path.insert(0, str(base_dir))
 
 from data.database import get_connection
@@ -14,6 +17,7 @@ from views.main_window import MainWindow
 
 # Inicjalizacja aplikacji Qt (dla testów UI)
 app = QApplication.instance() or QApplication(sys.argv)
+
 
 class TestAdminPanelPerformance(unittest.TestCase):
     def setUp(self):
@@ -30,9 +34,13 @@ class TestAdminPanelPerformance(unittest.TestCase):
         navigation_results = []
 
         # TEST NAWIGACJI (LATENCJA MODUŁÓW)
-        if hasattr(self.window, 'view_config'):
+        if hasattr(self.window, "view_config"):
             for btn, cfg in self.window.view_config.items():
-                btn_label = btn.text().strip() if hasattr(btn, 'text') else str(btn.objectName())
+                btn_label = (
+                    btn.text().strip()
+                    if hasattr(btn, "text")
+                    else str(btn.objectName())
+                )
 
                 start_nav = time.perf_counter()
                 btn.click()
@@ -72,9 +80,9 @@ class TestAdminPanelPerformance(unittest.TestCase):
         db_duration = time.perf_counter() - start_db
 
         # === WYDRUK RAPORTU ===
-        print("\n" + "="*75)
+        print("\n" + "=" * 75)
         print("                ZBIORCZY RAPORT WYDAJNOŚCI SYSTEMU")
-        print("="*75)
+        print("=" * 75)
         print(f"{'Moduł/Operacja':<20} | {'Czas [s]':<12} | {'Status':<8} | {'Ocena'}")
         print("-" * 75)
 
@@ -84,11 +92,16 @@ class TestAdminPanelPerformance(unittest.TestCase):
 
         print("-" * 75)
         # Wyniki techniczne
-        print(f"{'Live Feed Injection':<20} | {avg_log_time:10.6f}s | PASS     | Optymalny")
+        print(
+            f"{'Live Feed Injection':<20} | {avg_log_time:10.6f}s | PASS     | Optymalny"
+        )
         print(f"{'Startup SQL Cost':<20} | {db_duration:10.4f}s | PASS     | Optymalny")
         print("-" * 75)
-        print(f"Data: {time.strftime('%Y-%m-%d %H:%M:%S')} | Środowisko: Python/PySide6/SQLite")
-        print("="*75)
+        print(
+            f"Data: {time.strftime('%Y-%m-%d %H:%M:%S')} | Środowisko: Python/PySide6/SQLite"
+        )
+        print("=" * 75)
+
 
 if __name__ == "__main__":
     unittest.main()
