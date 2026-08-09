@@ -10,8 +10,8 @@ class UserProfileFormatter:
     @staticmethod
     def format_profile(profile, user_ppd, system_avg, current_filter):
         """Formatuje HTML profilu użytkownika"""
-        full_name = profile.get('name', 'Unknown')
-        username = profile.get('username', 'unknown')
+        full_name = profile.get("name", "Unknown")
+        username = profile.get("username", "unknown")
         streak = profile["streak"]
         streak_text = f"🔥 {streak} DAYS" if streak > 0 else "❄️ NO STREAK"
         streak_color = "#e67e22" if streak > 0 else "#95a5a6"
@@ -44,11 +44,20 @@ class UserProfileFormatter:
             ppd_color = "#3498db"
 
         reading_potential = profile["potential_ppd"]
-        progress = profile['avg_progress']
-        total_pages = profile['total_pages']
+        progress = profile["avg_progress"]
+        total_pages = profile["total_pages"]
         reading_list = profile["reading_now"] if profile["reading_now"] else []
-        reading_str = ", ".join(f"{i+1}. {book}" for i, book in enumerate(reading_list)) if reading_list else "None"
-        filter_label = f"({current_filter.upper()})" if current_filter.lower() != "all" else "(ALL TIME)"
+        user_status = profile.get("status", "active")
+        reading_str = (
+            ", ".join(f"{i+1}. {book}" for i, book in enumerate(reading_list))
+            if reading_list
+            else ("None (inactive account)" if user_status == "inactive" else "None")
+        )
+        filter_label = (
+            f"({current_filter.upper()})"
+            if current_filter.lower() != "all"
+            else "(ALL TIME)"
+        )
 
         return (
             f"<div style='font-family: Segoe UI, sans-serif; padding: 10px; color: #2c3e50;'>"

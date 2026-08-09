@@ -54,36 +54,49 @@ CREATE TABLE IF NOT EXISTS user_favorite_genres (
 -- =============================
 -- TABLE: BOOKS
 -- =============================
--- Rejestr książek przypisanych do użytkowników lub wygenerowanych dla statystyk.
+-- Globalny katalog książek (niezależny od użytkowników)
+-- Każda książka może być czytana przez wielu użytkowników
 CREATE TABLE IF NOT EXISTS books (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     authors TEXT,
-    openlibrary_id TEXT,
+    openlibrary_id TEXT UNIQUE,
     genre_id INTEGER,
     total_pages INTEGER,
-    current_page INTEGER DEFAULT 0 CHECK(current_page <= total_pages),
+    added_by_generator INTEGER DEFAULT 0 CHECK(added_by_generator IN (0,1)),
+    FOREIGN KEY (genre_id) REFERENCES genres(id)
+);
+
+-- =============================
+-- TABLE: USER_BOOKS
+-- =============================
+-- Relacja N:M między użytkownikami i książkami
+-- Przechowuje user-specific informacje o czytaniu
+CREATE TABLE IF NOT EXISTS user_books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    book_id INTEGER NOT NULL,
+    current_page INTEGER DEFAULT 0 CHECK(current_page >= 0),
     status TEXT CHECK(status IN ('reading', 'finished')) DEFAULT 'reading',
     rating INTEGER CHECK(rating >= 1 AND rating <= 5),
     start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     finish_date TIMESTAMP,                -- Data zakończenia lektury
-    added_by_generator INTEGER DEFAULT 0 CHECK(added_by_generator IN (0,1)),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (genre_id) REFERENCES genres(id)
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+    UNIQUE(user_id, book_id)              -- Każdy user może mieć każdą książkę max raz
 );
 
 -- =============================
 -- TABLE: ACTIVITY
 -- =============================
 -- Historia sesji czytelniczych (podstawa wykresów aktywności dziennej/tygodniowej)
--- pages_read <= 50 zapewnia realizm pojedynczego wpisu w historii
+-- pages_read <= 1000
 CREATE TABLE IF NOT EXISTS activity (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     book_id INTEGER NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Moment rejestracji sesji
-    pages_read INTEGER DEFAULT 0 CHECK(pages_read >= 0 AND pages_read <= 250),
+    pages_read INTEGER DEFAULT 0 CHECK(pages_read >= 0 AND pages_read <= 1000),
     session_minutes INTEGER DEFAULT 0 CHECK(session_minutes >= 0),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
@@ -123,8 +136,8 @@ CREATE TABLE IF NOT EXISTS achievements (
 );
 
 -- Optymalizacja zapytań agregujących
--- Indeks na książki: przyspiesza COUNT(DISTINCT b.id) przy filtrowaniu po statusie
-CREATE INDEX IF NOT EXISTS idx_books_user_status ON books(user_id, status);
+-- Indeks na user_books: przyspiesza filtrowanie po statusie i user_id
+CREATE INDEX IF NOT EXISTS idx_user_books_status ON user_books(user_id, status);
 
 -- Indeks na aktywność: kluczowy dla SUM(a.pages_read) i filtrowania po dacie
 CREATE INDEX IF NOT EXISTS idx_activity_user_timestamp ON activity(user_id, timestamp);

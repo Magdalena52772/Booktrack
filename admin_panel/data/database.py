@@ -1,3 +1,4 @@
+"""Zarządza połączeniem z bazą danych i jej inicjalizacją"""
 import sqlite3
 from data.config import DB_PATH, SCHEMA_PATH
 
@@ -5,7 +6,9 @@ from data.config import DB_PATH, SCHEMA_PATH
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
 
 def initialize_database():
     if not DB_PATH.exists():

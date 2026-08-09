@@ -10,7 +10,6 @@ DB_PATH = BASE_DIR / "booktrack.db"
 SCHEMA_PATH = BASE_DIR / "data" / "schema.sql"
 
 # Zahashowane hasło do konta testowego 'test1234'
-DJANGO_HASHED_PWD = 'pbkdf2_sha256$600000$u79vV3WpXzQ9$8p0/m/H7u0YvXmS7D5/V6eQzX7P8R9a0b1c2d3e4f5g='
-
-# Hashed password for 'test1234'
-DJANGO_HASHED_PWD = 'pbkdf2_sha256$600000$u79vV3WpXzQ9$8p0/m/H7u0YvXmS7D5/V6eQzX7P8R9a0b1c2d3e4f5g='
+DJANGO_HASHED_PWD = (
+    "pbkdf2_sha256$600000$u79vV3WpXzQ9$8p0/m/H7u0YvXmS7D5/V6eQzX7P8R9a0b1c2d3e4f5g="
+)

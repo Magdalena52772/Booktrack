@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QToolTip
 from PySide6.QtGui import QCursor
 import matplotlib.dates as mdates
 
+
 class ChartTooltipHelper:
     """Zbiór metod do interakcji i obsługi zdarzeń na wykresach"""
 
@@ -29,7 +30,7 @@ class ChartTooltipHelper:
             try:
                 # Sprawdzenie czy jest blisko linii/markerów
                 transform = ax.transData.transform
-                if hasattr(ax, 'lines') and len(ax.lines) > 0:
+                if hasattr(ax, "lines") and len(ax.lines) > 0:
                     line = ax.lines[0]
                     xdata = line.get_xdata()
                     ydata = line.get_ydata()
@@ -38,9 +39,9 @@ class ChartTooltipHelper:
                         points_px = transform(list(zip(xdata, ydata)))
 
                         # Obliczenie odległości od kursora do każdego punktu i znalezienie minimalnej
-                        min_dist = float('inf')
+                        min_dist = float("inf")
                         for px, py in points_px:
-                            dist = ((xpixel - px)**2 + (ypixel - py)**2)**0.5
+                            dist = ((xpixel - px) ** 2 + (ypixel - py) ** 2) ** 0.5
                             if dist < min_dist:
                                 min_dist = dist
 
@@ -62,7 +63,7 @@ class ChartTooltipHelper:
                 last_msg[0] = None
 
         # Łączenie zdarzenia ruchu myszy Matplotlib z funkcją on_motion
-        canvas.figure.canvas.mpl_connect('motion_notify_event', on_motion)
+        canvas.figure.canvas.mpl_connect("motion_notify_event", on_motion)
 
 
 class ChartStyler:
@@ -71,33 +72,33 @@ class ChartStyler:
     @staticmethod
     def apply_clean_layout(ax):
         """
-        Usuwa zbędne elementy obramowania (góra i prawa strona) 
+        Usuwa zbędne elementy obramowania (góra i prawa strona)
         oraz konfiguruje delikatną, kropkowaną siatkę
         """
-        for spine in ['top', 'right']:
+        for spine in ["top", "right"]:
             ax.spines[spine].set_visible(False)
-        ax.grid(True, linestyle=':', alpha=0.3, zorder=0)
+        ax.grid(True, linestyle=":", alpha=0.3, zorder=0)
 
     @staticmethod
     def set_date_axis(ax, time_filter="week"):
         """Konfiguruje oś X dla danych czasowych, dostosowując
         formatowanie i interwały ticków do wybranego filtra czasu"""
-        ax.tick_params(axis='x', rotation=30, labelsize=11)
-        ax.tick_params(axis='y', labelsize=11)
+        ax.tick_params(axis="x", rotation=30, labelsize=11)
+        ax.tick_params(axis="y", labelsize=11)
 
         if time_filter == "week":
             # Week: każdy dzień
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%a %d'))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%a %d"))
             ax.xaxis.set_major_locator(mdates.DayLocator())
         elif time_filter == "month":
             # Month: raz w tygodniu (co 7 dni)
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m"))
             ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
         elif time_filter == "year":
             # Year: 12 ticków (co miesiąc)
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
             ax.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
         else:
             # All: co pół roku (2 ticki na rok)
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %y"))
             ax.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
