@@ -3,10 +3,17 @@
 Zawiera logikę biznesową dla generowania realistycznych parametrów
 czytelników i sesji czytania na podstawie konfiguracji
 """
+
 import random
 import numpy as np
 from data.config import SIM_SETTINGS, ARCHETYPE_SETTINGS, get_fake
-from data.config import GENRES, GENRE_WEIGHTS, AGE_BASED_GENRES, FAVORITE_GENRE_BIAS, READING_ANOMALY
+from data.config import (
+    GENRES,
+    GENRE_WEIGHTS,
+    AGE_BASED_GENRES,
+    FAVORITE_GENRE_BIAS,
+    READING_ANOMALY,
+)
 from data.utils.helpers.date_helpers import DateHelper
 
 
@@ -14,7 +21,9 @@ class GeneratorService:
     """Serwis do obsługi generacji danych dla symulacji"""
 
     @staticmethod
-    def calculate_session_details(arch_name: str, is_weekend: bool, remaining_pages: int) -> tuple:
+    def calculate_session_details(
+        arch_name: str, is_weekend: bool, remaining_pages: int
+    ) -> tuple:
         """
         Oblicza parametry sesji na podstawie archetypu i warunków
 
@@ -41,8 +50,10 @@ class GeneratorService:
 
         # Czas sesji: im więcej stron, tym więcej czasu
         # (randomowe tempo czytania)
-        duration = max(SIM_SETTINGS["min_session_time"],
-                       int(pages_read * random.uniform(pace_min, pace_max)))
+        duration = max(
+            SIM_SETTINGS["min_session_time"],
+            int(pages_read * random.uniform(pace_min, pace_max)),
+        )
 
         return pages_read, duration
 
@@ -64,7 +75,7 @@ class GeneratorService:
         if rand < 0.70:
             # Główna grupa dorosłych (rozkład normalny wokół 32 lat)
             age = int(np.random.normal(32, 8))
-            age = max(18, min(55, age))
+            age = int(max(18, min(55, age)))
         elif rand < 0.85:
             # Grupa seniorów
             age = random.randint(60, 80)
@@ -72,37 +83,67 @@ class GeneratorService:
             # Grupa młodzieży
             age = random.randint(12, 17)
 
-        # Konwersja wyliczonego wieku na obiekt daty przy użyciu Fakera
-        return get_fake().date_of_birth(minimum_age=age, maximum_age=age)
+        # Konwersja wyliczonego wieku na obiekt daty i formatowanie do stringa YYYY-MM-DD
+        dob_date = get_fake().date_of_birth(minimum_age=age, maximum_age=age)
+        return dob_date.strftime("%Y-%m-%d")
 
     @staticmethod
     def age_category_from_birth(birth_date) -> str:
         """Zwraca kategorię wiekową: 'junior', 'young_adult', 'adult', 'senior'"""
         if not birth_date:
-            return 'adult'
+            return "adult"
         bd = DateHelper.to_datetime(birth_date)
         age = DateHelper.calculate_age(bd)
-        return "junior" if age < 18 else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
+        return (
+            "junior"
+            if age < 18
+            else "young_adult" if age <= 25 else "adult" if age <= 60 else "senior"
+        )
 
     @staticmethod
     def generate_favorite_genres_for_birth(birth_date):
-        """Generuje listę 1-3 ulubionych gatunków zgodnie z config FAVORITE_GENRE_BIAS"""
+        """Generuje listę unikalnych ulubionych gatunków z uwzględnieniem wag dla wieku"""
         cat = GeneratorService.age_category_from_birth(birth_date)
         age_genres = AGE_BASED_GENRES.get(cat, GENRES)
+        
         fav_genres = set()
         fav_count = random.randint(1, 3)
-        for _ in range(fav_count):
-            if random.random() < FAVORITE_GENRE_BIAS.get("age_based_ratio", 0.6):
-                fav_genres.add(random.choice(age_genres))
+        
+        # Filtruje globalne wagi specjalnie pod aktualną grupę wiekową
+        age_weights = []
+        for g in age_genres:
+            if g in GENRES:
+                idx = GENRES.index(g)
+                age_weights.append(GENRE_WEIGHTS[idx])
             else:
-                fav_genres.add(random.choices(GENRES, weights=GENRE_WEIGHTS, k=1)[0])
+                age_weights.append(5)
+        
+        attempts = 0
+        while len(fav_genres) < fav_count and attempts < 15:
+            attempts += 1
+            
+            # Losuje z wagami
+            if random.random() < FAVORITE_GENRE_BIAS.get("age_based_ratio", 0.9):
+                picked = random.choices(age_genres, weights=age_weights, k=1)[0]
+            else:
+                picked = random.choices(GENRES, weights=GENRE_WEIGHTS, k=1)[0]
+                
+            fav_genres.add(picked)
+            
+        if not fav_genres:
+            fav_genres.add(random.choices(GENRES, weights=GENRE_WEIGHTS, k=1)[0])
+            
         return list(fav_genres)
 
     @staticmethod
     def generate_actual_reading_genre(birth_date, declared_genres: list):
         """Generuje gatunek rzeczywistego czytania z uwzględnieniem anomalii"""
         if not READING_ANOMALY.get("enabled", False):
-            return random.choice(declared_genres) if declared_genres else random.choice(GENRES)
+            return (
+                random.choice(declared_genres)
+                if declared_genres
+                else random.choice(GENRES)
+            )
 
         bd = DateHelper.to_datetime(birth_date)
         age = DateHelper.calculate_age(bd)
@@ -131,5 +172,7 @@ class GeneratorService:
             elif adult_genres:
                 return random.choice(adult_genres)
 
-        # Bez anomalii - używa deklarowanych
-        return random.choice(declared_genres) if declared_genres else random.choice(GENRES)
+        # Jeśli brak anomalii, wybiera z deklarowanych lub globalnych
+        return (
+            random.choice(declared_genres) if declared_genres else random.choice(GENRES)
+        )

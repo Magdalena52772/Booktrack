@@ -37,14 +37,17 @@ GENRE_QUERY_ALIASES = {
     "Childrens literature": "Children's literature",
 }
 
+
 def _is_latin_only(text: str) -> bool:
-    # Odrzuca teksty zawierające cyrylicę
-    return not bool(re.search(r'[\u0400-\u04FF]', text))
+    # Sprawdza, czy tekst zawiera tylko znaki łacińskie (bez cyrylicy)
+    return not bool(re.search(r"[\u0400-\u04FF]", text))
+
 
 def _book_key(ol_key: str | None, title: str, authors_text: str) -> str:
     if ol_key:
         return ol_key
     return f"{title.strip().lower()}|{authors_text.strip().lower()}"
+
 
 def _fetch_payload(url: str, timeout: int) -> dict | None:
     # Pobieranie danych z obsługą błędów i retry
@@ -53,14 +56,14 @@ def _fetch_payload(url: str, timeout: int) -> dict | None:
             with urlopen(url, timeout=timeout) as response:
                 return json.loads(response.read().decode("utf-8"))
         except HTTPError as e:
-            if e.code == 429:  # Rate limiting
-                print(f"\n[429] Za szybko! Czekam 10s...")
+            if e.code == 429:  # Zbyt wiele żądań (rate limit)
+                print(f"\n[429] Za szybko! Czeka 10s...")
                 time.sleep(10)
             elif e.code >= 500:  # Błąd serwera
                 time.sleep(2 * (attempt + 1))
             else:
                 print(f"\n[HTTP {e.code}] Błąd dla URL: {url}")
-                break 
+                break
         except URLError as e:
             print(f"\n[Błąd sieci] {e.reason}. Próba {attempt + 1}/3...")
             time.sleep(2)
@@ -69,8 +72,10 @@ def _fetch_payload(url: str, timeout: int) -> dict | None:
             break
     return None
 
+
 def _get_edition_title(edition_key: str | None) -> str | None:
-    # Próba pozyskania tytułu, jeśli główny tytuł zawiera cyrylicę, ale może być dostępny w edycji łacińskiej
+    # Próba pozyskania tytułu, jeśli główny tytuł zawiera cyrylicę, 
+    # ale może być dostępny w edycji łacińskiej
     if not edition_key:
         return None
     url = f"https://openlibrary.org/books/{edition_key}.json"
@@ -79,12 +84,13 @@ def _get_edition_title(edition_key: str | None) -> str | None:
         return data["title"].strip()
     return None
 
+
 def _normalize_item(item: dict, genre: str) -> dict | None:
     # Standaryzacja, czyszczenie danych i filtracja alfabetu
     title = item.get("title", "")
     authors = item.get("author_name", ["Unknown"])
     authors_text = ", ".join(str(a) for a in authors)
-    
+
     # Odrzucenie, jeśli tytuł jest zapisany cyrylicą (ale próba alternatywnego tytułu z edycji)
     if not _is_latin_only(title):
         edition_key = item.get("cover_edition_key")
@@ -108,15 +114,16 @@ def _normalize_item(item: dict, genre: str) -> dict | None:
         "genre_hint": genre,
     }
 
+
 def main() -> None:
     genres = list(GENRES)
     target_count = DEFAULT_TARGET_COUNT
     per_genre_target = math.ceil(target_count / len(genres))
-    
+
     books = []
     seen = set()
 
-    print(f"Rozpoczynam pobieranie {target_count} pozycji z Open Library...")
+    print(f"Rozpoczyna pobieranie {target_count} pozycji z Open Library...")
 
     for genre in genres:
         genre_added = 0
@@ -140,7 +147,7 @@ def main() -> None:
             for item in payload["docs"]:
                 if genre_added >= per_genre_target:
                     break
-                
+
                 norm = _normalize_item(item, genre)
                 if not norm:
                     continue
@@ -163,16 +170,16 @@ def main() -> None:
         "count": len(books),
         "books": books,
     }
-    
+
     # Zapis do pliku JSON
     try:
         OUTPUT_FILE.write_text(
-            json.dumps(payload_out, ensure_ascii=False, indent=2), 
-            encoding="utf-8"
+            json.dumps(payload_out, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         print(f"\nSukces! Pula książek zapisana w: {OUTPUT_FILE}")
     except Exception as e:
         print(f"\nBłąd podczas zapisu pliku: {e}")
+
 
 if __name__ == "__main__":
     try:

@@ -2,6 +2,7 @@
 Moduł odpowiedzialny za integrację z Open Library API
 w celu pozyskiwania rzeczywistych danych o książkach
 """
+
 import requests
 import random
 import time
@@ -29,16 +30,21 @@ def fetch_book_from_api(genre_name: str = None, fallback_pool=None):
             params = {
                 "q": query,
                 "limit": 10,
-                "fields": "key,title,author_name,first_publish_year,number_of_pages_median"
+                "fields": "key,title,author_name,first_publish_year,number_of_pages_median",
             }
 
-            response = requests.get(OPENLIB_SEARCH_URL, params=params, timeout=API_TIMEOUT, verify=API_VERIFY_SSL)
+            response = requests.get(
+                OPENLIB_SEARCH_URL,
+                params=params,
+                timeout=API_TIMEOUT,
+                verify=API_VERIFY_SSL,
+            )
             response.raise_for_status()
 
             docs = response.json().get("docs", [])
             if not docs:
                 if attempt < MAX_RETRIES - 1:
-                    wait_time = RETRY_DELAY * (2 ** attempt)
+                    wait_time = RETRY_DELAY * (2**attempt)
                     time.sleep(wait_time)
                     continue
                 return None
@@ -65,27 +71,27 @@ def fetch_book_from_api(genre_name: str = None, fallback_pool=None):
                 "authors": authors,
                 "page_count": page_count,
                 "openlibrary_id": openlibrary_id,
-                "source": "api"
+                "source": "api",
             }
 
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
             # Timeout lub problem z połączeniem - retry z exponential backoff
             if attempt < MAX_RETRIES - 1:
-                wait_time = RETRY_DELAY * (2 ** attempt)
+                wait_time = RETRY_DELAY * (2**attempt)
                 time.sleep(wait_time)
                 continue
             return None
         except (requests.exceptions.RequestException, ValueError) as e:
             # Inne błędy związane z żądaniem - retry
             if attempt < MAX_RETRIES - 1:
-                wait_time = RETRY_DELAY * (2 ** attempt)
+                wait_time = RETRY_DELAY * (2**attempt)
                 time.sleep(wait_time)
                 continue
             return None
         except Exception as e:
             # Nieprzewidziany błąd - retry
             if attempt < MAX_RETRIES - 1:
-                wait_time = RETRY_DELAY * (2 ** attempt)
+                wait_time = RETRY_DELAY * (2**attempt)
                 time.sleep(wait_time)
                 continue
             return None
@@ -103,6 +109,7 @@ def get_book_live_or_fallback(genre_name=None, fallback_pool=None, force_api=Fal
     # Jeśli pula nie jest przekazana, załaduje ją z pliku
     if not fallback_pool:
         from data.data_generator.books import _load_book_pool
+
         fallback_pool = _load_book_pool()
 
     # Fallback do puli jeśli API zawiedzie
@@ -125,5 +132,5 @@ def get_book_live_or_fallback(genre_name=None, fallback_pool=None, force_api=Fal
                 "authors": selected.get("authors", "Unknown"),
                 "page_count": selected.get("page_count", 300),
                 "openlibrary_id": selected.get("openlibrary_id"),
-                "source": "pool"
+                "source": "pool",
             }
