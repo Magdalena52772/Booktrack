@@ -1,3 +1,5 @@
+"""Zarządza okresami czasu w aplikacji"""
+
 from datetime import datetime, timedelta
 
 def period_start(period: str) -> datetime:
@@ -10,6 +12,6 @@ def period_start(period: str) -> datetime:
         return now - timedelta(days=365)
     elif period == "all":
         # Zwraca wczesną datę, by objąć całą historię
-        return datetime(2023, 1, 1) 
+        return datetime(2023, 1, 1)
     else:
         return None

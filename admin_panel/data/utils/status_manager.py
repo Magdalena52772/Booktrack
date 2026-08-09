@@ -1,4 +1,4 @@
-# data/utils/status_manager.py
+"""Zarządza komunikatami statusu w aplikacji"""
 
 class StatusMsg:
     INFO = "info"
@@ -11,7 +11,6 @@ class StatusMsg:
         "LOAD_START": ("Loading data for: {}...", INFO),
         "LOAD_SUCCESS": ("View: {} loaded.", INFO),
         "DB_ERROR": ("Database error: {}.", ERROR),
-        
         "VIEW_LOADED_COUNT": ("View: {} loaded.", SUCCESS),
         "ACTIVITY_UPDATED": ("Activity updated for: {} (Total: {}).", INFO),
         

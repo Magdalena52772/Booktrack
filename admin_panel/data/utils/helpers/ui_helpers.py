@@ -2,24 +2,26 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout, QProgressBar
 
+
 def load_ui(widget_instance, file_path):
     """
-    Uniwersalny loader dla plików .ui. 
+    Uniwersalny loader dla plików .ui.
     Wczytuje interfejs i osadza go w głównym layoucie widgetu.
     """
     loader = QUiLoader()
     ui_file = QFile(file_path)
     if not ui_file.open(QFile.ReadOnly):
         return None
-    
+
     ui = loader.load(ui_file, widget_instance)
     ui_file.close()
-    
+
     # Automatyczne dodanie do layoutu widoku
     layout = QVBoxLayout(widget_instance)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.addWidget(ui)
     return ui
+
 
 def apply_tooltips(ui_object, tooltips_dict):
     """Masowo przypisuje podpowiedzi do elementów UI na podstawie słownika."""
@@ -35,6 +37,7 @@ def create_numeric_item(value, alignment=Qt.AlignCenter):
     item.setData(Qt.DisplayRole, value)
     item.setTextAlignment(alignment)
     return item
+
 
 def get_progress_bar_style(chunk_color="#630D16"):
     """Zwraca spójny arkusz stylów dla pasków postępu w tabelach (genres_view)"""
@@ -52,6 +55,7 @@ def get_progress_bar_style(chunk_color="#630D16"):
             border-radius: 3px;
         }}
     """
+
 
 def clear_layout(layout):
     """Czyści layout z widgetów, zapobiegając wyciekom pamięci i nakładaniu się elementów"""

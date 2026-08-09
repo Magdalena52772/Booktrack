@@ -1,28 +1,29 @@
 from datetime import datetime, date
 from typing import List, Optional
 
+
 class User:
     def __init__(
-        self, 
-        id: int, 
+        self,
+        id: int,
         username: str,
-        name: str, 
+        name: str,
         email: str,
-        status: str, 
+        status: str,
         birth_date: datetime,
-        books_read: int, 
-        pages_per_day: float, 
-        last_activity: Optional[datetime], 
-        date_joined: Optional[datetime], 
+        books_read: int,
+        pages_per_day: float,
+        last_activity: Optional[datetime],
+        date_joined: Optional[datetime],
         r_tier: str = "regular",
-        favorite_genres: List[str] = None
+        favorite_genres: List[str] = None,
     ):
         self.id = id
         self.username = username
         self.name = name
         self.email = email
         self.status = status
-        self.birth_date = birth_date 
+        self.birth_date = birth_date
         self.books_read = books_read
         self.pages_per_day = pages_per_day
         self.last_activity = last_activity
@@ -33,9 +34,14 @@ class User:
     @property
     def age(self) -> int:
         """Dynamicznie oblicza wiek na podstawie birth_date."""
-        if not self.birth_date: return 0
+        if not self.birth_date:
+            return 0
         today = date.today()
-        return today.year - self.birth_date.year - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
+        return (
+            today.year
+            - self.birth_date.year
+            - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
+        )
 
     def __repr__(self):
         return f"<User {self.name} (ID: {self.id})>"
