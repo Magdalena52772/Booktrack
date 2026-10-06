@@ -1,9 +1,13 @@
-{% extends "base.html" %}
+{% extends "base_public.html" %}
 {% block content %}
     <h1>🔥 Trendujące teraz</h1>
+    {% if books %}
     <ul>
         {% for book in books %}
-            <li>#{{ book.rank }} - {{ book.title }} ({{ book.author }})</li>
+            <li>#{{ book.rank }} - {{ book.title }} ({{ book.author }}) — {{ book.total_pages }} stron</li>
         {% endfor %}
     </ul>
+    {% else %}
+    <p>Brak danych.</p>
+    {% endif %}
 {% endblock %}

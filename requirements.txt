@@ -6,3 +6,4 @@ python-dateutil
 reportlab
 sqlite-utils
 Flask
+Django==6.0.2

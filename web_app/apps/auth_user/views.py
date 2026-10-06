@@ -2,11 +2,11 @@ from django.shortcuts import render
 
 # Widok powitalny
 def auth_welcome(request):
-    return render(request, "welcome.html")
+    return render(request, "auth/welcome.html")
 
 # Widok logowania
 def login(request):
-    return render(request, "login.html")
+    return render(request, "auth/login.html")
 
 # Kroki rejestracji
 def register_st1(request):

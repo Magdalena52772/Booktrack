@@ -1,2 +1,23 @@
-{% extends "base_account.html" %} {%block head%} {%endblock%} {%block
-account_content%} {%endblock%}
+{% extends "base_public.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Wyszukiwanie książek</h2>
+  {% if query %}
+    <p>Wyniki dla: <strong>{{ query }}</strong></p>
+  {% else %}
+    <p>Wpisz frazę w polu wyszukiwania w nagłówku.</p>
+  {% endif %}
+
+  {% if books %}
+  <ul class="list-group">
+    {% for book in books %}
+    <li class="list-group-item">
+      <strong>{{ book.title }}</strong> — {{ book.authors|default:"Nieznany autor" }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif query %}
+  <p>Brak wyników.</p>
+  {% endif %}
+</div>
+{% endblock %}
