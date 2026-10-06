@@ -1,1 +1,18 @@
 {% extends "base_account.html" %}
+{% block account_content %}
+<h2>Ulubione książki</h2>
+{% if selected_user %}
+<p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
+{% endif %}
+{% if books %}
+<ul class="list-group">
+  {% for book in books %}
+  <li class="list-group-item">
+    <strong>{{ book.title }}</strong> — {{ book.authors|default:"Nieznany autor" }}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>Brak danych.</p>
+{% endif %}
+{% endblock %}

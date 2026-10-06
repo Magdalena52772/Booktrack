@@ -1,3 +1,18 @@
-{% extends "base_account.html" %} {% block account_content %}
+{% extends "base_account.html" %}
+{% block account_content %}
 <h2>Lista czytanych książek</h2>
+{% if selected_user %}
+<p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
+{% endif %}
+{% if reading_books %}
+<ul class="list-group">
+  {% for row in reading_books %}
+  <li class="list-group-item">
+    <strong>{{ row.book.title }}</strong> — {{ row.current_page }}/{{ row.book.total_pages|default:"?" }} stron
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>Brak aktywnych książek.</p>
+{% endif %}
 {% endblock %}

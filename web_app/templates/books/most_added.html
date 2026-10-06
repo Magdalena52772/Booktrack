@@ -1,13 +1,18 @@
-{% extends "base.html" %}
-
+{% extends "base_public.html" %}
 {% block content %}
 <div class="container" style="margin-top: 50px;">
-    <h1 style="color: #611515;">Najczęściej dodawane książki</h1>
-    <p>Lista książek, które użytkownicy dodają najchętniej.</p>
-    
-    <ul class="list-group">
-        <li class="list-group-item">?Wiedźmin - A. Sapkowski</li>
-        <li class="list-group-item">?Hobbit - J.R.R. Tolkien</li>
-    </ul>
+  <h1 style="color: #611515;">Najczęściej dodawane książki</h1>
+  <p>Top pozycji najczęściej przypisywanych czytelnikom.</p>
+  {% if books %}
+  <ul class="list-group">
+    {% for book in books %}
+    <li class="list-group-item">
+      <strong>{{ book.title }}</strong> — {{ book.author }} <span class="text-muted">({{ book.readers }} czytelników)</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>Brak danych.</p>
+  {% endif %}
 </div>
 {% endblock %}

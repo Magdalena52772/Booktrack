@@ -40,7 +40,7 @@ Monitoruj książki, które czytasz{% endblock %} {% block content %}
           Nie przegap książek, które mogą ci się spodobać!
         </li>
       </ul>
-      <a href="/welcome" class="btn-reg"
+      <a href="{% url 'auth_welcome' %}" class="btn-reg"
         ><strong>ZAREJESTRUJ SIĘ ZA DARMO</strong>
       </a>
     </div>
@@ -53,10 +53,10 @@ Monitoruj książki, które czytasz{% endblock %} {% block content %}
   </section>
   <section>
     <h3>
-      <a href="/books/trending">Popularne - zobacz, co teraz czytają inni(5)</a>
+      <a href="{% url 'trending' %}">Popularne - zobacz, co teraz czytają inni (10)</a>
     </h3>
-    <h3><a href="/books/most_added">Najczęściej wybierane (5)</a></h3>
-    <h3><a href="/books/genres">Przeglądaj według gatunku</a></h3>
+    <h3><a href="{% url 'most_added' %}">Najczęściej wybierane (10)</a></h3>
+    <h3><a href="{% url 'searching' %}">Przeglądaj według gatunku</a></h3>
   </section>
 </main>
 {% endblock %}
