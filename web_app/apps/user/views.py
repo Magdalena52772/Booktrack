@@ -1,40 +1,162 @@
-from django.shortcuts import render, redirect
+from django.db.models import Avg, Sum
+from django.shortcuts import redirect, render
 
-# Wyświetlanie panelu użytkownika
+from pages.models import (
+    Activity,
+    Book,
+    BooktrackUser,
+    Challenge,
+    Genre,
+    UserBook,
+    UserFavoriteGenre,
+)
+
+
+def _get_user(request):
+    raw_user_id = request.GET.get("user_id")
+    if raw_user_id and raw_user_id.isdigit():
+        user = BooktrackUser.objects.filter(id=int(raw_user_id)).first()
+        if user:
+            return user
+    return (
+        BooktrackUser.objects.filter(status="active").order_by("id").first()
+        or BooktrackUser.objects.order_by("id").first()
+    )
+
+
 def dashboard(request):
-    stats = {"total_hours": "12h", "books_read": 7}
-    return render(request, "user/user_dashboard.html", {"stats": stats})
+    user = _get_user(request)
+    reading_rows = []
+    books_read = 0
+    if user:
+        books_read = (
+            UserBook.objects.filter(user_id=user.id, status="finished").count()
+        )
+        reading_rows = list(
+            UserBook.objects.filter(user_id=user.id, status="reading")
+            .select_related("book")
+            .order_by("-start_date", "id")[:2]
+        )
 
-# Lista lektur użytkownika
+    return render(
+        request,
+        "user/user_dashboard.html",
+        {
+            "books_read": books_read,
+            "selected_user": user,
+            "reading_books": reading_rows,
+        },
+    )
+
+
 def reading_list(request):
-    books = ["Duna", "Wiedźmin", "Harry Potter"]
-    return render(request, "user/reading_list.html", {"books": books})
+    user = _get_user(request)
+    rows = []
+    if user:
+        rows = list(
+            UserBook.objects.filter(user_id=user.id, status="reading")
+            .select_related("book")
+            .order_by("-start_date", "id")
+        )
+    return render(
+        request,
+        "user/reading_list.html",
+        {"selected_user": user, "reading_books": rows},
+    )
 
-# Ulubione książki
+
 def favourite_books(request):
-    favs = ["Duna", "Imię róży"]
-    return render(request, "user/favourite_books.html", {"favs": favs})
+    user = _get_user(request)
+    books = []
+    if user:
+        favorite_genre_ids = UserFavoriteGenre.objects.filter(user_id=user.id).values_list(
+            "genre_id", flat=True
+        )
+        books = list(
+            Book.objects.filter(genre_id__in=favorite_genre_ids)
+            .order_by("title")[:20]
+        )
+    return render(
+        request,
+        "user/favourite_books.html",
+        {"selected_user": user, "books": books},
+    )
 
-# Listy użytkownika
+
 def lists(request):
-    user_lists = ["Moje 10", "Do przeczytania 2025"]
-    return render(request, "user/lists.html", {"lists": user_lists})
+    return render(request, "user/lists.html")
 
-# Statystyki czytelnictwa
+
 def stats(request):
-    stats_data = {"total_hours": "12h", "books_read": 7}
-    return render(request, "user/stats.html", {"stats": stats_data})
+    user = _get_user(request)
+    stats_data = {"books_read": 0, "pages_total": 0, "ppd": 0.0, "streak": 0}
+    if user:
+        activity_aggregate = Activity.objects.filter(user_id=user.id).aggregate(
+            total_pages=Sum("pages_read")
+        )
+        stats_data = {
+            "books_read": UserBook.objects.filter(
+                user_id=user.id, status="finished"
+            ).count(),
+            "pages_total": activity_aggregate["total_pages"] or 0,
+            "ppd": round(user.pages_per_day or 0.0, 1),
+            "streak": user.current_streak or 0,
+        }
+    return render(
+        request, "user/stats.html", {"selected_user": user, "stats": stats_data}
+    )
 
-# Rekomendacje dla użytkownika
+
 def recommendations(request):
-    recs = ["Książka A", "Książka B"]
-    return render(request, "user/recommendations.html", {"recs": recs})
+    user = _get_user(request)
+    recommendations_data = []
+    if user:
+        favorite_genre_ids = UserFavoriteGenre.objects.filter(user_id=user.id).values_list(
+            "genre_id", flat=True
+        )
+        already_assigned = UserBook.objects.filter(user_id=user.id).values_list(
+            "book_id", flat=True
+        )
+        recommendations_data = list(
+            Book.objects.filter(genre_id__in=favorite_genre_ids)
+            .exclude(id__in=already_assigned)
+            .order_by("title")[:10]
+        )
+    return render(
+        request,
+        "user/recommendations.html",
+        {"selected_user": user, "recommendations": recommendations_data},
+    )
 
-# Profil użytkownika
+
 def profile(request):
-    return render(request, "user/profile.html")
+    user = _get_user(request)
+    favorite_genres = []
+    avg_rating = 0.0
+    active_challenges = 0
+    if user:
+        favorite_genres = list(
+            Genre.objects.filter(user_links__user_id=user.id).values_list("name", flat=True)
+        )
+        ratings = UserBook.objects.filter(user_id=user.id, rating__isnull=False).aggregate(
+            avg=Avg("rating")
+        )
+        avg_rating = round(float(ratings["avg"] or 0.0), 2)
+        active_challenges = Challenge.objects.filter(
+            user_id=user.id, status="active"
+        ).count()
 
-# Wylogowanie użytkownika
+    return render(
+        request,
+        "user/profile.html",
+        {
+            "selected_user": user,
+            "favorite_genres": favorite_genres,
+            "avg_rating": avg_rating,
+            "active_challenges": active_challenges,
+        },
+    )
+
+
 def logout(request):
-    # request.session.flush() # Odpowiednik session.clear()
-    return redirect('home') # 'home' to nazwa z urls.py w apps/main
+    return redirect("home")

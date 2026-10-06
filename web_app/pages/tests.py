@@ -1,3 +1,3 @@
 from django.test import TestCase
 
-# Create your tests here.
+# Testy aplikacji pages będą dodawane razem z implementacją logowania i formularzy.
