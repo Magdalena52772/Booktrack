@@ -1,3 +1,3 @@
 from django.shortcuts import render
 
-# Create your views here.
+# Widoki aplikacji pages będą dodawane wraz z kolejnymi funkcjami webowymi.

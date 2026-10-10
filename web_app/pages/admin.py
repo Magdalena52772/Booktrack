@@ -1,3 +1,3 @@
 from django.contrib import admin
 
-# Register your models here.
+# Modele są odczytywane ze wspólnej bazy panelu; rejestrację w adminie

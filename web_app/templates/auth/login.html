@@ -1,2 +1,40 @@
-{% extends "base_form.html" %} {% block title %}Zaloguj się | Book Track{%
-endblock %}{% block form_content %} {% endblock %}
+{% extends "base_form.html" %}
+
+{% block title %}Zaloguj się | Book Track{% endblock %}
+
+{% block form_content %}
+  <h1 class="h3 mb-4 text-center">Zaloguj się</h1>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-danger" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="username" class="form-label">Nazwa użytkownika lub e-mail</label>
+      <input
+        type="text"
+        class="form-control"
+        id="username"
+        name="username"
+        autocomplete="username"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Hasło</label>
+      <input
+        type="password"
+        class="form-control"
+        id="password"
+        name="password"
+        autocomplete="current-password"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Zaloguj się</button>
+  </form>
+{% endblock %}

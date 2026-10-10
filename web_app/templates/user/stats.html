@@ -1,3 +1,13 @@
-{% extends "base_account.html" %} {% block account_content %}
+{% extends "base_account.html" %}
+{% block account_content %}
 <h2>Statystyki</h2>
+{% if selected_user %}
+<p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
+{% endif %}
+<ul>
+  <li>Przeczytane książki: <strong>{{ stats.books_read }}</strong></li>
+  <li>Przeczytane strony: <strong>{{ stats.pages_total }}</strong></li>
+  <li>Średnio stron/dzień: <strong>{{ stats.ppd }}</strong></li>
+  <li>Aktualny streak: <strong>{{ stats.streak }}</strong></li>
+</ul>
 {% endblock %}

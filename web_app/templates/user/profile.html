@@ -1,3 +1,24 @@
-{% extends "base_account.html" %} {% block account_content %}
+{% extends "base_account.html" %}
+{% block account_content %}
 <h2>Twój profil</h2>
+{% if selected_user %}
+<ul>
+  <li>ID: {{ selected_user.id }}</li>
+  <li>Nazwa użytkownika: {{ selected_user.username }}</li>
+  <li>Imię i nazwisko: {{ selected_user.name|default:"-" }}</li>
+  <li>E-mail: {{ selected_user.email|default:"-" }}</li>
+  <li>Status: {{ selected_user.status }}</li>
+  <li>Średnia ocen: {{ avg_rating }}</li>
+  <li>Aktywne wyzwania: {{ active_challenges }}</li>
+  <li>Ulubione gatunki:
+    {% if favorite_genres %}
+      {{ favorite_genres|join:", " }}
+    {% else %}
+      -
+    {% endif %}
+  </li>
+</ul>
+{% else %}
+<p>Brak użytkowników w bazie.</p>
+{% endif %}
 {% endblock %}
