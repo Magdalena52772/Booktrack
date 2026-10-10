@@ -92,12 +92,15 @@
             <span class="fs-4">✨</span>
           </div>
           <div class="rec-list mb-3">
-            <div class="p-2 bg-light rounded-3 mb-2 text-center border-start border-4 border-accent shadow-sm">
-              <span class="small fw-bold">„Pani Róża”</span>
-            </div>
-            <div class="p-2 bg-light rounded-3 mb-2 text-center border-start border-4 border-accent shadow-sm">
-              <span class="small fw-bold">„Duna 2”</span>
-            </div>
+            {% if recommendations %}
+              {% for book in recommendations %}
+              <div class="p-2 bg-light rounded-3 mb-2 text-center border-start border-4 border-accent shadow-sm">
+                <span class="small fw-bold">„{{ book.title }}”</span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p class="small text-muted mb-0">Brak rekomendacji na ten moment.</p>
+            {% endif %}
           </div>
           <a href="{% url 'recommendations' %}" class="btn-minimal d-block text-center">Sprawdź więcej</a>
         </div>

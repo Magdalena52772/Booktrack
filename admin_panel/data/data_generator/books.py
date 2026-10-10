@@ -2,7 +2,7 @@ import random
 import json
 from datetime import datetime
 from pathlib import Path
-from data.config import GENRES, AGE_BASED_GENRES, RATING_SETTINGS, get_fake
+from data.config import GENRES, AGE_BASED_GENRES, RATING_SETTINGS
 from data.services.generator_service import GeneratorService
 from data.utils.helpers.date_helpers import DateHelper
 from data.repositories.genre_repo import GenresRepository
@@ -126,10 +126,17 @@ def generate_books(conn, users):
                 # Losowanie książki z puli gatunku, jeśli dostępna
                 if genre_pool:
                     selected_pool = random.choice(genre_pool)
+                if not selected_pool:
+                    continue
+
+                book_title = selected_pool.get("title")
+                author = selected_pool.get("authors")
+                pool_id = selected_pool.get("openlibrary_id")
+                if not book_title or not author or not pool_id:
+                    continue
 
                 if (
-                    selected_pool
-                    and isinstance(selected_pool.get("page_count"), int)
+                    isinstance(selected_pool.get("page_count"), int)
                     and selected_pool.get("page_count") > 0
                 ):
                     total_pages = selected_pool.get("page_count")
@@ -157,15 +164,6 @@ def generate_books(conn, users):
                         current_page = total_pages
                     else:
                         current_page = random.randint(1, total_pages - 1)
-
-                if selected_pool and genre_pool:
-                    book_title = selected_pool.get("title") or f"{get_fake().word().title()} {get_fake().word().title()}"
-                    author = selected_pool.get("authors") or f"{get_fake().first_name()} {get_fake().last_name()}"
-                    pool_id = selected_pool.get("openlibrary_id")
-                else:
-                    book_title = f"{get_fake().word().title()} {get_fake().word().title()}"
-                    author = f"{get_fake().first_name()} {get_fake().last_name()}"
-                    pool_id = None
 
                 # Zapis do globalnego słownika książek z ignorowaniem duplikatów z puli JSON
                 cursor.execute(
@@ -228,45 +226,6 @@ def generate_books(conn, users):
                 break
 
             slot_index += 1
-
-        # Aktywny użytkownik powinien mieć przynajmniej jedną książkę "reading".
-        cursor.execute(
-            "SELECT COUNT(*) FROM user_books WHERE user_id = ? AND status = 'reading'",
-            (user_id,),
-        )
-        reading_count = cursor.fetchone()[0]
-        if user_status == "active" and reading_count == 0:
-            fallback_genre = random.choice(user_favs or age_pref_list)
-            fallback_genre_id = genre_map.get(fallback_genre, 1)
-            fallback_total_pages = random.randint(180, 550)
-            fallback_title = f"{get_fake().word().title()} {get_fake().word().title()}"
-            fallback_author = f"{get_fake().first_name()} {get_fake().last_name()}"
-            cursor.execute(
-                """
-                INSERT INTO books (title, authors, openlibrary_id, genre_id, total_pages, added_by_generator)
-                VALUES (?, ?, NULL, ?, ?, 1)
-                """,
-                (fallback_title, fallback_author, fallback_genre_id, fallback_total_pages),
-            )
-            fallback_book_id = cursor.lastrowid
-            fallback_current_page = random.randint(1, fallback_total_pages - 1)
-            cursor.execute(
-                """
-                INSERT INTO user_books (user_id, book_id, current_page, status, rating)
-                VALUES (?, ?, ?, 'reading', NULL)
-                """,
-                (user_id, fallback_book_id, fallback_current_page),
-            )
-            book_metadata.append(
-                {
-                    "id": fallback_book_id,
-                    "user_id": user_id,
-                    "status": "reading",
-                    "total_pages": fallback_total_pages,
-                    "date_joined": reg_date,
-                    "added_by_generator": 1,
-                }
-            )
 
     conn.commit()
     print(f"SUCCESS: Zindeksowano {len(book_metadata)} pozycji w katalogu globalnym i przypisano użytkownikom.")

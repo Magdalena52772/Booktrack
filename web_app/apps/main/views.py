@@ -1,5 +1,6 @@
 from django.db.models import Count, Q, Sum
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from pages.models import Activity, Book, UserBook
 
@@ -107,5 +108,6 @@ def searching(request):
     return render(request, "books/explore.html", context)
 
 
+@ensure_csrf_cookie
 def welcome(request):
-    return render(request, "auth/welcome.html")
+    return redirect("login")

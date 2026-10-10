@@ -1,4 +1,6 @@
 from django.db.models import Avg, Sum
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout as auth_logout
 from django.shortcuts import redirect, render
 
 from pages.models import (
@@ -13,6 +15,9 @@ from pages.models import (
 
 
 def _get_user(request):
+    if request.user.is_authenticated:
+        return request.user
+
     raw_user_id = request.GET.get("user_id")
     if raw_user_id and raw_user_id.isdigit():
         user = BooktrackUser.objects.filter(id=int(raw_user_id)).first()
@@ -24,6 +29,25 @@ def _get_user(request):
     )
 
 
+def _get_recommendations(user, limit=10):
+    if not user:
+        return []
+
+    favorite_genre_ids = UserFavoriteGenre.objects.filter(
+        user_id=user.id
+    ).values_list("genre_id", flat=True)
+    already_assigned = UserBook.objects.filter(user_id=user.id).values_list(
+        "book_id", flat=True
+    )
+    return list(
+        Book.objects.filter(genre_id__in=favorite_genre_ids)
+        .exclude(openlibrary_id__isnull=True)
+        .exclude(id__in=already_assigned)
+        .order_by("title")[:limit]
+    )
+
+
+@login_required(login_url="login")
 def dashboard(request):
     user = _get_user(request)
     reading_rows = []
@@ -37,6 +61,7 @@ def dashboard(request):
             .select_related("book")
             .order_by("-start_date", "id")[:2]
         )
+    recommendations = _get_recommendations(user, limit=2)
 
     return render(
         request,
@@ -45,10 +70,12 @@ def dashboard(request):
             "books_read": books_read,
             "selected_user": user,
             "reading_books": reading_rows,
+            "recommendations": recommendations,
         },
     )
 
 
+@login_required(login_url="login")
 def reading_list(request):
     user = _get_user(request)
     rows = []
@@ -65,6 +92,7 @@ def reading_list(request):
     )
 
 
+@login_required(login_url="login")
 def favourite_books(request):
     user = _get_user(request)
     books = []
@@ -83,10 +111,12 @@ def favourite_books(request):
     )
 
 
+@login_required(login_url="login")
 def lists(request):
     return render(request, "user/lists.html")
 
 
+@login_required(login_url="login")
 def stats(request):
     user = _get_user(request)
     stats_data = {"books_read": 0, "pages_total": 0, "ppd": 0.0, "streak": 0}
@@ -107,21 +137,10 @@ def stats(request):
     )
 
 
+@login_required(login_url="login")
 def recommendations(request):
     user = _get_user(request)
-    recommendations_data = []
-    if user:
-        favorite_genre_ids = UserFavoriteGenre.objects.filter(user_id=user.id).values_list(
-            "genre_id", flat=True
-        )
-        already_assigned = UserBook.objects.filter(user_id=user.id).values_list(
-            "book_id", flat=True
-        )
-        recommendations_data = list(
-            Book.objects.filter(genre_id__in=favorite_genre_ids)
-            .exclude(id__in=already_assigned)
-            .order_by("title")[:10]
-        )
+    recommendations_data = _get_recommendations(user)
     return render(
         request,
         "user/recommendations.html",
@@ -129,6 +148,7 @@ def recommendations(request):
     )
 
 
+@login_required(login_url="login")
 def profile(request):
     user = _get_user(request)
     favorite_genres = []
@@ -159,4 +179,5 @@ def profile(request):
 
 
 def logout(request):
+    auth_logout(request)
     return redirect("home")

@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
+    # Stary adres prowadzi do logowania, aby nie mylić go z rejestracją.
     path('welcome/', views.welcome, name='welcome'),
     
     path('books/most_added/', views.most_added, name='most_added'),
