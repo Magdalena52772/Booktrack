@@ -12,6 +12,23 @@
   width: 100%;
 }
 
+.auth-box input,
+.auth-box select,
+.auth-box textarea {
+  min-height: 2.75rem;
+}
+
+.auth-box button,
+.auth-box .btn {
+  min-height: 2.75rem;
+}
+
+@media (max-width: 576px) {
+  .auth-box {
+    border-radius: 12px;
+  }
+}
+
 .btn-primary {
   background-color: var(--forms-primary);
   border: none;

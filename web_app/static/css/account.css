@@ -99,6 +99,22 @@ body {
 }
 
 @media (max-width: 768px) {
-  .bento-grid { grid-template-columns: 1fr; }
-  .card-main-stats, .card-reading-now { grid-column: span 1; }
+  .dashboard-root-container {
+    width: min(100% - 2rem, 42rem) !important;
+  }
+
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-main-stats,
+  .card-reading-now {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-root-container {
+    width: min(100% - 1rem, 42rem) !important;
+  }
 }
