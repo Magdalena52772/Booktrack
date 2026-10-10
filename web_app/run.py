@@ -1,4 +1,4 @@
-"""Uruchamia deweloperską webówkę BookTrack."""
+"""Uruchamia część webową BookTrack."""
 
 import os
 import sys
