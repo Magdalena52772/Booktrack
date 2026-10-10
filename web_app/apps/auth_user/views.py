@@ -1,7 +1,11 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
+from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from pages.models import BooktrackUser
@@ -47,12 +51,76 @@ def login_view(request):
     return render(request, "auth/login.html")
 
 
-# Kolejne kroki rejestracji zostaną podłączone po ustaleniu bezpiecznego zapisu.
+def _registration_form_data(request):
+    return {
+        "registration_email": (request.POST.get("email") or "").strip(),
+        "registration_username": (request.POST.get("username") or "").strip(),
+        "registration_birth_date": (request.POST.get("birth_date") or "").strip(),
+    }
+
+
 def register_st1(request):
+    form_data = {
+        "registration_email": request.session.get("registration_email", ""),
+        "registration_username": "",
+        "registration_birth_date": "",
+    }
+    if request.method == "POST":
+        form_data = _registration_form_data(request)
+        email = form_data["registration_email"]
+        username = form_data["registration_username"]
+        password = request.POST.get("password") or ""
+        password_confirm = request.POST.get("password-confirm") or ""
+
+        email_is_valid = True
+        try:
+            validate_email(email)
+        except ValidationError:
+            email_is_valid = False
+
+        if not email_is_valid:
+            messages.error(request, "Podaj poprawny adres e-mail.")
+        elif not username:
+            messages.error(request, "Podaj nazwę użytkownika.")
+        elif len(password) < 8:
+            messages.error(request, "Hasło musi mieć co najmniej 8 znaków.")
+        elif password != password_confirm:
+            messages.error(request, "Hasła muszą być takie same.")
+        elif BooktrackUser.objects.filter(username__iexact=username).exists():
+            messages.error(request, "Ta nazwa użytkownika jest już zajęta.")
+        elif BooktrackUser.objects.filter(email__iexact=email).exists():
+            messages.error(request, "Konto z tym adresem e-mail już istnieje.")
+        else:
+            try:
+                birth_date = date.fromisoformat(form_data["registration_birth_date"])
+            except ValueError:
+                messages.error(request, "Podaj poprawną datę urodzenia.")
+            else:
+                if birth_date >= date.today():
+                    messages.error(request, "Data urodzenia musi być wcześniejsza niż dzisiaj.")
+                else:
+                    try:
+                        user = BooktrackUser.objects.create_user(
+                            username=username,
+                            email=email,
+                            password=password,
+                            birth_date=birth_date,
+                            date_joined=timezone.now(),
+                        )
+                    except IntegrityError:
+                        messages.error(
+                            request,
+                            "Nie udało się utworzyć konta. Spróbuj użyć innej nazwy użytkownika.",
+                        )
+                    else:
+                        request.session.pop("registration_email", None)
+                        auth_login(request, user)
+                        return redirect("dashboard")
+
     return render(
         request,
         "auth/register_step1.html",
-        {"registration_email": request.session.get("registration_email", "")},
+        {**form_data, "today": date.today().isoformat()},
     )
 
 def register_st2(request):
