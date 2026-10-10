@@ -7,7 +7,7 @@ from data.repositories.book_repo import BookRepository
 from data.repositories.statistics_repo import StatsRepository
 from data.repositories.activity_repo import ActivityRepository
 from charts.activity_charts import ActivityChart, ActivityHeatmap
-from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
+from data.utils.helpers.ui_helpers import load_ui, apply_tooltips, clear_layout
 from worker import DatabaseWorker
 
 
@@ -124,11 +124,9 @@ class DashboardView(QWidget):
         self.canvas = ActivityChart(self.ui.frame_chart)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.canvas.setMinimumHeight(240)
-        lbl_activity = getattr(self.ui, "lbl_activity_chart", None)
-        if lbl_activity is not None:
-            self.ui.verticalLayout_3.replaceWidget(lbl_activity, self.canvas)
-            lbl_activity.hide()
-            lbl_activity.deleteLater()
+        clear_layout(self.ui.verticalLayout_3)
+        self.ui.verticalLayout_3.addWidget(self.canvas)
+        if hasattr(self.ui, "lbl_activity_chart"):
             self.ui.lbl_activity_chart = None
         try:
             self.canvas.updateGeometry()
@@ -142,11 +140,9 @@ class DashboardView(QWidget):
         self.heatmap = ActivityHeatmap(self.ui.heatmap_container)
         self.heatmap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.heatmap.setMinimumHeight(200)
-        lbl_heatmap = getattr(self.ui, "lbl_heatmap_placeholder", None)
-        if lbl_heatmap is not None:
-            self.ui.verticalLayout_heatmap.replaceWidget(lbl_heatmap, self.heatmap)
-            lbl_heatmap.hide()
-            lbl_heatmap.deleteLater()
+        clear_layout(self.ui.verticalLayout_heatmap)
+        self.ui.verticalLayout_heatmap.addWidget(self.heatmap)
+        if hasattr(self.ui, "lbl_heatmap_placeholder"):
             self.ui.lbl_heatmap_placeholder = None
         try:
             self.heatmap.updateGeometry()
