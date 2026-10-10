@@ -27,6 +27,17 @@
         id="username"
         name="username"
         placeholder="Wprowadź nazwę użytkownika"
+        value="{{ registration_username }}"
+      />
+
+      <label for="birth-date">Data urodzenia</label>
+      <input
+        type="date"
+        id="birth-date"
+        name="birth_date"
+        value="{{ registration_birth_date }}"
+        max="{{ today }}"
+        required
       />
 
       <label for="password">Hasło</label>
@@ -45,7 +56,7 @@
         placeholder="Potwierdź hasło"
       />
 
-      <a href="{% url 'register_st2' %}">Dalej</a>
+      <button type="submit">Utwórz konto</button>
     </form>
   </div>
 </div>
