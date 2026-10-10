@@ -45,6 +45,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Sesje webowe są przechowywane w osobnej tabeli Django w tej samej bazie.
+# Tabele panelu pozostają własnością panelu, a migracje niezarządzanych modeli
+# nie tworzą ani nie zmieniają tabel `users`, `books`, `activity` itd.
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False
+
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
@@ -66,14 +73,21 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Wspólna baza SQLite panelu administracyjnego.
-
-DEFAULT_BOOKTRACK_DB = BASE_DIR.parent / 'admin_panel' / 'booktrack.db'
-BOOKTRACK_DB = Path(
-    os.getenv(
-        'BOOKTRACK_DB_PATH',
-        str(DEFAULT_BOOKTRACK_DB),
-    )
+#
+# Przy pracy z worktree pełna baza może znajdować się w głównym checkoutcie
+# repozytorium, a lokalny plik worktree może zawierać wyłącznie pusty schemat.
+WORKTREE_BOOKTRACK_DB = BASE_DIR.parent / 'admin_panel' / 'booktrack.db'
+MAIN_CHECKOUT_BOOKTRACK_DB = (
+    BASE_DIR.parent.parent.parent / 'Booktrack' / 'admin_panel' / 'booktrack.db'
 )
+CONFIGURED_BOOKTRACK_DB = os.getenv('BOOKTRACK_DB_PATH')
+
+if CONFIGURED_BOOKTRACK_DB:
+    BOOKTRACK_DB = Path(CONFIGURED_BOOKTRACK_DB)
+elif MAIN_CHECKOUT_BOOKTRACK_DB.is_file():
+    BOOKTRACK_DB = MAIN_CHECKOUT_BOOKTRACK_DB
+else:
+    BOOKTRACK_DB = WORKTREE_BOOKTRACK_DB
 
 # Panel PySide6 tworzy bazę i inicjalizuje jej schemat.
 # Django tylko łączy się z istniejącym plikiem.

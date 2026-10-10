@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DB_PATH = BASE_DIR / "booktrack.db"
 SCHEMA_PATH = BASE_DIR / "data" / "schema.sql"
 
-# Zahashowane hasło do konta testowego 'test1234'
+# Poprawny hash Django używany przez generowane konta testowe.
 DJANGO_HASHED_PWD = (
-    "pbkdf2_sha256$600000$u79vV3WpXzQ9$8p0/m/H7u0YvXmS7D5/V6eQzX7P8R9a0b1c2d3e4f5g="
+    "pbkdf2_sha256$1200000$E7oe6arSCV9SMgLpYtSXj0$Ci1DMQ8AErkiNBCcUc8Xw/R7R9qv7NgWc+05+bUpHEs="
 )
