@@ -141,7 +141,7 @@ section h3 a:hover {
   display: flex;
   align-items: center;
   margin-bottom: 15px;
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 1.5vw, 1.1rem);
 }
 
 .benefit-icon {
@@ -155,4 +155,38 @@ section h3 a:hover {
 
 .benefits-list li:hover .benefit-icon {
   transform: scale(1.1);
+}
+
+@media (max-width: 767px) {
+  header {
+    padding: 0.75rem 1rem;
+  }
+
+  .main-content {
+    align-items: stretch;
+  }
+
+  .main-content-l,
+  .main-content-r {
+    max-width: none;
+  }
+
+  .main-content-r {
+    order: -1;
+  }
+
+  .main-content-r img {
+    max-width: none;
+    max-height: 20rem;
+  }
+
+  .main-content .btn-reg {
+    display: inline-block;
+    text-align: center;
+  }
+
+  section h3 {
+    width: calc(100% - 2rem);
+    margin-inline: auto;
+  }
 }
