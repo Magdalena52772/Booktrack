@@ -8,7 +8,11 @@
       <div class="d-flex align-items-center">
         <div class="user-avatar-circle me-3 shadow-sm"></div>
         <div class="user-info">
-          <span class="badge bg-secondary id-badge">ID: 9993845</span>
+          {% if selected_user %}
+            <span class="badge bg-secondary id-badge">ID: {{ selected_user.external_id|default:selected_user.id|default:"-" }}</span>
+          {% else %}
+            <span class="badge bg-secondary id-badge">ID: -</span>
+          {% endif %}
           <h1 class="h3 mt-2 fw-bold">Witaj z powrotem!</h1>
         </div>
       </div>
@@ -59,24 +63,21 @@
             <span class="fs-4">📖</span>
           </div>
           <div class="row g-3">
-            <div class="col-md-6">
-              <div class="mini-book d-flex align-items-center p-3 rounded-4 bg-light shadow-sm">
-                <div class="book-cover-placeholder me-3"></div>
-                <div>
-                  <p class="mb-0 fw-bold small">Wiedźmin</p>
-                  <small class="text-muted">300/400 str.</small>
+            {% if reading_books %}
+              {% for row in reading_books %}
+              <div class="col-md-6">
+                <div class="mini-book d-flex align-items-center p-3 rounded-4 bg-light shadow-sm">
+                  <div class="book-cover-placeholder me-3"></div>
+                  <div>
+                    <p class="mb-0 fw-bold small">{{ row.book.title }}</p>
+                    <small class="text-muted">{{ row.current_page }}/{{ row.book.total_pages|default:"?" }} str.</small>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mini-book d-flex align-items-center p-3 rounded-4 bg-light shadow-sm">
-                <div class="book-cover-placeholder me-3"></div>
-                <div>
-                  <p class="mb-0 fw-bold small">Duna</p>
-                  <small class="text-muted">200/300 str.</small>
-                </div>
-              </div>
-            </div>
+              {% endfor %}
+            {% else %}
+            <div class="col-md-12 text-muted">Brak aktualnie czytanych książek.</div>
+            {% endif %}
           </div>
           <div class="mt-4">
             <a href="{% url 'reading_list' %}" class="btn-accent shadow-sm">Otwórz czytelnię</a>
@@ -91,12 +92,15 @@
             <span class="fs-4">✨</span>
           </div>
           <div class="rec-list mb-3">
-            <div class="p-2 bg-light rounded-3 mb-2 text-center border-start border-4 border-accent shadow-sm">
-              <span class="small fw-bold">„Pani Róża”</span>
-            </div>
-            <div class="p-2 bg-light rounded-3 mb-2 text-center border-start border-4 border-accent shadow-sm">
-              <span class="small fw-bold">„Duna 2”</span>
-            </div>
+            {% if recommendations %}
+              {% for book in recommendations %}
+              <div class="p-2 bg-light rounded-3 mb-2 text-center border-start border-4 border-accent shadow-sm">
+                <span class="small fw-bold">„{{ book.title }}”</span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p class="small text-muted mb-0">Brak rekomendacji na ten moment.</p>
+            {% endif %}
           </div>
           <a href="{% url 'recommendations' %}" class="btn-minimal d-block text-center">Sprawdź więcej</a>
         </div>
