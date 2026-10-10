@@ -3,7 +3,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget
 
 from data.utils.status_manager import StatusMsg
-from data.utils.helpers.ui_helpers import apply_tooltips, load_ui
+from data.utils.helpers.ui_helpers import apply_tooltips, load_ui, clear_layout
 from charts.activity_charts import ActivityChart
 from data.repositories.activity_repo import ActivityRepository
 from data.repositories.challenge_repo import ChallengeRepository
@@ -27,13 +27,8 @@ class ActivityView(QWidget):
 
         # Konfiguracja i osadzenie wykresu aktywności
         self.canvas = ActivityChart(self.ui.activity_chart)
-        if hasattr(self.ui, "lbl_chart_placeholder"):
-            self.ui.verticalLayout_4.replaceWidget(
-                self.ui.lbl_chart_placeholder, self.canvas
-            )
-            self.ui.lbl_chart_placeholder.deleteLater()
-        else:
-            self.ui.verticalLayout_4.addWidget(self.canvas)
+        clear_layout(self.ui.verticalLayout_4)
+        self.ui.verticalLayout_4.addWidget(self.canvas)
 
         # Podpięcie zdarzeń przycisków i filtrów
         self.ui.btn_refresh_activity.clicked.connect(self.refresh_data)
