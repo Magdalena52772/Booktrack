@@ -1,5 +1,6 @@
 {% extends "base_public.html" %} {% block title %} {{ genre_label }} – Book
 Track{% endblock %} {% block content %}
+<main class="public-page">
 <h2>{{ genre_label }}</h2>
 
 {% if books %}
@@ -10,4 +11,6 @@ Track{% endblock %} {% block content %}
 </ul>
 {% else %}
 <p>Brak książek w tym gatunku.</p>
-{% endif %} {% endblock %}
+{% endif %}
+</main>
+{% endblock %}

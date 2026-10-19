@@ -14,6 +14,115 @@ body {
   color: var(--public-text);
 }
 
+.public-page {
+  width: min(100% - 2rem, 70rem);
+  margin: 2rem auto;
+}
+
+.public-page h1,
+.public-page h2 {
+  overflow-wrap: anywhere;
+}
+
+.public-page > ul:not(.list-group) {
+  padding-left: 1.25rem;
+}
+
+.public-page > ul:not(.list-group) li {
+  margin-bottom: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.public-page .list-group {
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.public-page .list-group-item {
+  overflow-wrap: anywhere;
+}
+
+.public-page-heading {
+  margin-bottom: 1.5rem;
+}
+
+.public-page-heading h1 {
+  color: var(--public-header-bg);
+}
+
+.eyebrow {
+  margin-bottom: 0.35rem;
+  color: var(--public-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.book-ranking {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: ranking;
+}
+
+.book-ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1rem 1.15rem;
+  border-radius: 0.75rem;
+  background-color: var(--public-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.book-rank {
+  flex: 0 0 2.25rem;
+  color: var(--public-accent);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.book-ranking-info {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.book-ranking-info strong,
+.book-ranking-info small {
+  overflow-wrap: anywhere;
+}
+
+.book-ranking-info small {
+  color: var(--public-text);
+  opacity: 0.75;
+}
+
+.genre-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.genre-links a {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background-color: var(--public-bg);
+  color: var(--public-accent);
+  font-weight: 700;
+}
+
+.empty-state {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background-color: var(--public-bg);
+  color: var(--public-text);
+}
+
 header {
   background-color: var(--public-header-bg);
   color: var(--public-header-text);
@@ -183,6 +292,28 @@ section h3 a:hover {
   .main-content .btn-reg {
     display: inline-block;
     text-align: center;
+  }
+
+  .public-page {
+    width: calc(100% - 2rem);
+    margin-block: 1.25rem;
+  }
+
+  .public-page h1 {
+    font-size: 1.75rem;
+  }
+
+  .book-ranking-item {
+    align-items: flex-start;
+    padding: 0.9rem;
+  }
+
+  .book-rank {
+    flex-basis: 1.75rem;
+  }
+
+  .genre-links {
+    grid-template-columns: 1fr;
   }
 
   section h3 {

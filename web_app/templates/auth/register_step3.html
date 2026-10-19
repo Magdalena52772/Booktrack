@@ -1,2 +1,38 @@
-{% extends "base_form.html" %} {% block title %}Zarejestruj się | Book Track{%
-endblock %} {% block form_content %} {% endblock %}
+{% extends "base_form.html" %}
+
+{% block title %}Wybierz motywy | Book Track{% endblock %}
+
+{% block form_content %}
+<div class="quiz-heading">
+  <span class="quiz-step-label">Krok 2 z 2 · opcjonalnie</span>
+  <h1>Jaki klimat lubisz?</h1>
+  <p>Wybierz dowolne motywy albo pomiń ten krok.</p>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-danger" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  {% for genre, motifs in available_tags.items %}
+    <fieldset class="motif-group">
+      <legend>{{ genre }}</legend>
+      <div class="quiz-options">
+        {% for value, label in motifs.items %}
+          <label class="quiz-option">
+            <input type="checkbox" name="motifs" value="{{ value }}" />
+            <span>{{ label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+  {% endfor %}
+  <div class="d-flex flex-column gap-2 mt-4">
+    <button type="submit" class="btn btn-primary w-100">Zakończ i utwórz konto</button>
+    <button type="submit" name="skip_motifs" value="1" class="btn btn-link">Pomiń motywy</button>
+  </div>
+</form>
+{% endblock %}

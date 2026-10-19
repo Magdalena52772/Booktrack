@@ -1,5 +1,6 @@
 {% extends "base_account.html" %}
 {% block account_content %}
+<section class="account-panel">
 <h2>Statystyki</h2>
 {% if selected_user %}
 <p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
@@ -10,4 +11,5 @@
   <li>Średnio stron/dzień: <strong>{{ stats.ppd }}</strong></li>
   <li>Aktualny streak: <strong>{{ stats.streak }}</strong></li>
 </ul>
+</section>
 {% endblock %}

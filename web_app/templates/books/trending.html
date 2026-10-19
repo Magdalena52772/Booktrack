@@ -1,13 +1,25 @@
 {% extends "base_public.html" %}
 {% block content %}
-    <h1>🔥 Trendujące teraz</h1>
+<main class="public-page">
+    <div class="public-page-heading">
+      <p class="eyebrow">BOOK TRACK</p>
+      <h1>Trendujące teraz</h1>
+      <p class="text-muted">Książki, przy których czytelnicy spędzają najwięcej czasu.</p>
+    </div>
     {% if books %}
-    <ul>
+    <ol class="book-ranking">
         {% for book in books %}
-            <li>#{{ book.rank }} - {{ book.title }} ({{ book.author }}) — {{ book.total_pages }} stron</li>
+            <li class="book-ranking-item">
+              <span class="book-rank">#{{ book.rank }}</span>
+              <span class="book-ranking-info">
+                <strong>{{ book.title }}</strong>
+                <small>{{ book.author }} · {{ book.total_pages }} przeczytanych stron</small>
+              </span>
+            </li>
         {% endfor %}
-    </ul>
+    </ol>
     {% else %}
-    <p>Brak danych.</p>
+    <div class="empty-state">Brak danych o aktywności czytelników.</div>
     {% endif %}
+</main>
 {% endblock %}

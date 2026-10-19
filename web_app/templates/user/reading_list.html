@@ -1,5 +1,6 @@
 {% extends "base_account.html" %}
 {% block account_content %}
+<section class="account-panel">
 <h2>Lista czytanych książek</h2>
 {% if selected_user %}
 <p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
@@ -15,4 +16,5 @@
 {% else %}
 <p>Brak aktywnych książek.</p>
 {% endif %}
+</section>
 {% endblock %}

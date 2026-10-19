@@ -91,6 +91,42 @@ body {
   font-weight: 600;
 }
 
+.account-page {
+  width: min(100% - 2rem, 56rem);
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.account-page > h2 {
+  margin-bottom: 0.35rem;
+  overflow-wrap: anywhere;
+}
+
+.account-page > ul:not(.list-group) {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+}
+
+.account-page > ul:not(.list-group) li {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--account-bg-secondary);
+  overflow-wrap: anywhere;
+}
+
+.account-page .list-group {
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.account-page .list-group-item {
+  overflow-wrap: anywhere;
+}
+
+.account-page .text-muted {
+  overflow-wrap: anywhere;
+}
+
 .btn-minimal {
   color: var(--account-accent) !important;
   font-weight: 700;
@@ -99,6 +135,18 @@ body {
 }
 
 @media (max-width: 768px) {
+  .account-page {
+    width: min(100% - 2rem, 42rem);
+  }
+
+  .account-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .account-page .list-group-item {
+    padding: 0.85rem 1rem;
+  }
+
   .dashboard-root-container {
     width: min(100% - 2rem, 42rem) !important;
   }
@@ -114,6 +162,14 @@ body {
 }
 
 @media (max-width: 480px) {
+  .account-page {
+    width: min(100% - 1rem, 42rem);
+  }
+
+  .account-page .list-group-item {
+    padding-inline: 0.75rem;
+  }
+
   .dashboard-root-container {
     width: min(100% - 1rem, 42rem) !important;
   }
