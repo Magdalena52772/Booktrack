@@ -1,5 +1,6 @@
 {% extends "base_account.html" %}
 {% block account_content %}
+<section class="account-panel">
 <h2>Twój profil</h2>
 {% if selected_user %}
 <ul>
@@ -21,4 +22,5 @@
 {% else %}
 <p>Brak użytkowników w bazie.</p>
 {% endif %}
+</section>
 {% endblock %}
