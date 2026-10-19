@@ -104,6 +104,7 @@ def searching(request):
     context = {
         "query": query,
         "books": books,
+        "genre_links": list(GENRE_SLUG_TO_LABEL.items()),
     }
     return render(request, "books/explore.html", context)
 

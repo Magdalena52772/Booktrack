@@ -1,6 +1,6 @@
 {% extends "base_public.html" %}
 {% block content %}
-<div class="container" style="margin-top: 50px;">
+<main class="public-page">
   <h1 style="color: #611515;">Najczęściej dodawane książki</h1>
   <p>Top pozycji najczęściej przypisywanych czytelnikom.</p>
   {% if books %}
@@ -14,5 +14,5 @@
   {% else %}
   <p>Brak danych.</p>
   {% endif %}
-</div>
+</main>
 {% endblock %}
