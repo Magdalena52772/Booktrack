@@ -2,22 +2,45 @@
 {% block content %}
 <main class="public-page">
     <div class="public-page-heading">
-      <p class="eyebrow">BOOK TRACK</p>
-      <h1>Trendujące teraz</h1>
-      <p class="text-muted">Książki, przy których czytelnicy spędzają najwięcej czasu.</p>
+      <p class="eyebrow">BOOK TRACK · UKOŃCZONE</p>
+      <h1>Najczęściej przeczytane</h1>
+      <p class="text-muted">Książki, które najwięcej użytkowników oznaczyło jako przeczytane.</p>
     </div>
     {% if books %}
     <ol class="book-ranking">
         {% for book in books %}
             <li class="book-ranking-item">
               <span class="book-rank">#{{ book.rank }}</span>
+              <div class="ranking-book-cover">
+                <img data-cover-work="{{ book.cover_work_id }}" alt="Okładka książki {{ book.title }}" hidden>
+                <span class="material-symbols-outlined cover-fallback" aria-hidden="true">auto_stories</span>
+              </div>
               <span class="book-ranking-info">
                 <strong>{{ book.title }}</strong>
-                <small>{{ book.author }} · {{ book.total_pages }} przeczytanych stron</small>
+                <small>{{ book.author }} · {{ book.readers }} {% if book.readers == 1 %}użytkownik{% else %}użytkowników{% endif %}</small>
               </span>
             </li>
         {% endfor %}
     </ol>
+    <script>
+      (() => {
+        document.querySelectorAll("[data-cover-work]").forEach(async (image) => {
+          if (!image.dataset.coverWork) return;
+          try {
+            const response = await fetch(`https://openlibrary.org/works/${image.dataset.coverWork}.json`);
+            if (!response.ok) throw new Error("Open Library request failed");
+            const work = await response.json();
+            const coverId = Array.isArray(work.covers) ? work.covers[0] : null;
+            if (!coverId) throw new Error("Cover not found");
+            image.src = `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
+            image.hidden = false;
+            image.parentElement.classList.add("has-cover");
+          } catch {
+            image.parentElement.classList.add("is-empty");
+          }
+        });
+      })();
+    </script>
     {% else %}
     <div class="empty-state">Brak danych o aktywności czytelników.</div>
     {% endif %}

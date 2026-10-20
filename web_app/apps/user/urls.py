@@ -4,8 +4,11 @@ from . import views
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('reading-list/', views.reading_list, name='reading_list'),
+    path('books/<int:user_book_id>/', views.user_book_detail, name='user_book_detail'),
     path('favourites/', views.favourite_books, name='favourite_books'),
-    path('lists/', views.lists, name='lists'),
+    path('to-read/', views.to_read_books, name='to_read_books'),
+    path('library/search/', views.library_search, name='library_search'),
+    path('library/action/', views.library_action, name='library_action'),
     path('stats/', views.stats, name='stats'),
     path('recommendations/', views.recommendations, name='recommendations'),
     path('profile/', views.profile, name='profile'),

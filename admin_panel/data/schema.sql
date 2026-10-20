@@ -86,6 +86,26 @@ CREATE TABLE IF NOT EXISTS user_books (
     UNIQUE(user_id, book_id)              -- Każdy user może mieć każdą książkę max raz
 );
 
+CREATE TABLE IF NOT EXISTS user_favorite_books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    book_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+    UNIQUE(user_id, book_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_reading_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    book_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+    UNIQUE(user_id, book_id)
+);
+
 -- =============================
 -- TABLE: ACTIVITY
 -- =============================
@@ -153,3 +173,13 @@ CREATE TABLE IF NOT EXISTS meta (
 
 -- Indeks na timestamp w activity dla szybszych zapytań czasowych (np. aktywność dzienna/tygodniowa)
 CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON activity(timestamp);
+
+-- Komentarze i dodatkowe dane opinii zapisywane przez webową część Django.
+-- Osobna tabela nie zmienia struktury user_books używanej przez panel.
+CREATE TABLE IF NOT EXISTS user_book_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_book_id INTEGER NOT NULL UNIQUE,
+    comment TEXT NOT NULL DEFAULT '',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_book_id) REFERENCES user_books(id) ON DELETE CASCADE
+);
