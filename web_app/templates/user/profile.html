@@ -1,24 +1,31 @@
 {% extends "base_account.html" %}
 {% block account_content %}
-<section class="account-panel">
-<h2>Twój profil</h2>
+<section class="account-panel profile-page">
+<div class="profile-heading">
+  <div class="profile-avatar">{{ selected_user.username|first|upper }}</div>
+  <div>
+    <p class="stats-eyebrow">BOOK TRACK · KONTO</p>
+    <h1>Twój profil</h1>
+    <p class="text-muted">Informacje o Twoim koncie i preferencjach czytelniczych.</p>
+  </div>
+</div>
 {% if selected_user %}
-<ul>
-  <li>ID: {{ selected_user.id }}</li>
-  <li>Nazwa użytkownika: {{ selected_user.username }}</li>
-  <li>Imię i nazwisko: {{ selected_user.name|default:"-" }}</li>
-  <li>E-mail: {{ selected_user.email|default:"-" }}</li>
-  <li>Status: {{ selected_user.status }}</li>
-  <li>Średnia ocen: {{ avg_rating }}</li>
-  <li>Aktywne wyzwania: {{ active_challenges }}</li>
-  <li>Ulubione gatunki:
+<div class="profile-details">
+  <div><span>ID użytkownika</span><strong>{{ selected_user.id }}</strong></div>
+  <div><span>Nazwa użytkownika</span><strong>{{ selected_user.username }}</strong></div>
+  <div><span>Imię i nazwisko</span><strong>{{ selected_user.name|default:"-" }}</strong></div>
+  <div><span>E-mail</span><strong>{{ selected_user.email|default:"-" }}</strong></div>
+  <div><span>Status konta</span><strong>{{ selected_user.status }}</strong></div>
+  <div><span>Średnia ocen</span><strong>{{ avg_rating }}</strong></div>
+  <div><span>Aktywne wyzwania</span><strong>{{ active_challenges }}</strong></div>
+  <div class="profile-genres"><span>Ulubione gatunki</span><strong>
     {% if favorite_genres %}
       {{ favorite_genres|join:", " }}
     {% else %}
       -
     {% endif %}
-  </li>
-</ul>
+  </strong></div>
+</div>
 {% else %}
 <p>Brak użytkowników w bazie.</p>
 {% endif %}

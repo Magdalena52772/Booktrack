@@ -5,12 +5,45 @@
   --forms-link: #88384f;
 }
 
+.form-page {
+  min-height: 100vh;
+  padding: 2.5rem 1rem;
+  background: #f8f5f2;
+}
+
+.form-shell {
+  width: min(100%, 34rem);
+  margin: 0 auto;
+}
+
+.form-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 auto 1.25rem;
+}
+
+.form-brand > a:first-child {
+  color: var(--forms-primary);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.form-back-link {
+  color: #6e655f;
+  font-size: 0.85rem;
+}
+
 .auth-box {
   background-color: var(--forms-bg);
   border-radius: 15px;
-  max-width: 400px;
   width: 100%;
   border: 1px solid rgba(94, 21, 28, 0.08);
+}
+
+.auth-heading {
+  margin-bottom: 1.75rem;
 }
 
 .auth-heading .auth-mark {
@@ -26,9 +59,27 @@
   font-size: 1.35rem;
 }
 
+.form-step-label {
+  display: block;
+  color: var(--forms-link);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.55rem;
+  text-transform: uppercase;
+}
+
 .auth-heading h1 {
   color: var(--forms-primary);
+  font-size: clamp(1.65rem, 4vw, 2rem);
   font-weight: 700;
+  margin-bottom: 0.65rem;
+}
+
+.auth-heading p {
+  color: #6e655f;
+  line-height: 1.55;
+  margin-bottom: 0;
 }
 
 .auth-switch {
@@ -40,6 +91,22 @@
 .auth-box select,
 .auth-box textarea {
   min-height: 2.75rem;
+}
+
+.auth-box form > label {
+  display: block;
+  color: var(--forms-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0.9rem 0 0.35rem;
+}
+
+.auth-box form > label:first-of-type {
+  margin-top: 0;
+}
+
+.auth-box form > input {
+  margin-bottom: 0.2rem;
 }
 
 .quiz-heading {
@@ -123,6 +190,10 @@
 }
 
 @media (max-width: 576px) {
+  .form-page {
+    padding: 1.25rem 0.75rem;
+  }
+
   .auth-box {
     border-radius: 12px;
   }

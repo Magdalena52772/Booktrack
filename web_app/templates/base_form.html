@@ -1,14 +1,15 @@
 {% extends "base.html" %} {% load static %} {% block head %}
-<link rel="stylesheet" href="{% static 'css/forms.css' %}" />
-{% endblock %} {% block header %}
-<div class="text-center mb-4">
-  <a href="/" class="text-decoration-none h2 text-dark fw-bold">Book Track</a>
-  <a href="/" class="btn btn-link mt-2 text-secondary">&laquo; Powrót</a>
-</div>
-{% endblock %}{% block content %}
-<main class="d-flex justify-content-center align-items-center min-vh-100 bg-light py-4 px-3">
-  <div class="auth-box card p-4 shadow-sm">
-    {% block form_content %}{% endblock %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}?v=forms-layout-2" />
+{% endblock %} {% block content %}
+<main class="form-page">
+  <div class="form-shell">
+    <header class="form-brand">
+      <a href="/" class="text-decoration-none">Book Track</a>
+      <a href="/" class="form-back-link">&laquo; Powrót</a>
+    </header>
+    <section class="auth-box card p-4 p-sm-5 shadow-sm">
+      {% block form_content %}{% endblock %}
+    </section>
   </div>
 </main>
 {% endblock %}
