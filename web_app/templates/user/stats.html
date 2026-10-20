@@ -10,8 +10,13 @@
   <div class="stats-tile-grid">
     <article class="stats-tile stats-tile-primary">
       <span class="material-symbols-outlined">menu_book</span>
-      <strong><a class="stats-tile-value-link" href="{% url 'reading_list' %}">{{ stats.books_read }}</a></strong>
-      <small>przeczytanych książek</small>
+      <strong><a class="stats-tile-value-link" href="{% url 'reading_list' %}">{{ stats.books_read_year }}</a></strong>
+      <small>książek przeczytanych w {{ stats.current_year }}</small>
+      <div class="stats-mini-chart" aria-label="Książki przeczytane w tym roku">
+        {% for item in book_chart %}
+          <i style="height: {{ item.bar_height|default:2 }}px;" title="{{ item.label }}: {{ item.count }}"></i>
+        {% endfor %}
+      </div>
     </article>
     <article class="stats-tile">
       <span class="material-symbols-outlined">auto_stories</span>
@@ -51,10 +56,40 @@
   <section class="stats-chart-card">
     <div class="stats-chart-heading">
       <div>
+        <h2>Przeczytane książki</h2>
+        <p>Ukończone książki — {{ book_period_label }}.</p>
+      </div>
+      <span class="material-symbols-outlined">monitoring</span>
+    </div>
+    <div class="stats-period-switcher" aria-label="Zakres wykresu">
+      <a class="{% if book_chart_period == 'week' %}active{% endif %}" href="?period=week">Tydzień</a>
+      <a class="{% if book_chart_period == 'month' %}active{% endif %}" href="?period=month">Miesiąc</a>
+      <a class="{% if book_chart_period == 'year' %}active{% endif %}" href="?period=year">Rok</a>
+    </div>
+    {% if book_chart %}
+      <div class="stats-chart stats-book-chart" role="img" aria-label="Wykres liczby przeczytanych książek">
+        {% for day in book_chart %}
+          <div class="stats-chart-column">
+            <div class="stats-chart-bar-wrap">
+              <div class="stats-chart-bar" style="height: {{ day.bar_height }}px;" title="{{ day.label }}: {{ day.count }} książek"></div>
+            </div>
+            <small>{{ day.label }}</small>
+            <span>{{ day.count }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="stats-empty">Brak ukończonych książek w wybranym okresie.</div>
+    {% endif %}
+  </section>
+
+  <section class="stats-chart-card">
+    <div class="stats-chart-heading">
+      <div>
         <h2>Tempo czytania</h2>
         <p>Przeczytane strony w ostatnich 14 dniach.</p>
       </div>
-      <span class="material-symbols-outlined">monitoring</span>
+      <span class="material-symbols-outlined">auto_stories</span>
     </div>
     {% if activity_chart %}
       <div class="stats-chart" role="img" aria-label="Wykres liczby przeczytanych stron w ostatnich 14 dniach">

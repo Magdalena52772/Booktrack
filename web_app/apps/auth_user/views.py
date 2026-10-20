@@ -9,7 +9,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from pages.models import BooktrackUser, Genre, UserFavoriteGenre
+from pages.models import BooktrackUser, Genre, UserFavoriteGenre, UserNotification
 from .quiz_data import GENRE_LABELS, TAGS_BY_GENRE
 
 
@@ -36,6 +36,19 @@ def login_view(request):
 
         if user is not None:
             auth_login(request, user)
+            today = timezone.localdate()
+            if not UserNotification.objects.filter(
+                user_id=user.id,
+                notification_type="daily_login",
+                created_at__date=today,
+            ).exists():
+                login_message = "Twój licznik dni z rzędu właśnie wzrósł! 🔥"
+                UserNotification.objects.create(
+                    user_id=user.id,
+                    message=login_message,
+                    notification_type="daily_login",
+                )
+                messages.success(request, login_message)
             return redirect("dashboard")
 
         messages.error(request, "Nieprawidłowa nazwa użytkownika lub hasło.")
