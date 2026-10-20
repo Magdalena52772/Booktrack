@@ -166,6 +166,23 @@ class UserReadingQueue(models.Model):
         unique_together = (("user", "book"),)
 
 
+class UserNotification(models.Model):
+    user = models.ForeignKey(
+        BooktrackUser,
+        on_delete=models.CASCADE,
+        db_column="user_id",
+        related_name="notifications",
+    )
+    message = models.TextField()
+    notification_type = models.TextField(default="info")
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "user_notifications"
+        ordering = ("-created_at", "-id")
+
+
 class UserBookReview(models.Model):
     user_book = models.OneToOneField(
         UserBook,

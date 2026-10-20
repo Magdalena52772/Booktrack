@@ -18,6 +18,22 @@
     <div class="collapse navbar-collapse justify-content-end" id="navbarUser">
       <ul class="navbar-nav mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="nav-item nav-notifications">
+          <a class="nav-link notification-bell" href="{% url 'notifications' %}" aria-label="Powiadomienia" title="Powiadomienia">
+            <span class="material-symbols-outlined">notifications</span>
+            {% if unread_notification_count %}<span class="notification-dot" aria-label="Nowe powiadomienia"></span>{% endif %}
+          </a>
+          {% if recent_notifications %}
+          <div class="notification-preview" aria-label="Ostatnie powiadomienia">
+            {% for notification in recent_notifications|slice:":5" %}
+              <a href="{% url 'notifications' %}" class="{% if not notification.is_read %}notification-preview-unread{% endif %}">
+                {{ notification.message }}
+              </a>
+            {% endfor %}
+            <a href="{% url 'notifications' %}" class="notification-preview-all">Zobacz wszystkie</a>
+          </div>
+          {% endif %}
+        </li>
         <li class="nav-item"><a class="nav-link" href="{% url 'reading_list' %}">Czytane książki</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'favourite_books' %}">Ulubione</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'to_read_books' %}">Do przeczytania</a></li>
@@ -36,4 +52,16 @@
     {% endblock %}
     </main>
 </div>
+{% if messages %}
+  <div class="feel-good-toast-stack" aria-live="polite">
+    {% for message in messages %}
+      <div class="feel-good-toast">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+<script>
+  window.setTimeout(() => {
+    document.querySelectorAll(".feel-good-toast").forEach((toast) => toast.classList.add("feel-good-toast-hidden"));
+  }, 5000);
+</script>
 {% endblock %}
