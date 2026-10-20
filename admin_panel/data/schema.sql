@@ -107,6 +107,19 @@ CREATE TABLE IF NOT EXISTS user_reading_queue (
 );
 
 -- =============================
+-- TABLE: USER NOTIFICATIONS
+-- =============================
+CREATE TABLE IF NOT EXISTS user_notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    notification_type TEXT NOT NULL DEFAULT 'info',
+    is_read INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- =============================
 -- TABLE: ACTIVITY
 -- =============================
 -- Historia sesji czytelniczych (podstawa wykresów aktywności dziennej/tygodniowej)

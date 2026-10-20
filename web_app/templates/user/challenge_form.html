@@ -1,0 +1,57 @@
+{% extends "base_account.html" %}
+
+{% block account_content %}
+<section class="account-panel challenge-form-page">
+  <div class="library-heading">
+    <div>
+      <p class="stats-eyebrow">TWOJE CELE</p>
+      <h1>Dodaj wyzwanie</h1>
+      <p class="text-muted">Wybierz preset i ustaw rok, w którym wyzwanie ma się zakończyć.</p>
+    </div>
+    <span class="material-symbols-outlined">emoji_events</span>
+  </div>
+
+  {% if error %}<div class="book-form-error">{{ error }}</div>{% endif %}
+  <form method="post" class="challenge-form">
+    {% csrf_token %}
+    <label for="challenge_type">Kategoria</label>
+    <select id="challenge_type" name="challenge_type">
+      <option value="quantity" {% if challenge_type == "quantity" %}selected{% endif %}>Ilościowe — przeczytam X książek</option>
+      <option value="genre" {% if challenge_type == "genre" %}selected{% endif %}>Gatunkowe — odkrywca</option>
+      <option value="streak" {% if challenge_type == "streak" %}selected{% endif %}>Dyscyplina — dni z rzędu</option>
+    </select>
+
+    <label for="target_value">Cel</label>
+    <input id="target_value" name="target_value" type="number" min="1" max="1000" value="{{ target_value }}" required>
+    <small class="form-help">Propozycje: 12, 24 lub 52 książki; 14, 30 lub 100 dni.</small>
+
+    <label for="year">Rok zakończenia</label>
+    <select id="year" name="year">
+      {% for year in available_years %}
+        <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }} (do 31.12.{{ year }})</option>
+      {% endfor %}
+    </select>
+
+    <div id="genre-field">
+      <label for="genre_id">Gatunek</label>
+      <select id="genre_id" name="genre_id">
+        <option value="">Wybierz gatunek</option>
+        {% for genre in genres %}
+          <option value="{{ genre.id }}" {% if selected_genre_id == genre.id|stringformat:"s" %}selected{% endif %}>{{ genre.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button class="library-action library-action-primary" type="submit">Utwórz wyzwanie</button>
+  </form>
+</section>
+<script>
+  (() => {
+    const type = document.querySelector("#challenge_type");
+    const genre = document.querySelector("#genre-field");
+    const update = () => { genre.hidden = type.value !== "genre"; };
+    type.addEventListener("change", update);
+    update();
+  })();
+</script>
+{% endblock %}
