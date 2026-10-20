@@ -1,0 +1,104 @@
+{% extends "base_account.html" %}
+{% block account_content %}
+<section class="account-panel book-detail-page">
+  <a class="btn-minimal" href="{% url 'reading_list' %}">← Wróć do listy książek</a>
+  <div class="book-detail-heading">
+    <div>
+      <p class="stats-eyebrow">TWOJA KSIĄŻKA</p>
+      <h1>{{ user_book.book.title }}</h1>
+      {% if user_book.book.authors %}<p class="text-muted">{{ user_book.book.authors }}</p>{% endif %}
+    </div>
+    <span class="book-detail-status">{{ user_book.status|title }}</span>
+  </div>
+
+  <div class="book-progress-card">
+    <div>
+      <span>Postęp czytania</span>
+      <strong>{{ user_book.current_page }}{% if user_book.book.total_pages %} / {{ user_book.book.total_pages }}{% endif %} stron</strong>
+    </div>
+    {% if user_book.book.total_pages %}
+      <div class="progress book-detail-progress">
+        <div class="progress-bar" style="width: {% widthratio user_book.current_page user_book.book.total_pages 100 %}%"></div>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if error %}<div class="book-form-error" role="alert">{{ error }}</div>{% endif %}
+
+  <form method="post" class="book-session-form">
+    {% csrf_token %}
+    {% if user_book.status != "finished" %}
+      <h2>Dodaj sesję czytania</h2>
+      <p class="text-muted">Zapisz, ile stron udało Ci się przeczytać podczas jednej sesji.</p>
+      <div class="book-form-grid">
+        <label>
+          Strony w sesji
+          <input type="number" name="pages_read" min="0" max="1000" value="0" required>
+        </label>
+        <label>
+          Czas sesji (minuty)
+          <input type="number" name="session_minutes" min="0" value="0" required>
+        </label>
+      </div>
+      <label class="book-finish-check">
+        <input type="checkbox" name="mark_finished">
+        Oznacz jako przeczytaną
+      </label>
+    {% else %}
+      <div class="book-finished-notice">
+        <span class="material-symbols-outlined">task_alt</span>
+        <div>
+          <strong>Ta książka jest już przeczytana</strong>
+          <p>Sesje czytania są zamknięte. Możesz nadal edytować swoją ocenę i komentarz.</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="book-review-fields">
+      <h2>Ocena i komentarz</h2>
+      <p class="text-muted">
+        {% if user_book.status == "finished" %}Zaktualizuj swoją opinię o tej książce.{% else %}Ocena będzie wymagana po oznaczeniu książki jako przeczytanej.{% endif %}
+      </p>
+      <label>
+        Ocena
+        <select name="rating">
+          <option value="">Wybierz ocenę</option>
+          {% for value in "12345" %}
+            <option value="{{ value }}" {% if user_book.rating|stringformat:"s" == value %}selected{% endif %}>{{ value }} / 5 gwiazdek</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Komentarz
+        <textarea name="comment" rows="5" maxlength="2000" placeholder="Co sądzisz o tej książce?">{% if review %}{{ review.comment }}{% endif %}</textarea>
+      </label>
+    </div>
+    <button class="btn-accent book-submit-button" type="submit">Zapisz zmiany</button>
+  </form>
+
+  <section class="book-sessions-card">
+    <div class="book-sessions-heading">
+      <div>
+        <h2>Sesje czytania</h2>
+        <p>Ostatnie zapisane sesje dla tej książki.</p>
+      </div>
+      <span class="material-symbols-outlined">history</span>
+    </div>
+    {% if reading_sessions %}
+      <div class="book-sessions-list">
+        {% for session in reading_sessions %}
+          <div class="book-session-row">
+            <div>
+              <strong>{{ session.timestamp|date:"d.m.Y, H:i" }}</strong>
+              <span>{{ session.pages_read }} stron</span>
+            </div>
+            <span>{{ session.session_minutes }} min</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="book-sessions-empty">Nie ma jeszcze zapisanych sesji. Dodaj pierwszą powyżej.</p>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

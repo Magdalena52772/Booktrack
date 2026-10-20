@@ -16,17 +16,7 @@ from .quiz_data import GENRE_LABELS, TAGS_BY_GENRE
 # Strona wejściowa modułu uwierzytelniania.
 @ensure_csrf_cookie
 def auth_welcome(request):
-    if request.method == "POST":
-        email = (request.POST.get("email") or "").strip()
-        try:
-            validate_email(email)
-        except ValidationError:
-            messages.error(request, "Podaj poprawny adres e-mail.")
-        else:
-            request.session["registration_email"] = email
-            return redirect("register_st1")
-
-    return render(request, "auth/welcome.html")
+    return redirect("register_st1")
 
 
 @ensure_csrf_cookie
@@ -63,7 +53,7 @@ def _registration_form_data(request):
 
 def register_st1(request):
     form_data = {
-        "registration_email": request.session.get("registration_email", ""),
+        "registration_email": "",
         "registration_username": "",
         "registration_birth_date": "",
     }
@@ -198,17 +188,3 @@ def register_st3(request):
         "auth/register_step3.html",
         {"available_tags": available_tags},
     )
-
-# Kroki personalizacji
-def personalization_st1(request):
-    return render(request, "auth/personalization_step1.html")
-
-def personalization_st2(request):
-    return render(request, "auth/personalization_step2.html")
-
-def personalization_st3(request):
-    return render(request, "auth/personalization_step3.html")
-
-# Sukces operacji
-def success(request):
-    return render(request, "auth/success.html")

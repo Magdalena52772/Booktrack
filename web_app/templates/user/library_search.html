@@ -1,0 +1,54 @@
+{% extends "base_account.html" %}
+{% block account_content %}
+<section class="account-panel library-search-page">
+  <div class="library-heading">
+    <div>
+      <p class="stats-eyebrow">TWOJA BIBLIOTEKA</p>
+      <h1>Dodaj książkę do listy</h1>
+      <p class="text-muted">Wyszukaj po tytule lub autorze, a następnie wybierz odpowiednią akcję.</p>
+    </div>
+    <span class="material-symbols-outlined">manage_search</span>
+  </div>
+  <form class="library-search-form" method="get">
+    <input type="search" name="query" value="{{ query }}" maxlength="100" placeholder="np. Harry Potter" aria-label="Tytuł lub autor">
+    <button type="submit">Szukaj</button>
+  </form>
+  {% if query_error %}<div class="book-form-error">{{ query_error }}</div>{% endif %}
+  {% if query %}
+    <p class="search-summary">Wyniki dla: <strong>{{ query }}</strong></p>
+    <div class="library-result-list">
+      {% for book in books %}
+        <article class="library-result-card">
+          <div>
+            <strong>{{ book.title }}</strong>
+            <span>{{ book.authors|default:"Nieznany autor" }}</span>
+          </div>
+          <div class="library-result-actions">
+            <form method="post" action="{% url 'library_action' %}">
+              {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="next" value="library_search">
+              {% if book.id in favorite_ids %}
+                <input type="hidden" name="action" value="unfavorite"><button class="library-action library-action-active" type="submit" title="Usuń z ulubionych">♥</button>
+              {% else %}
+                <input type="hidden" name="action" value="favorite"><button class="library-action" type="submit" title="Dodaj do ulubionych">♡</button>
+              {% endif %}
+            </form>
+            {% if book.id in reading_ids %}
+              <a class="library-action library-action-reading" href="{% url 'reading_list' %}">Czytasz</a>
+            {% elif book.id in queue_ids %}
+              <form method="post" action="{% url 'library_action' %}">
+                {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="action" value="start_reading"><input type="hidden" name="next" value="library_search"><button class="library-action library-action-primary" type="submit">Zacznij czytać</button>
+              </form>
+            {% else %}
+              <form method="post" action="{% url 'library_action' %}">
+                {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="action" value="to_read"><input type="hidden" name="next" value="library_search"><button class="library-action" type="submit">Do przeczytania</button>
+              </form>
+            {% endif %}
+          </div>
+        </article>
+      {% empty %}<p class="library-empty">Nie znaleziono książek.</p>{% endfor %}
+    </div>
+  {% else %}
+    <p class="library-empty">Wpisz tytuł lub autora, aby znaleźć książkę.</p>
+  {% endif %}
+</section>
+{% endblock %}

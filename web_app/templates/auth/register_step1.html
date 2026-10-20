@@ -3,18 +3,24 @@
 {% block title %}Zarejestruj się | Book Track{% endblock %}
 
 {% block form_content %}
-<div class="auth-container">
-  <div class="auth-box">
-    <div class="auth-header">
-      <h1>Utwórz konto</h1>
-      <a href="{% url 'home' %}" class="back-link">← Wróć</a>
-    </div>
+<div class="auth-heading">
+  <span class="form-step-label">Rejestracja · krok 1 z 3</span>
+  <h1>Utwórz konto</h1>
+  <p>Uzupełnij dane konta. W kolejnym kroku wybierzesz od 1 do 3 ulubionych gatunków.</p>
+</div>
 
-    <form method="post">
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-danger" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="post">
       {% csrf_token %}
       <label for="email">Adres e-mail</label>
       <input
         type="email"
+        class="form-control"
         id="email"
         name="email"
         placeholder="Wprowadź e-mail"
@@ -24,6 +30,7 @@
       <label for="username">Nazwa użytkownika</label>
       <input
         type="text"
+        class="form-control"
         id="username"
         name="username"
         placeholder="Wprowadź nazwę użytkownika"
@@ -33,6 +40,7 @@
       <label for="birth-date">Data urodzenia</label>
       <input
         type="date"
+        class="form-control"
         id="birth-date"
         name="birth_date"
         value="{{ registration_birth_date }}"
@@ -43,6 +51,7 @@
       <label for="password">Hasło</label>
       <input
         type="password"
+        class="form-control"
         id="password"
         name="password"
         placeholder="Wprowadź hasło"
@@ -51,13 +60,12 @@
       <label for="password-confirm">Potwierdź hasło</label>
       <input
         type="password"
+        class="form-control"
         id="password-confirm"
         name="password-confirm"
         placeholder="Potwierdź hasło"
       />
 
-      <button type="submit">Utwórz konto</button>
+      <button type="submit" class="btn btn-primary w-100">Dalej: wybierz gatunki</button>
     </form>
-  </div>
-</div>
 {% endblock %}

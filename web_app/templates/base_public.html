@@ -1,6 +1,6 @@
 {% extends "base.html"%} {% load static %} {% block head %}
 
-<link rel="stylesheet" href="{% static 'css/public.css' %}" />
+<link rel="stylesheet" href="{% static 'css/public.css' %}?v=genre-covers" />
 {% endblock %} {% block header %}
 
 <nav
@@ -95,6 +95,7 @@
           name="query"
           placeholder="Szukaj książek..."
           aria-label="Szukaj"
+          maxlength="100"
         />
         <button class="btn btn-outline-light search-btn" type="submit">
           <img
@@ -105,14 +106,26 @@
         </button>
       </form>
 
-      <!-- Logowanie/Rejestracja -->
+      <!-- Konto -->
       <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'login' %}">Zaloguj się</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'auth_welcome' %}">Zarejestruj się</a>
-        </li>
+        {% if request.user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link public-account-link" href="{% url 'dashboard' %}" title="Wróć do panelu użytkownika">
+              <span class="public-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
+              <span>{{ request.user.username }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}" onclick="return confirm('Czy na pewno chcesz się wylogować?');">Wyloguj</a>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login' %}">Zaloguj się</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'auth_welcome' %}">Zarejestruj się</a>
+          </li>
+        {% endif %}
       </ul>
     </div>
   </div>
