@@ -2,27 +2,43 @@
 {% load static %} 
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/account.css' %}" />
+<link rel="stylesheet" href="{% static 'css/account.css' %}?v=library-lists-1" />
 {% endblock %} 
 
 {% block header %}
 <header class="navbar navbar-expand-lg mb-4" style="background-color: var(--account-accent)">
   <div class="container-fluid d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
-      <a class="navbar-brand me-3 text-light" href="/" style="color: var(--account-light-text)">Book Track</a>
-      <a class="navbar-brand me-3 text-light" href="/user/dashboard" style="color: var(--account-light-text)">Panel użytkownika</a>
+      <a class="navbar-brand me-3 text-light" href="/">Book Track</a>
+      <a class="navbar-brand me-3 text-light" href="/user/dashboard">Panel użytkownika</a>
     </div>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUser">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse justify-content-end" id="navbarUser">
       <ul class="navbar-nav mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}" style="color: var(--account-light-text)">Dashboard</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'reading_list' %}" style="color: var(--account-light-text)">Czytane książki</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'favourite_books' %}" style="color: var(--account-light-text)">Ulubione</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'stats' %}" style="color: var(--account-light-text)">Statystyki</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}" style="color: var(--account-light-text)">Profil</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}" style="color: var(--account-light-text)">Wyloguj</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="nav-item nav-notifications">
+          <a class="nav-link notification-bell" href="{% url 'notifications' %}" aria-label="Powiadomienia" title="Powiadomienia">
+            <span class="material-symbols-outlined">notifications</span>
+            {% if unread_notification_count %}<span class="notification-dot" aria-label="Nowe powiadomienia"></span>{% endif %}
+          </a>
+          {% if recent_notifications %}
+          <div class="notification-preview" aria-label="Ostatnie powiadomienia">
+            {% for notification in recent_notifications|slice:":5" %}
+              <a href="{% url 'notifications' %}" class="{% if not notification.is_read %}notification-preview-unread{% endif %}">
+                {{ notification.message }}
+              </a>
+            {% endfor %}
+            <a href="{% url 'notifications' %}" class="notification-preview-all">Zobacz wszystkie</a>
+          </div>
+          {% endif %}
+        </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'reading_list' %}">Czytane książki</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'favourite_books' %}">Ulubione</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'to_read_books' %}">Do przeczytania</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'stats' %}">Statystyki</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}" onclick="return confirm('Czy na pewno chcesz się wylogować?');">Wyloguj</a></li>
       </ul>
     </div>
   </div>
@@ -31,7 +47,21 @@
 
 {% block content %}
 <div class="dashboard-root">
-    {% block account_content %} 
+    <main class="account-page">
+    {% block account_content %}
     {% endblock %}
+    </main>
 </div>
+{% if messages %}
+  <div class="feel-good-toast-stack" aria-live="polite">
+    {% for message in messages %}
+      <div class="feel-good-toast">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+<script>
+  window.setTimeout(() => {
+    document.querySelectorAll(".feel-good-toast").forEach((toast) => toast.classList.add("feel-good-toast-hidden"));
+  }, 5000);
+</script>
 {% endblock %}

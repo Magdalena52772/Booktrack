@@ -1,0 +1,31 @@
+{% extends "base_account.html" %}
+
+{% block account_content %}
+<section class="account-panel notifications-page">
+  <div class="library-heading">
+    <div>
+      <p class="stats-eyebrow">TWOJE POWIADOMIENIA</p>
+      <h1>Powiadomienia</h1>
+      <p class="text-muted">Ostatnie 10 informacji o Twoim postępie i bibliotece.</p>
+    </div>
+    <span class="material-symbols-outlined">notifications</span>
+  </div>
+  {% if notifications %}
+    <div class="notification-list">
+      {% for notification in notifications %}
+        <article class="notification-card {% if not notification.is_read %}notification-unread{% endif %}">
+          <span class="material-symbols-outlined">
+            {% if notification.notification_type == "achievement" %}emoji_events{% elif notification.notification_type == "book" %}auto_stories{% else %}notifications{% endif %}
+          </span>
+          <div>
+            <p>{{ notification.message }}</p>
+            <small>{{ notification.created_at|date:"d.m.Y, H:i" }}</small>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="library-empty">Nie masz jeszcze powiadomień.</p>
+  {% endif %}
+</section>
+{% endblock %}

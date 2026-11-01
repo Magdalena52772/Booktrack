@@ -5,11 +5,198 @@
   --forms-link: #88384f;
 }
 
+.form-page {
+  min-height: 100vh;
+  padding: 2.5rem 1rem;
+  background: #f8f5f2;
+}
+
+.form-shell {
+  width: min(100%, 34rem);
+  margin: 0 auto;
+}
+
+.form-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 auto 1.25rem;
+}
+
+.form-brand > a:first-child {
+  color: var(--forms-primary);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.form-back-link {
+  color: #6e655f;
+  font-size: 0.85rem;
+}
+
 .auth-box {
   background-color: var(--forms-bg);
   border-radius: 15px;
-  max-width: 400px;
   width: 100%;
+  border: 1px solid rgba(94, 21, 28, 0.08);
+}
+
+.auth-heading {
+  margin-bottom: 1.75rem;
+}
+
+.auth-heading .auth-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.75rem;
+  border-radius: 50%;
+  background-color: var(--forms-primary);
+  color: var(--forms-bg);
+  font-size: 1.35rem;
+}
+
+.form-step-label {
+  display: block;
+  color: var(--forms-link);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.55rem;
+  text-transform: uppercase;
+}
+
+.auth-heading h1 {
+  color: var(--forms-primary);
+  font-size: clamp(1.65rem, 4vw, 2rem);
+  font-weight: 700;
+  margin-bottom: 0.65rem;
+}
+
+.auth-heading p {
+  color: #6e655f;
+  line-height: 1.55;
+  margin-bottom: 0;
+}
+
+.auth-switch {
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.auth-box input,
+.auth-box select,
+.auth-box textarea {
+  min-height: 2.75rem;
+}
+
+.auth-box form > label {
+  display: block;
+  color: var(--forms-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0.9rem 0 0.35rem;
+}
+
+.auth-box form > label:first-of-type {
+  margin-top: 0;
+}
+
+.auth-box form > input {
+  margin-bottom: 0.2rem;
+}
+
+.quiz-heading {
+  margin-bottom: 1.5rem;
+}
+
+.quiz-heading h1 {
+  color: var(--forms-primary);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.quiz-heading p {
+  color: #6e655f;
+  margin-bottom: 0;
+}
+
+.quiz-step-label {
+  color: var(--forms-link);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.quiz-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.quiz-option {
+  cursor: pointer;
+}
+
+.quiz-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.quiz-option span {
+  display: block;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(94, 21, 28, 0.35);
+  border-radius: 999px;
+  color: var(--forms-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.quiz-option span:hover {
+  background-color: rgba(136, 56, 79, 0.08);
+}
+
+.quiz-option input:checked + span {
+  background-color: var(--forms-primary);
+  color: var(--forms-bg);
+}
+
+.quiz-option input:focus-visible + span {
+  outline: 3px solid rgba(136, 56, 79, 0.25);
+  outline-offset: 2px;
+}
+
+.motif-group {
+  border: 0;
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.motif-group legend {
+  color: var(--forms-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+}
+
+.auth-box button,
+.auth-box .btn {
+  min-height: 2.75rem;
+}
+
+@media (max-width: 576px) {
+  .form-page {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .auth-box {
+    border-radius: 12px;
+  }
 }
 
 .btn-primary {
@@ -19,6 +206,12 @@
 
 .btn-primary:hover {
   background-color: var(--forms-primary-hover);
+}
+
+.btn-primary:focus-visible,
+.auth-box input:focus {
+  border-color: var(--forms-primary-hover);
+  box-shadow: 0 0 0 0.2rem rgba(136, 56, 79, 0.2);
 }
 
 a {

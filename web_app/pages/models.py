@@ -146,6 +146,57 @@ class UserBook(models.Model):
         unique_together = (("user", "book"),)
 
 
+class UserFavoriteBook(models.Model):
+    user = models.ForeignKey(BooktrackUser, on_delete=models.CASCADE, db_column="user_id", related_name="favorite_book_links")
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, db_column="book_id", related_name="favorite_book_links")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "user_favorite_books"
+        unique_together = (("user", "book"),)
+
+
+class UserReadingQueue(models.Model):
+    user = models.ForeignKey(BooktrackUser, on_delete=models.CASCADE, db_column="user_id", related_name="reading_queue_links")
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, db_column="book_id", related_name="reading_queue_links")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "user_reading_queue"
+        unique_together = (("user", "book"),)
+
+
+class UserNotification(models.Model):
+    user = models.ForeignKey(
+        BooktrackUser,
+        on_delete=models.CASCADE,
+        db_column="user_id",
+        related_name="notifications",
+    )
+    message = models.TextField()
+    notification_type = models.TextField(default="info")
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "user_notifications"
+        ordering = ("-created_at", "-id")
+
+
+class UserBookReview(models.Model):
+    user_book = models.OneToOneField(
+        UserBook,
+        on_delete=models.CASCADE,
+        db_column="user_book_id",
+        related_name="review",
+    )
+    comment = models.TextField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "user_book_reviews"
+
+
 class Activity(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
