@@ -1,2 +1,35 @@
-{% extends "base_form.html" %} {% block title %}Zarejestruj się | Book Track{%
-endblock %} {% block form_content %} {% endblock %}
+{% extends "base_form.html" %}
+
+{% block title %}Wybierz gatunki | Book Track{% endblock %}
+
+{% block form_content %}
+<div class="quiz-heading">
+  <span class="quiz-step-label">Rejestracja · krok 2 z 3 · obowiązkowo</span>
+  <h1>Co lubisz czytać?</h1>
+  <p>Wybierz od 1 do 3 gatunków. Dzięki temu od razu przygotujemy rekomendacje.</p>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-danger" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <div class="quiz-options">
+    {% for value, label in genres.items %}
+      <label class="quiz-option">
+        <input
+          type="checkbox"
+          name="genres"
+          value="{{ value }}"
+          {% if value in selected_genres %}checked{% endif %}
+        />
+        <span>{{ label }}</span>
+      </label>
+    {% endfor %}
+  </div>
+  <button type="submit" class="btn btn-primary w-100 mt-4">Dalej</button>
+</form>
+{% endblock %}

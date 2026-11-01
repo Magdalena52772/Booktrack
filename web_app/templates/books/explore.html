@@ -1,23 +1,50 @@
 {% extends "base_public.html" %}
 {% block content %}
-<div class="container mt-4">
-  <h2>Wyszukiwanie książek</h2>
-  {% if query %}
-    <p>Wyniki dla: <strong>{{ query }}</strong></p>
+<main class="public-page">
+<div class="search-page">
+  <div class="public-page-heading">
+    <p class="eyebrow">BOOK TRACK · BIBLIOTEKA</p>
+    <h1>Znajdź książkę</h1>
+    <p class="text-muted">Wpisz fragment tytułu albo nazwiska autora.</p>
+  </div>
+
+  <form class="book-search-form" action="{% url 'searching' %}" method="get">
+    <label for="book-query">Tytuł lub autor</label>
+    <div class="book-search-row">
+      <input id="book-query" type="search" name="query" value="{{ query }}"
+        maxlength="100" placeholder="np. Harry Potter"
+        autocomplete="off">
+      <button type="submit">Szukaj</button>
+    </div>
+  </form>
+
+  {% if query_error %}
+    <div class="empty-state search-feedback">{{ query_error }}</div>
+  {% elif query %}
+    <p class="search-summary">Wyniki dla: <strong>{{ query }}</strong></p>
   {% else %}
-    <p>Wpisz frazę w polu wyszukiwania w nagłówku.</p>
+    <p class="search-summary">Wybierz gatunek albo wpisz własną frazę.</p>
+    <div class="genre-links" aria-label="Gatunki książek">
+      {% for slug, label in genre_links %}
+        <a href="{% url 'genres' slug %}">{{ label }}</a>
+      {% endfor %}
+    </div>
   {% endif %}
 
   {% if books %}
-  <ul class="list-group">
+  <ul class="search-results">
     {% for book in books %}
-    <li class="list-group-item">
-      <strong>{{ book.title }}</strong> — {{ book.authors|default:"Nieznany autor" }}
+    <li class="search-result">
+      <strong>{{ book.title }}</strong>
+      <span>{{ book.authors|default:"Nieznany autor" }}</span>
     </li>
     {% endfor %}
   </ul>
   {% elif query %}
-  <p>Brak wyników.</p>
+  <div class="empty-state search-feedback">Nie znaleziono książek pasujących do tej frazy.</div>
+  {% else %}
+  <p class="empty-state">Wybierz gatunek, aby zobaczyć książki.</p>
   {% endif %}
 </div>
+</main>
 {% endblock %}

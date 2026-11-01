@@ -1,12 +1,50 @@
-{% extends "base.html" %}
+{% extends "base_public.html" %}
+{% load static %}
+{% block title %}{{ book.title }} | Book Track{% endblock %}
 {% block content %}
-<div class="book-container">
-    <h2>{{ book.title }}</h2>
-    <p><strong>Autor:</strong> {{ book.author }}</p>
-    <div class="description">
-        {{ book.description }}
+<main class="public-page book-detail-public">
+  <a class="book-detail-back" href="{% url 'searching' %}">← Wróć do wyszukiwarki</a>
+  <section class="book-detail-hero">
+    <div class="book-detail-cover">
+      <img data-cover-work="{{ book.openlibrary_id|default:'' }}" alt="Okładka książki {{ book.title }}" hidden>
+      <span class="material-symbols-outlined cover-fallback" aria-hidden="true">auto_stories</span>
     </div>
-    <hr>
-    <a href="{% url 'dashboard' %}" class="btn btn-primary">Powrót do panelu</a>
-</div>
+    <div class="book-detail-copy">
+      <p class="eyebrow">KATALOG BOOK TRACK</p>
+      <h1>{{ book.title }}</h1>
+      <p class="book-detail-author">{{ book.authors|default:"Nieznany autor" }}</p>
+      {% if book.total_pages %}<p class="book-detail-pages">{{ book.total_pages }} stron</p>{% endif %}
+      {% if user_book %}
+        <div class="book-detail-user-state">
+          <strong>{% if user_book.status == "finished" %}Przeczytana{% else %}W trakcie czytania{% endif %}</strong>
+          <span>{{ user_book.current_page }}{% if book.total_pages %}/{{ book.total_pages }}{% endif %} stron</span>
+        </div>
+        <a class="public-detail-button" href="{% url 'user_book_detail' user_book.id %}">Otwórz swoją książkę</a>
+      {% elif request.user.is_authenticated %}
+        <p class="book-detail-hint">Ta książka nie jest jeszcze w Twojej bibliotece.</p>
+      {% else %}
+        <a class="public-detail-button" href="{% url 'login' %}">Zaloguj się, aby ją śledzić</a>
+      {% endif %}
+    </div>
+  </section>
+</main>
+<script>
+  (() => {
+    const image = document.querySelector("[data-cover-work]");
+    if (!image || !image.dataset.coverWork) return;
+    fetch(`https://openlibrary.org/works/${image.dataset.coverWork}.json`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Open Library request failed");
+        return response.json();
+      })
+      .then((work) => {
+        const coverId = Array.isArray(work.covers) ? work.covers[0] : null;
+        if (!coverId) throw new Error("Cover not found");
+        image.src = `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
+        image.hidden = false;
+        image.parentElement.classList.add("has-cover");
+      })
+      .catch(() => image.parentElement.classList.add("is-empty"));
+  })();
+</script>
 {% endblock %}

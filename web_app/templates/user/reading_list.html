@@ -1,18 +1,32 @@
 {% extends "base_account.html" %}
 {% block account_content %}
+<section class="account-panel">
 <h2>Lista czytanych książek</h2>
 {% if selected_user %}
 <p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
 {% endif %}
 {% if reading_books %}
-<ul class="list-group">
+<div class="reading-book-list">
   {% for row in reading_books %}
-  <li class="list-group-item">
-    <strong>{{ row.book.title }}</strong> — {{ row.current_page }}/{{ row.book.total_pages|default:"?" }} stron
-  </li>
+  <a class="reading-book-row" href="{% url 'user_book_detail' row.id %}">
+    <div>
+      <strong>{{ row.book.title }}</strong>
+      <span>{{ row.current_page }}/{{ row.book.total_pages|default:"?" }} stron</span>
+    </div>
+    <div class="reading-book-meta">
+      {% if row.status == "finished" %}
+        <span class="reading-status reading-status-finished">Przeczytana</span>
+        {% if row.rating %}<span>{{ row.rating }}/5 ★</span>{% endif %}
+      {% else %}
+        <span class="reading-status">W trakcie</span>
+      {% endif %}
+      <span class="material-symbols-outlined">arrow_forward</span>
+    </div>
+  </a>
   {% endfor %}
-</ul>
+</div>
 {% else %}
 <p>Brak aktywnych książek.</p>
 {% endif %}
+</section>
 {% endblock %}

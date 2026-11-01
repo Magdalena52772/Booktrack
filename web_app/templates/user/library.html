@@ -1,0 +1,31 @@
+{% extends "base_account.html" %}
+{% block account_content %}
+<section class="account-panel library-page">
+  <div class="library-heading">
+    <div>
+      <p class="stats-eyebrow">TWOJA BIBLIOTEKA</p>
+      <h1>{% if list_type == "favourites" %}Ulubione{% else %}Do przeczytania{% endif %}</h1>
+      <p class="text-muted">Stała lista książek, którą możesz zarządzać z poziomu wyszukiwarki.</p>
+    </div>
+    <span class="material-symbols-outlined">{% if list_type == "favourites" %}favorite{% else %}bookmark_add{% endif %}</span>
+  </div>
+  <a class="library-search-link" href="{% url 'library_search' %}">+ Wyszukaj i dodaj książkę</a>
+  {% if books %}
+    <div class="library-result-list">
+      {% for book in books %}
+        <article class="library-result-card">
+          <div><strong>{{ book.title }}</strong><span>{{ book.authors|default:"Nieznany autor" }}</span></div>
+          <div class="library-result-actions">
+            <a class="library-action library-action-primary" href="{% url 'book_detail' book.id %}">Szczegóły</a>
+            <form method="post" action="{% url 'library_action' %}">
+              {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="next" value="{% if list_type == 'favourites' %}favourite_books{% else %}to_read_books{% endif %}">
+              <input type="hidden" name="action" value="{% if list_type == 'favourites' %}unfavorite{% else %}remove_to_read{% endif %}">
+              <button class="library-action" type="submit">Usuń</button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}<p class="library-empty">Ta lista jest jeszcze pusta.</p>{% endif %}
+</section>
+{% endblock %}

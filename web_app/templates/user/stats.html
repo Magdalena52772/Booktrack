@@ -1,13 +1,139 @@
 {% extends "base_account.html" %}
 {% block account_content %}
-<h2>Statystyki</h2>
-{% if selected_user %}
-<p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
-{% endif %}
-<ul>
-  <li>Przeczytane książki: <strong>{{ stats.books_read }}</strong></li>
-  <li>Przeczytane strony: <strong>{{ stats.pages_total }}</strong></li>
-  <li>Średnio stron/dzień: <strong>{{ stats.ppd }}</strong></li>
-  <li>Aktualny streak: <strong>{{ stats.streak }}</strong></li>
-</ul>
+<section class="stats-page">
+  <div class="stats-page-heading">
+    <p class="stats-eyebrow">BOOK TRACK · TWOJE DANE</p>
+    <h1>Twoje statystyki</h1>
+    {% if selected_user %}<p class="text-muted">Podsumowanie aktywności użytkownika {{ selected_user.username }}.</p>{% endif %}
+  </div>
+
+  <div class="stats-tile-grid">
+    <article class="stats-tile stats-tile-primary">
+      <span class="material-symbols-outlined">menu_book</span>
+      <strong><a class="stats-tile-value-link" href="{% url 'reading_list' %}">{{ stats.books_read_year }}</a></strong>
+      <small>książek przeczytanych w {{ stats.current_year }}</small>
+      <div class="stats-mini-chart" aria-label="Książki przeczytane w tym roku">
+        {% for item in book_chart %}
+          <i style="height: {{ item.bar_height|default:2 }}px;" title="{{ item.label }}: {{ item.count }}"></i>
+        {% endfor %}
+      </div>
+    </article>
+    <article class="stats-tile">
+      <span class="material-symbols-outlined">auto_stories</span>
+      <strong>{{ stats.pages_total }}</strong>
+      <small>przeczytanych stron łącznie</small>
+    </article>
+    <article class="stats-tile">
+      <span class="material-symbols-outlined">speed</span>
+      <strong>{{ stats.ppd }}</strong>
+      <small>średnio stron dziennie</small>
+    </article>
+    <article class="stats-tile">
+      <span class="material-symbols-outlined">local_fire_department</span>
+      <strong>{{ stats.streak }}</strong>
+      <small>dni aktualnej serii</small>
+    </article>
+  </div>
+
+  <div class="stats-period-grid">
+    <article class="stats-period-card">
+      <span>Strony dzisiaj</span>
+      <strong>{{ stats.pages_today }}</strong>
+      <small>zarejestrowanych stron</small>
+    </article>
+    <article class="stats-period-card">
+      <span>Strony wczoraj</span>
+      <strong>{{ stats.pages_yesterday }}</strong>
+      <small>zarejestrowanych stron</small>
+    </article>
+    <article class="stats-period-card">
+      <span>Okres wykresu</span>
+      <strong>14 dni</strong>
+      <small>aktywność czytelnicza</small>
+    </article>
+  </div>
+
+  <section class="stats-chart-card">
+    <div class="stats-chart-heading">
+      <div>
+        <h2>Przeczytane książki</h2>
+        <p>Ukończone książki — {{ book_period_label }}.</p>
+      </div>
+      <span class="material-symbols-outlined">monitoring</span>
+    </div>
+    <div class="stats-period-switcher" aria-label="Zakres wykresu">
+      <a class="{% if book_chart_period == 'week' %}active{% endif %}" href="?period=week">Tydzień</a>
+      <a class="{% if book_chart_period == 'month' %}active{% endif %}" href="?period=month">Miesiąc</a>
+      <a class="{% if book_chart_period == 'year' %}active{% endif %}" href="?period=year">Rok</a>
+    </div>
+    {% if book_chart %}
+      <div class="stats-chart stats-book-chart" role="img" aria-label="Wykres liczby przeczytanych książek">
+        {% for day in book_chart %}
+          <div class="stats-chart-column">
+            <div class="stats-chart-bar-wrap">
+              <div class="stats-chart-bar" style="height: {{ day.bar_height }}px;" title="{{ day.label }}: {{ day.count }} książek"></div>
+            </div>
+            <small>{{ day.label }}</small>
+            <span>{{ day.count }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="stats-empty">Brak ukończonych książek w wybranym okresie.</div>
+    {% endif %}
+  </section>
+
+  <section class="stats-chart-card">
+    <div class="stats-chart-heading">
+      <div>
+        <h2>Tempo czytania</h2>
+        <p>Przeczytane strony w ostatnich 14 dniach.</p>
+      </div>
+      <span class="material-symbols-outlined">auto_stories</span>
+    </div>
+    {% if activity_chart %}
+      <div class="stats-chart" role="img" aria-label="Wykres liczby przeczytanych stron w ostatnich 14 dniach">
+        {% for day in activity_chart %}
+          <div class="stats-chart-column">
+            <div class="stats-chart-bar-wrap">
+              <div class="stats-chart-bar" style="height: {{ day.bar_height }}px;" title="{{ day.label }}: {{ day.pages }} stron"></div>
+            </div>
+            <small>{{ day.label }}</small>
+            <span>{{ day.pages }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="stats-empty">Brak zarejestrowanej aktywności czytelniczej w ostatnich 14 dniach.</div>
+    {% endif %}
+  </section>
+
+  <section class="stats-heatmap-card">
+    <div class="stats-chart-heading">
+      <div>
+        <h2>Mapa aktywności</h2>
+        <p>Twoje sesje czytelnicze z ostatnich 365 dni.</p>
+      </div>
+      <span class="material-symbols-outlined">calendar_month</span>
+    </div>
+    <div class="stats-heatmap-scroll">
+      <div class="stats-heatmap" role="img" aria-label="Mapa aktywności czytelniczej z ostatniego roku">
+        {% for day in activity_heatmap %}
+          <div class="stats-heatmap-day stats-heatmap-level-{{ day.level }}" title="{{ day.label }}: {{ day.pages }} stron">
+            {% if day.month_label %}<span class="stats-heatmap-month">{{ day.month_label }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="stats-heatmap-legend">
+      <span>Mniej</span>
+      <i class="stats-heatmap-level-0"></i>
+      <i class="stats-heatmap-level-1"></i>
+      <i class="stats-heatmap-level-2"></i>
+      <i class="stats-heatmap-level-3"></i>
+      <i class="stats-heatmap-level-4"></i>
+      <span>Więcej</span>
+    </div>
+  </section>
+</section>
 {% endblock %}
