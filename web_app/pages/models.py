@@ -191,6 +191,22 @@ class UserNotification(models.Model):
         ordering = ("-created_at", "-id")
 
 
+class UserAchievement(models.Model):
+    user = models.ForeignKey(
+        BooktrackUser,
+        on_delete=models.CASCADE,
+        db_column="user_id",
+        related_name="achievements",
+    )
+    key = models.CharField(max_length=50)
+    earned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "user_achievements"
+        ordering = ("-earned_at", "-id")
+        unique_together = (("user", "key"),)
+
+
 class UserBookReview(models.Model):
     user_book = models.OneToOneField(
         UserBook,
