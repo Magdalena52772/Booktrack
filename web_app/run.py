@@ -24,10 +24,10 @@ def main():
     )
 
     if migration_plan:
-        print("Wykryto niezaaplikowane migracje. Aktualizuję bazę Django...")
+        print("Wykryto niezaaplikowane migracje. Aktualizacja bazy Django...")
         call_command("migrate", interactive=False)
     else:
-        print("Migracje Django są aktualne — pomijam migrację.")
+        print("Migracje Django są aktualne — pomija migrację.")
 
     server_arguments = sys.argv[1:] or [DEFAULT_ADDRESS]
     address = next(
@@ -37,7 +37,7 @@ def main():
     print(f"BookTrack web działa pod adresem: http://{address}/")
     print("Aby zatrzymać serwer, naciśnij Ctrl+C.")
 
-    # Uruchamiamy właściwe polecenie Django, aby autoreloader działał standardowo.
+    # Uruchamia właściwe polecenie Django, aby autoreloader działał standardowo.
     execute_from_command_line(["manage.py", "runserver", *server_arguments])
 
 
