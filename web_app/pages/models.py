@@ -1,5 +1,6 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 
 class BooktrackUserManager(BaseUserManager):
@@ -71,6 +72,13 @@ class BooktrackUser(AbstractBaseUser):
 
     def get_short_name(self):
         return self.username
+
+    @property
+    def age(self):
+        today = timezone.localdate()
+        return today.year - self.birth_date.year - (
+            (today.month, today.day) < (self.birth_date.month, self.birth_date.day)
+        )
 
 
 class Genre(models.Model):
