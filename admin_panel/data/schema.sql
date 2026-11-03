@@ -120,6 +120,18 @@ CREATE TABLE IF NOT EXISTS user_notifications (
 );
 
 -- =============================
+-- TABLE: USER ACHIEVEMENTS
+-- =============================
+CREATE TABLE IF NOT EXISTS user_achievements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    key TEXT NOT NULL,
+    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, key),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- =============================
 -- TABLE: ACTIVITY
 -- =============================
 -- Historia sesji czytelniczych (podstawa wykresów aktywności dziennej/tygodniowej)
