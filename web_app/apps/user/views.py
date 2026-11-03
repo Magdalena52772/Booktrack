@@ -21,6 +21,7 @@ from pages.models import (
     UserNotification,
     UserReadingQueue,
 )
+from pages.achievements import achievement_cards, evaluate_achievements
 
 
 def _get_user(request):
@@ -127,6 +128,7 @@ def dashboard(request):
     favorite_count = 0
     to_read_count = 0
     if user:
+        evaluate_achievements(user)
         books_read = (
             UserBook.objects.filter(user_id=user.id, status="finished").count()
         )
@@ -143,6 +145,7 @@ def dashboard(request):
             ),
             user,
         )
+        evaluate_achievements(user)
         favorite_count = UserFavoriteBook.objects.filter(user_id=user.id).count()
         to_read_count = UserReadingQueue.objects.filter(user_id=user.id).count()
     recommendations = _get_recommendations(user, limit=2)
@@ -363,6 +366,7 @@ def user_book_detail(request, user_book_id):
                         defaults={"comment": comment},
                     )
                 if should_finish and not is_finished:
+                    evaluate_achievements(request.user)
                     _notify(
                         request,
                         request.user.id,
@@ -370,6 +374,7 @@ def user_book_detail(request, user_book_id):
                         "book",
                     )
                 elif pages_read or session_minutes:
+                    evaluate_achievements(request.user)
                     _notify(
                         request,
                         request.user.id,
@@ -517,6 +522,7 @@ def stats(request):
         book_chart_period = "year"
     activity_heatmap = []
     if user:
+        evaluate_achievements(user)
         user_activity = Activity.objects.filter(user_id=user.id)
         finished_books = UserBook.objects.filter(
             user_id=user.id,
@@ -719,6 +725,7 @@ def profile(request):
     avg_rating = 0.0
     active_challenges = 0
     if user:
+        evaluate_achievements(user)
         favorite_genres = list(
             Genre.objects.filter(user_links__user_id=user.id).values_list("name", flat=True)
         )
@@ -738,6 +745,7 @@ def profile(request):
             "favorite_genres": favorite_genres,
             "avg_rating": avg_rating,
             "active_challenges": active_challenges,
+            "achievements": achievement_cards(user) if user else [],
         },
     )
 
