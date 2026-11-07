@@ -21,7 +21,18 @@
         </div>
         <a class="public-detail-button" href="{% url 'user_book_detail' user_book.id %}">Otwórz swoją książkę</a>
       {% elif request.user.is_authenticated %}
-        <p class="book-detail-hint">Ta książka nie jest jeszcze w Twojej bibliotece.</p>
+        {% if in_reading_queue %}
+          <p class="book-detail-hint">Ta książka czeka na Twojej liście.</p>
+          <form method="post" action="{% url 'library_action' %}">
+            {% csrf_token %}
+            <input type="hidden" name="book_id" value="{{ book.id }}">
+            <input type="hidden" name="action" value="start_reading">
+            <input type="hidden" name="next" value="book_detail">
+            <button class="public-detail-button" type="submit">Zacznij czytać</button>
+          </form>
+        {% else %}
+          <p class="book-detail-hint">Ta książka nie jest jeszcze w Twojej bibliotece.</p>
+        {% endif %}
       {% else %}
         <a class="public-detail-button" href="{% url 'login' %}">Zaloguj się, aby ją śledzić</a>
       {% endif %}

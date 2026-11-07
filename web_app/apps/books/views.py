@@ -1,7 +1,7 @@
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, render
 
-from pages.models import Book, UserBook
+from pages.models import Book, UserBook, UserReadingQueue
 
 GENRE_SLUG_TO_NAME = {
     "drama": "Drama",
@@ -35,16 +35,20 @@ GENRE_SLUG_TO_LABEL = {
 def book_detail(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     user_book = None
+    in_reading_queue = False
     if request.user.is_authenticated:
         user_book = (
             UserBook.objects.filter(user_id=request.user.id, book_id=book.id)
             .select_related("book")
             .first()
         )
+        in_reading_queue = UserReadingQueue.objects.filter(
+            user_id=request.user.id, book_id=book.id
+        ).exists()
     return render(
         request,
         "books/book_details.html",
-        {"book": book, "user_book": user_book},
+        {"book": book, "user_book": user_book, "in_reading_queue": in_reading_queue},
     )
 
 

@@ -2,7 +2,7 @@
 {% load static %} 
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/account.css' %}?v=library-lists-1" />
+<link rel="stylesheet" href="{% static 'css/account.css' %}?v=dashboard-nav-24" />
 {% endblock %} 
 
 {% block header %}
@@ -16,8 +16,12 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse justify-content-end" id="navbarUser">
+      <form class="account-nav-search me-2" method="get" action="{% url 'library_search' %}">
+        <label class="visually-hidden" for="account-nav-query">Szukaj książki</label>
+        <input id="account-nav-query" name="query" type="search" placeholder="Szukaj książki..." aria-label="Szukaj książki">
+        <button type="submit" aria-label="Szukaj"><span class="material-symbols-outlined">search</span></button>
+      </form>
       <ul class="navbar-nav mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
         <li class="nav-item nav-notifications">
           <a class="nav-link notification-bell" href="{% url 'notifications' %}" aria-label="Powiadomienia" title="Powiadomienia">
             <span class="material-symbols-outlined">notifications</span>
@@ -34,11 +38,18 @@
           </div>
           {% endif %}
         </li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'reading_list' %}">Czytane książki</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'favourite_books' %}">Ulubione</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'to_read_books' %}">Do przeczytania</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'stats' %}">Statystyki</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}" onclick="return confirm('Czy na pewno chcesz się wylogować?');">Wyloguj</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link nav-avatar dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-label="Menu użytkownika">{{ request.user.username|first|upper }}</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'stats' %}">Statystyki</a></li>
+            <li><a class="dropdown-item" href="{% url 'reading_list' %}">Czytane książki</a></li>
+            <li><a class="dropdown-item" href="{% url 'achievements' %}">Odznaki</a></li>
+            <li><a class="dropdown-item" href="{% url 'favourite_books' %}">Ulubione</a></li>
+            <li><a class="dropdown-item" href="{% url 'to_read_books' %}">Do przeczytania</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}" onclick="return confirm('Czy na pewno chcesz się wylogować?');">Wyloguj</a></li>
+          </ul>
+        </li>
       </ul>
     </div>
   </div>

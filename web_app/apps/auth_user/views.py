@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
@@ -9,7 +9,13 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from pages.models import BooktrackUser, Genre, UserFavoriteGenre, UserNotification
+from pages.models import (
+    BooktrackUser,
+    Challenge,
+    Genre,
+    UserFavoriteGenre,
+    UserNotification,
+)
 from .quiz_data import GENRE_LABELS, TAGS_BY_GENRE
 
 
@@ -17,6 +23,53 @@ from .quiz_data import GENRE_LABELS, TAGS_BY_GENRE
 @ensure_csrf_cookie
 def auth_welcome(request):
     return redirect("register_st1")
+
+
+def _update_login_streak(user, today):
+    last_activity_date = (
+        timezone.localtime(user.last_activity).date()
+        if user.last_activity
+        else None
+    )
+    if last_activity_date == today:
+        now = timezone.now()
+        current_streak = max(user.current_streak or 0, 1)
+        BooktrackUser.objects.filter(id=user.id).update(
+            last_activity=now,
+            current_streak=current_streak,
+        )
+        user.last_activity = now
+        user.current_streak = current_streak
+        return False
+
+    if last_activity_date == today - timedelta(days=1):
+        streak = max(user.current_streak or 0, 1) + 1
+    else:
+        streak = 1
+    now = timezone.now()
+    BooktrackUser.objects.filter(id=user.id).update(
+        last_activity=now,
+        current_streak=streak,
+    )
+    user.last_activity = now
+    user.current_streak = streak
+    return True
+
+
+def _update_streak_challenges(user, today):
+    challenges = Challenge.objects.filter(
+        user_id=user.id,
+        type="streak",
+        status="active",
+        start_date__lte=today,
+        end_date__gte=today,
+    )
+    for challenge in challenges:
+        progress = min(user.current_streak or 1, challenge.target_value)
+        update_fields = {"current_value": progress}
+        if progress >= challenge.target_value:
+            update_fields["status"] = "finished"
+        Challenge.objects.filter(id=challenge.id).update(**update_fields)
 
 
 @ensure_csrf_cookie
@@ -37,6 +90,8 @@ def login_view(request):
         if user is not None:
             auth_login(request, user)
             today = timezone.localdate()
+            _update_login_streak(user, today)
+            _update_streak_challenges(user, today)
             if not UserNotification.objects.filter(
                 user_id=user.id,
                 notification_type="daily_login",
@@ -58,6 +113,8 @@ def login_view(request):
 
 def _registration_form_data(request):
     return {
+        "registration_first_name": (request.POST.get("first_name") or "").strip(),
+        "registration_last_name": (request.POST.get("last_name") or "").strip(),
         "registration_email": (request.POST.get("email") or "").strip(),
         "registration_username": (request.POST.get("username") or "").strip(),
         "registration_birth_date": (request.POST.get("birth_date") or "").strip(),
@@ -66,12 +123,16 @@ def _registration_form_data(request):
 
 def register_st1(request):
     form_data = {
+        "registration_first_name": "",
+        "registration_last_name": "",
         "registration_email": "",
         "registration_username": "",
         "registration_birth_date": "",
     }
     if request.method == "POST":
         form_data = _registration_form_data(request)
+        first_name = form_data["registration_first_name"]
+        last_name = form_data["registration_last_name"]
         email = form_data["registration_email"]
         username = form_data["registration_username"]
         password = request.POST.get("password") or ""
@@ -83,7 +144,9 @@ def register_st1(request):
         except ValidationError:
             email_is_valid = False
 
-        if not email_is_valid:
+        if not first_name or not last_name:
+            messages.error(request, "Podaj imię i nazwisko.")
+        elif not email_is_valid:
             messages.error(request, "Podaj poprawny adres e-mail.")
         elif not username:
             messages.error(request, "Podaj nazwę użytkownika.")
@@ -105,6 +168,7 @@ def register_st1(request):
                     messages.error(request, "Data urodzenia musi być wcześniejsza niż dzisiaj.")
                 else:
                     request.session["registration_pending"] = {
+                        "name": f"{first_name} {last_name}",
                         "username": username,
                         "email": email,
                         "birth_date": birth_date.isoformat(),
@@ -166,11 +230,14 @@ def register_st3(request):
                 with transaction.atomic():
                     pending = request.session["registration_pending"]
                     user = BooktrackUser(
+                        name=pending["name"],
                         username=pending["username"],
                         email=pending["email"],
                         password=pending["password_hash"],
                         birth_date=date.fromisoformat(pending["birth_date"]),
                         date_joined=timezone.now(),
+                        last_activity=timezone.now(),
+                        current_streak=1,
                     )
                     user.save(force_insert=True)
                     genres = Genre.objects.filter(name__in=selected_genres)

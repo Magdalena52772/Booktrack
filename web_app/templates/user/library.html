@@ -14,9 +14,25 @@
     <div class="library-result-list">
       {% for book in books %}
         <article class="library-result-card">
-          <div><strong>{{ book.title }}</strong><span>{{ book.authors|default:"Nieznany autor" }}</span></div>
+          <div>
+            <strong>{{ book.title }}</strong>
+            <span>{{ book.authors|default:"Nieznany autor" }}</span>
+            <div class="book-status-list">
+              {% if list_type == "favourites" %}<span class="book-status book-status-favorite">Ulubiona</span>{% endif %}
+              {% if list_type == "to_read" %}<span class="book-status book-status-queued">Do przeczytania</span>{% endif %}
+            </div>
+          </div>
           <div class="library-result-actions">
             <a class="library-action library-action-primary" href="{% url 'book_detail' book.id %}">Szczegóły</a>
+            {% if list_type == "to_read" %}
+              <form method="post" action="{% url 'library_action' %}">
+                {% csrf_token %}
+                <input type="hidden" name="book_id" value="{{ book.id }}">
+                <input type="hidden" name="action" value="start_reading">
+                <input type="hidden" name="next" value="to_read_books">
+                <button class="library-action library-action-primary" type="submit">Zacznij czytać</button>
+              </form>
+            {% endif %}
             <form method="post" action="{% url 'library_action' %}">
               {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="next" value="{% if list_type == 'favourites' %}favourite_books{% else %}to_read_books{% endif %}">
               <input type="hidden" name="action" value="{% if list_type == 'favourites' %}unfavorite{% else %}remove_to_read{% endif %}">

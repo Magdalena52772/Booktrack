@@ -21,6 +21,7 @@
     {% for value, label in genres.items %}
       <label class="quiz-option">
         <input
+          class="genre-choice"
           type="checkbox"
           name="genres"
           value="{{ value }}"
@@ -32,4 +33,18 @@
   </div>
   <button type="submit" class="btn btn-primary w-100 mt-4">Dalej</button>
 </form>
+<script>
+  (() => {
+    const choices = [...document.querySelectorAll(".genre-choice")];
+    const updateAvailability = () => {
+      const selectedCount = choices.filter((choice) => choice.checked).length;
+      choices.forEach((choice) => {
+        choice.disabled = !choice.checked && selectedCount >= 3;
+      });
+    };
+
+    choices.forEach((choice) => choice.addEventListener("change", updateAvailability));
+    updateAvailability();
+  })();
+</script>
 {% endblock %}

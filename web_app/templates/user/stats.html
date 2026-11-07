@@ -4,19 +4,14 @@
   <div class="stats-page-heading">
     <p class="stats-eyebrow">BOOK TRACK · TWOJE DANE</p>
     <h1>Twoje statystyki</h1>
-    {% if selected_user %}<p class="text-muted">Podsumowanie aktywności użytkownika {{ selected_user.username }}.</p>{% endif %}
+    {% if selected_user %}<p class="text-muted">Podsumowanie aktywności.</p>{% endif %}
   </div>
 
   <div class="stats-tile-grid">
     <article class="stats-tile stats-tile-primary">
       <span class="material-symbols-outlined">menu_book</span>
-      <strong><a class="stats-tile-value-link" href="{% url 'reading_list' %}">{{ stats.books_read_year }}</a></strong>
-      <small>książek przeczytanych w {{ stats.current_year }}</small>
-      <div class="stats-mini-chart" aria-label="Książki przeczytane w tym roku">
-        {% for item in book_chart %}
-          <i style="height: {{ item.bar_height|default:2 }}px;" title="{{ item.label }}: {{ item.count }}"></i>
-        {% endfor %}
-      </div>
+      <strong><a class="stats-tile-value-link" href="{% url 'reading_list' %}">{{ stats.books_read }}</a></strong>
+      <small>książek przeczytanych łącznie</small>
     </article>
     <article class="stats-tile">
       <span class="material-symbols-outlined">auto_stories</span>
@@ -37,20 +32,59 @@
 
   <div class="stats-period-grid">
     <article class="stats-period-card">
-      <span>Strony dzisiaj</span>
-      <strong>{{ stats.pages_today }}</strong>
+      <span>Strony w tym roku</span>
+      <strong>{{ stats.pages_year }}</strong>
       <small>zarejestrowanych stron</small>
     </article>
     <article class="stats-period-card">
-      <span>Strony wczoraj</span>
-      <strong>{{ stats.pages_yesterday }}</strong>
-      <small>zarejestrowanych stron</small>
+      <span>Książki w tym roku</span>
+      <strong>{{ stats.books_read_year }}</strong>
+      <small>ukończonych książek</small>
     </article>
     <article class="stats-period-card">
-      <span>Okres wykresu</span>
-      <strong>14 dni</strong>
-      <small>aktywność czytelnicza</small>
+      <span>Aktywne dni</span>
+      <strong>{{ stats.active_days_year }}</strong>
+      <small>w {{ stats.current_year }} roku</small>
     </article>
+  </div>
+
+  <section class="stats-chart-card stats-genre-card">
+    <div class="stats-chart-heading">
+      <div>
+        <h2>Gatunki przeczytanych książek</h2>
+        <p>Rozkład wszystkich ukończonych książek.</p>
+      </div>
+      <span class="material-symbols-outlined">pie_chart</span>
+    </div>
+    {% if genre_chart %}
+      <div class="stats-genre-content">
+        <svg class="stats-genre-pie" viewBox="0 0 200 200" role="img" aria-label="Wykres kołowy gatunków przeczytanych książek">
+          {% for genre in genre_chart %}
+            <path d="{{ genre.path }}" fill="{{ genre.color }}">
+              <title>{{ genre.name }}: {{ genre.count }} książek. Tytuły: {{ genre.titles }}</title>
+            </path>
+          {% endfor %}
+        </svg>
+        <div class="stats-genre-legend">
+          {% for genre in genre_chart %}
+            <div class="stats-genre-item">
+              <i style="background: {{ genre.color }};"></i>
+              <span>{{ genre.name }}</span>
+              <strong>{{ genre.count }} ({{ genre.percentage }}%)</strong>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="stats-empty">Brak ukończonych książek.</div>
+    {% endif %}
+  </section>
+
+  <div class="stats-period-switcher stats-period-switcher-wide" aria-label="Zakres wykresów">
+    <span>Zakres wykresów:</span>
+    <a class="{% if book_chart_period == '14' %}active{% endif %}" href="?period=14">14 dni</a>
+    <a class="{% if book_chart_period == '30' %}active{% endif %}" href="?period=30">30 dni</a>
+    <a class="{% if book_chart_period == 'year' %}active{% endif %}" href="?period=year">Cały rok</a>
   </div>
 
   <section class="stats-chart-card">
@@ -61,22 +95,19 @@
       </div>
       <span class="material-symbols-outlined">monitoring</span>
     </div>
-    <div class="stats-period-switcher" aria-label="Zakres wykresu">
-      <a class="{% if book_chart_period == 'week' %}active{% endif %}" href="?period=week">Tydzień</a>
-      <a class="{% if book_chart_period == 'month' %}active{% endif %}" href="?period=month">Miesiąc</a>
-      <a class="{% if book_chart_period == 'year' %}active{% endif %}" href="?period=year">Rok</a>
-    </div>
     {% if book_chart %}
-      <div class="stats-chart stats-book-chart" role="img" aria-label="Wykres liczby przeczytanych książek">
-        {% for day in book_chart %}
-          <div class="stats-chart-column">
-            <div class="stats-chart-bar-wrap">
-              <div class="stats-chart-bar" style="height: {{ day.bar_height }}px;" title="{{ day.label }}: {{ day.count }} książek"></div>
+      <div class="stats-chart-scroll">
+        <div class="stats-chart stats-book-chart stats-chart-period-{{ book_chart_period }}" role="img" aria-label="Wykres liczby przeczytanych książek">
+          {% for day in book_chart %}
+            <div class="stats-chart-column">
+              <div class="stats-chart-bar-wrap">
+                <div class="stats-chart-bar" style="height: {{ day.bar_height }}px;" title="{{ day.label }}: {{ day.count }} książek"></div>
+              </div>
+              <small>{{ day.label }}</small>
+              <span>{{ day.count }}</span>
             </div>
-            <small>{{ day.label }}</small>
-            <span>{{ day.count }}</span>
-          </div>
-        {% endfor %}
+          {% endfor %}
+        </div>
       </div>
     {% else %}
       <div class="stats-empty">Brak ukończonych książek w wybranym okresie.</div>
@@ -87,40 +118,56 @@
     <div class="stats-chart-heading">
       <div>
         <h2>Tempo czytania</h2>
-        <p>Przeczytane strony w ostatnich 14 dniach.</p>
+        <p>Przeczytane strony w wybranym okresie.</p>
       </div>
       <span class="material-symbols-outlined">auto_stories</span>
     </div>
     {% if activity_chart %}
-      <div class="stats-chart" role="img" aria-label="Wykres liczby przeczytanych stron w ostatnich 14 dniach">
-        {% for day in activity_chart %}
-          <div class="stats-chart-column">
-            <div class="stats-chart-bar-wrap">
-              <div class="stats-chart-bar" style="height: {{ day.bar_height }}px;" title="{{ day.label }}: {{ day.pages }} stron"></div>
+      <div class="stats-chart-scroll">
+        <div class="stats-chart stats-chart-period-{{ book_chart_period }}" role="img" aria-label="Wykres liczby przeczytanych stron w wybranym okresie">
+          {% for day in activity_chart %}
+            <div class="stats-chart-column">
+              <div class="stats-chart-bar-wrap">
+                <div class="stats-chart-bar" style="height: {{ day.bar_height }}px;" title="{{ day.label }}: {{ day.pages }} stron"></div>
+              </div>
+              <small>{{ day.label }}</small>
+              <span>{{ day.pages }}</span>
             </div>
-            <small>{{ day.label }}</small>
-            <span>{{ day.pages }}</span>
-          </div>
-        {% endfor %}
+          {% endfor %}
+        </div>
       </div>
     {% else %}
-      <div class="stats-empty">Brak zarejestrowanej aktywności czytelniczej w ostatnich 14 dniach.</div>
+      <div class="stats-empty">Brak zarejestrowanej aktywności czytelniczej w wybranym okresie.</div>
     {% endif %}
   </section>
 
   <section class="stats-heatmap-card">
     <div class="stats-chart-heading">
       <div>
-        <h2>Mapa aktywności</h2>
-        <p>Twoje sesje czytelnicze z ostatnich 365 dni.</p>
+        <div class="stats-heading-with-info">
+          <h2>Mapa aktywności</h2>
+          <button class="stats-info-button" type="button" aria-label="Informacje o natężeniu aktywności">
+            <span class="material-symbols-outlined">info</span>
+            <span class="stats-info-tooltip" role="tooltip">
+              Natężenie zależy od liczby stron przeczytanych danego dnia w wybranym okresie:
+              poziom 0 oznacza brak stron, a poziomy 1–4 oznaczają od najmniejszej do największej
+              aktywności względem najbardziej aktywnego dnia.
+            </span>
+          </button>
+        </div>
+        <p>Twoje sesje czytelnicze w wybranym okresie.</p>
       </div>
       <span class="material-symbols-outlined">calendar_month</span>
     </div>
-    <div class="stats-heatmap-scroll">
+    <div class="stats-heatmap-scroll stats-heatmap-period-{{ book_chart_period }}">
+      <div class="stats-heatmap-months" aria-hidden="true">
+        {% for month in activity_heatmap_months %}
+          <span style="grid-column: {{ month.column }} / span 4;">{{ month.label }}</span>
+        {% endfor %}
+      </div>
       <div class="stats-heatmap" role="img" aria-label="Mapa aktywności czytelniczej z ostatniego roku">
         {% for day in activity_heatmap %}
-          <div class="stats-heatmap-day stats-heatmap-level-{{ day.level }}" title="{{ day.label }}: {{ day.pages }} stron">
-            {% if day.month_label %}<span class="stats-heatmap-month">{{ day.month_label }}</span>{% endif %}
+          <div class="stats-heatmap-day stats-heatmap-level-{{ day.level }}" title="{{ day.label }}: {{ day.pages }} stron przeczytanych">
           </div>
         {% endfor %}
       </div>

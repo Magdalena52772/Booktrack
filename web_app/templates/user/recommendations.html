@@ -1,4 +1,5 @@
 {% extends "base_account.html" %}
+{% load static %}
 {% block account_content %}
 <section class="account-panel">
 <h2>Rekomendacje</h2>
@@ -6,15 +7,78 @@
 <p class="text-muted">Użytkownik: {{ selected_user.username }}</p>
 {% endif %}
 {% if recommendations %}
-<ul class="list-group">
+<div class="library-result-list recommendation-list">
   {% for book in recommendations %}
-  <li class="list-group-item">
-    <strong>{{ book.title }}</strong> — {{ book.authors|default:"Nieznany autor" }}
-  </li>
+  <article class="library-result-card recommendation-card">
+    <div class="recommendation-book">
+      <div class="dashboard-book-cover dashboard-book-cover-small">
+        <img data-cover-work="{{ book.openlibrary_id|default:'' }}" alt="Okładka książki {{ book.title }}" hidden>
+        <span class="material-symbols-outlined cover-fallback" aria-hidden="true">auto_stories</span>
+      </div>
+      <div>
+        <strong>{{ book.title }}</strong>
+        <span>{{ book.authors|default:"Nieznany autor" }}</span>
+        <div class="book-status-list">
+          {% if book.reading_status == "finished" %}<span class="book-status book-status-finished">Przeczytana</span>{% endif %}
+          {% if book.reading_status == "reading" %}<span class="book-status book-status-reading">W trakcie</span>{% endif %}
+          {% if book.is_queued %}<span class="book-status book-status-queued">Do przeczytania</span>{% endif %}
+          {% if book.is_favorite %}<span class="book-status book-status-favorite">Ulubiona</span>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="library-result-actions">
+      <form method="post" action="{% url 'library_action' %}">
+        {% csrf_token %}
+        <input type="hidden" name="book_id" value="{{ book.id }}">
+        <input type="hidden" name="action" value="{% if book.is_favorite %}unfavorite{% else %}favorite{% endif %}">
+        <input type="hidden" name="next" value="recommendations">
+        <button class="library-action {% if book.is_favorite %}library-action-active{% endif %}" type="submit">
+          {% if book.is_favorite %}Ulubiona{% else %}Ulubione{% endif %}
+        </button>
+      </form>
+      <form method="post" action="{% url 'library_action' %}">
+        {% csrf_token %}
+        <input type="hidden" name="book_id" value="{{ book.id }}">
+        <input type="hidden" name="action" value="{% if book.is_queued %}remove_to_read{% else %}to_read{% endif %}">
+        <input type="hidden" name="next" value="recommendations">
+        <button class="library-action {% if book.is_queued %}library-action-active{% endif %}" type="submit">
+          {% if book.is_queued %}Dodano{% else %}Do przeczytania{% endif %}
+        </button>
+      </form>
+      <form method="post" action="{% url 'library_action' %}">
+        {% csrf_token %}
+        <input type="hidden" name="book_id" value="{{ book.id }}">
+        <input type="hidden" name="action" value="start_reading">
+        <input type="hidden" name="next" value="recommendations">
+        <button class="library-action library-action-primary" type="submit">
+          {% if book.reading_status == "reading" %}Czytasz{% else %}Zacznij czytać{% endif %}
+        </button>
+      </form>
+    </div>
+  </article>
   {% endfor %}
-</ul>
+</div>
 {% else %}
 <p>Brak rekomendacji na ten moment.</p>
 {% endif %}
 </section>
+<script>
+  (() => {
+    document.querySelectorAll("[data-cover-work]").forEach(async (image) => {
+      if (!image.dataset.coverWork) return;
+      try {
+        const response = await fetch(`https://openlibrary.org/works/${image.dataset.coverWork}.json`);
+        if (!response.ok) throw new Error("Open Library request failed");
+        const work = await response.json();
+        const coverId = Array.isArray(work.covers) ? work.covers[0] : null;
+        if (!coverId) throw new Error("Cover not found");
+        image.src = `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
+        image.hidden = false;
+        image.parentElement.classList.add("has-cover");
+      } catch {
+        image.parentElement.classList.add("is-empty");
+      }
+    });
+  })();
+</script>
 {% endblock %}

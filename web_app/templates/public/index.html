@@ -102,7 +102,24 @@ Monitoruj książki, które czytasz{% endblock %} {% block content %}
       </div>
     </div>
 
-    <a class="home-explore-link" href="{% url 'searching' %}">Przeglądaj według gatunku</a>
+    <div class="home-genres">
+      <div class="home-genres-heading">
+        <div>
+          <p class="eyebrow">ODKRYWAJ</p>
+          <h2>Przeglądaj według gatunku</h2>
+        </div>
+        <a href="{% url 'searching' %}">Wyszukiwarka</a>
+      </div>
+      <div class="home-genre-grid">
+        {% for slug, label in genre_links %}
+          <a class="home-genre-card" href="{% url 'genres' slug %}">
+            <span class="material-symbols-outlined" aria-hidden="true">auto_stories</span>
+            <span>{{ label }}</span>
+            <span class="material-symbols-outlined home-genre-arrow" aria-hidden="true">arrow_forward</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
   </section>
 </main>
 <script>

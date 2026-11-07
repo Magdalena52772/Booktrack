@@ -1,4 +1,5 @@
 {% extends "base_account.html" %}
+{% load static %}
 
 {% block account_content %}
 <div class="dashboard-root-container">
@@ -26,11 +27,29 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="h5 mb-0 fw-bold text-accent">Statystyki Roczne</h3>
-            <span class="fs-4">📊</span>
+            <span class="material-symbols-outlined dashboard-header-icon" aria-hidden="true">bar_chart</span>
           </div>
-          <div class="stats-content text-center py-3">
-            <a href="{% url 'reading_list' %}" class="huge-number d-block fw-bold text-decoration-none">{{ books_read|default:"0" }}</a>
-            <p class="text-muted small fw-bold text-uppercase">Przeczytanych książek</p>
+          <div class="dashboard-summary-grid">
+            <div class="dashboard-summary-item">
+              <span class="material-symbols-outlined dashboard-summary-icon" aria-hidden="true">auto_stories</span>
+              <a href="{% url 'reading_list' %}" class="dashboard-summary-value text-decoration-none">{{ books_read|default:"0" }}</a>
+              <span>Przeczytanych książek</span>
+            </div>
+            <div class="dashboard-summary-item">
+              <span class="material-symbols-outlined dashboard-summary-icon" aria-hidden="true">local_fire_department</span>
+              <strong class="dashboard-summary-value">{{ selected_user.current_streak|default:"0" }}</strong>
+              <span>Dni aktualnej serii</span>
+            </div>
+            <div class="dashboard-summary-item">
+              <span class="material-symbols-outlined dashboard-summary-icon" aria-hidden="true">schedule</span>
+              <strong class="dashboard-summary-value">{{ account_age_days }}</strong>
+              <span>Dni wieku konta</span>
+            </div>
+            <div class="dashboard-summary-item dashboard-summary-genres">
+              <span class="material-symbols-outlined dashboard-summary-icon" aria-hidden="true">favorite</span>
+              <strong>Ulubione gatunki</strong>
+              <span>{% if favorite_genres %}{{ favorite_genres|join:", " }}{% else %}Brak wybranych{% endif %}</span>
+            </div>
           </div>
           <div class="mt-3 border-top pt-2">
             <a href="{% url 'stats' %}" class="btn-minimal">Szczegóły →</a>
@@ -42,7 +61,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="h5 mb-0 fw-bold text-accent">Wyzwania</h3>
-            <span class="fs-4">🏆</span>
+            <span class="material-symbols-outlined dashboard-header-icon" aria-hidden="true">emoji_events</span>
           </div>
           {% if active_challenges %}
             <div class="dashboard-challenges">
@@ -51,14 +70,22 @@
                 <div class="dashboard-challenge">
                   <div class="challenge-title-row">
                     <strong>{{ challenge.title }}</strong>
-                    <span>{{ challenge.current_value }}/{{ challenge.target_value }}</span>
+                    {% if challenge.status == "finished" %}
+                      <span class="challenge-finished-label">Ukończone</span>
+                    {% else %}
+                      <span>{{ challenge.current_value }}/{{ challenge.target_value }}</span>
+                    {% endif %}
                   </div>
                   <div class="progress" aria-label="Postęp: {{ challenge_percent }} procent">
-                    <div class="progress-bar" role="progressbar"
+                    <div class="progress-bar {% if challenge.status == 'finished' %}challenge-progress-finished{% endif %}" role="progressbar"
                       style="width: {{ challenge_percent }}%;"
                       aria-valuenow="{{ challenge_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
                   </div>
-                  <small class="text-muted">Do {{ challenge.end_date|date:"d.m.Y" }}</small>
+                  {% if challenge.status == "finished" %}
+                    <small class="text-muted">Wyzwanie ukończone</small>
+                  {% else %}
+                    <small class="text-muted">Do {{ challenge.end_date|date:"d.m.Y" }}</small>
+                  {% endif %}
                 </div>
               {% endfor %}
             </div>
@@ -70,16 +97,40 @@
           {% endif %}
           <a href="{% url 'create_challenge' %}" class="btn-minimal">+ Dodaj własne wyzwanie</a>
           <div class="mt-auto pt-2">
-            <a href="{% url 'stats' %}" class="btn-minimal">Zobacz statystyki</a>
+            <a href="{% url 'challenges' %}" class="btn-minimal">Zobacz wszystkie wyzwania</a>
           </div>
+        </div>
+      </div>
+
+      <div class="card card-achievements shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h5 mb-0 fw-bold text-accent">Odznaki</h3>
+            <span class="material-symbols-outlined dashboard-header-icon" aria-hidden="true">military_tech</span>
+          </div>
+          {% if recent_achievements %}
+            <div class="dashboard-achievement-grid">
+              {% for achievement in recent_achievements %}
+                <a class="dashboard-achievement-card" href="{% url 'achievements' %}">
+                  <img src="{% static 'img/badges/' %}{{ achievement.icon }}" alt="{{ achievement.name }}">
+                  <span>{{ achievement.name }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted small">Twoja kolekcja odznak dopiero się rozpoczyna.</p>
+          {% endif %}
+          <a href="{% url 'achievements' %}" class="btn-minimal">Zobacz wszystkie odznaki →</a>
         </div>
       </div>
 
       <div class="card card-reading-now shadow-sm">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="h5 mb-0 fw-bold text-accent">Aktualnie Czytane</h3>
-            <span class="fs-4">📖</span>
+            <h3 class="h5 mb-0 fw-bold text-accent">
+              <a class="dashboard-section-link" href="{% url 'reading_list' %}">Aktualnie Czytane</a>
+            </h3>
+            <span class="material-symbols-outlined dashboard-header-icon" aria-hidden="true">menu_book</span>
           </div>
           <div class="reading-now-grid">
             {% if reading_books %}
@@ -98,7 +149,16 @@
                 </a>
               {% endfor %}
             {% else %}
-              <div class="dashboard-reading-empty">Brak aktualnie czytanych książek.</div>
+              <div class="dashboard-reading-empty">
+                <span class="material-symbols-outlined" aria-hidden="true">auto_stories</span>
+                <strong>Nie masz jeszcze książki w trakcie czytania.</strong>
+                <span>Wyszukaj coś ciekawego i zacznij swoją kolejną historię.</span>
+                <form class="dashboard-inline-search" method="get" action="{% url 'library_search' %}">
+                  <label class="visually-hidden" for="dashboard-book-search">Wyszukaj książkę</label>
+                  <input id="dashboard-book-search" name="query" type="search" placeholder="Wyszukaj książkę..." aria-label="Wyszukaj książkę">
+                  <button class="library-action library-action-primary" type="submit">Szukaj</button>
+                </form>
+              </div>
             {% endif %}
           </div>
           <div class="mt-4">
@@ -111,7 +171,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="h5 mb-0 fw-bold text-accent">Dla Ciebie</h3>
-            <span class="fs-4">✨</span>
+            <span class="material-symbols-outlined dashboard-header-icon" aria-hidden="true">auto_awesome</span>
           </div>
           <div class="rec-list mb-3">
             {% if recommendations %}
@@ -122,7 +182,13 @@
                     alt="Okładka książki {{ book.title }}" hidden>
                   <span class="material-symbols-outlined cover-fallback" aria-hidden="true">auto_stories</span>
                 </div>
-                <span class="small fw-bold">„{{ book.title }}”</span>
+                <div>
+                  <span class="small fw-bold">„{{ book.title }}”</span>
+                  <div class="book-status-list">
+                    {% if book.is_favorite %}<span class="book-status book-status-favorite">Ulubiona</span>{% endif %}
+                    {% if book.is_queued %}<span class="book-status book-status-queued">Do przeczytania</span>{% endif %}
+                  </div>
+                </div>
               </div>
               {% endfor %}
             {% else %}
@@ -137,7 +203,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="h5 mb-0 fw-bold text-accent">Twoje listy</h3>
-            <span class="fs-4">♡</span>
+            <span class="material-symbols-outlined dashboard-header-icon" aria-hidden="true">favorite_border</span>
           </div>
           <div class="dashboard-library-grid">
             <a class="dashboard-library-card" href="{% url 'favourite_books' %}">

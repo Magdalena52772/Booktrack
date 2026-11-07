@@ -66,6 +66,7 @@ def home(request):
         {
             "most_read": normalize(most_read),
             "most_added": normalize(most_added_books),
+            "genre_links": list(GENRE_SLUG_TO_LABEL.items()),
         },
     )
 

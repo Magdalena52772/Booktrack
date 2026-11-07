@@ -6,7 +6,7 @@
     <div>
       <p class="stats-eyebrow">TWOJE CELE</p>
       <h1>Dodaj wyzwanie</h1>
-      <p class="text-muted">Wybierz preset i ustaw rok, w którym wyzwanie ma się zakończyć.</p>
+      <p class="text-muted">Wybierz kategorię i ustaw wartość celu. Wyzwanie obowiązuje do końca bieżącego roku.</p>
     </div>
     <span class="material-symbols-outlined">emoji_events</span>
   </div>
@@ -21,16 +21,12 @@
       <option value="streak" {% if challenge_type == "streak" %}selected{% endif %}>Dyscyplina — dni z rzędu</option>
     </select>
 
-    <label for="target_value">Cel</label>
+    <label for="target_value">Wartość celu</label>
     <input id="target_value" name="target_value" type="number" min="1" max="1000" value="{{ target_value }}" required>
-    <small class="form-help">Propozycje: 12, 24 lub 52 książki; 14, 30 lub 100 dni.</small>
+    <small class="form-help">Wpisz liczbę książek albo dni, zależnie od wybranej kategorii.</small>
 
-    <label for="year">Rok zakończenia</label>
-    <select id="year" name="year">
-      {% for year in available_years %}
-        <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }} (do 31.12.{{ year }})</option>
-      {% endfor %}
-    </select>
+    <label>Termin</label>
+    <p class="form-help">Do 31.12.{{ current_year }}. W kategorii dyscypliny cel oznacza liczbę dni z rzędu.</p>
 
     <div id="genre-field">
       <label for="genre_id">Gatunek</label>

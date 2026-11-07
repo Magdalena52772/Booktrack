@@ -92,16 +92,18 @@ def evaluate_achievements(user):
 
 
 def achievement_cards(user):
-    earned = set(
-        UserAchievement.objects.filter(user_id=user.id).values_list("key", flat=True)
-    )
+    earned_rows = {
+        row.key: row.earned_at
+        for row in UserAchievement.objects.filter(user_id=user.id)
+    }
     return [
         {
             "key": key,
             "name": name,
             "icon": icon,
             "description": description,
-            "earned": key in earned,
+            "earned": key in earned_rows,
+            "earned_at": earned_rows.get(key),
         }
         for key, name, icon, description in ACHIEVEMENTS
     ]
