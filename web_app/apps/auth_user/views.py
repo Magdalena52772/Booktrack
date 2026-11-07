@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
@@ -9,7 +9,13 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from pages.models import BooktrackUser, Genre, UserFavoriteGenre, UserNotification
+from pages.models import (
+    BooktrackUser,
+    Challenge,
+    Genre,
+    UserFavoriteGenre,
+    UserNotification,
+)
 from .quiz_data import GENRE_LABELS, TAGS_BY_GENRE
 
 
@@ -17,6 +23,48 @@ from .quiz_data import GENRE_LABELS, TAGS_BY_GENRE
 @ensure_csrf_cookie
 def auth_welcome(request):
     return redirect("register_st1")
+
+
+def _update_login_streak(user, today):
+    last_activity_date = (
+        timezone.localtime(user.last_activity).date()
+        if user.last_activity
+        else None
+    )
+    if last_activity_date == today:
+        if (user.current_streak or 0) < 1:
+            BooktrackUser.objects.filter(id=user.id).update(current_streak=1)
+            user.current_streak = 1
+        return False
+
+    if last_activity_date == today - timedelta(days=1):
+        streak = max(user.current_streak or 0, 1) + 1
+    else:
+        streak = 1
+    now = timezone.now()
+    BooktrackUser.objects.filter(id=user.id).update(
+        last_activity=now,
+        current_streak=streak,
+    )
+    user.last_activity = now
+    user.current_streak = streak
+    return True
+
+
+def _update_streak_challenges(user, today):
+    challenges = Challenge.objects.filter(
+        user_id=user.id,
+        type="streak",
+        status="active",
+        start_date__lte=today,
+        end_date__gte=today,
+    )
+    for challenge in challenges:
+        progress = min(user.current_streak or 1, challenge.target_value)
+        update_fields = {"current_value": progress}
+        if progress >= challenge.target_value:
+            update_fields["status"] = "finished"
+        Challenge.objects.filter(id=challenge.id).update(**update_fields)
 
 
 @ensure_csrf_cookie
@@ -37,6 +85,8 @@ def login_view(request):
         if user is not None:
             auth_login(request, user)
             today = timezone.localdate()
+            _update_login_streak(user, today)
+            _update_streak_challenges(user, today)
             if not UserNotification.objects.filter(
                 user_id=user.id,
                 notification_type="daily_login",
