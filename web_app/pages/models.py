@@ -160,6 +160,7 @@ class UserFavoriteBook(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        managed = False
         db_table = "user_favorite_books"
         unique_together = (("user", "book"),)
 
@@ -170,6 +171,7 @@ class UserReadingQueue(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        managed = False
         db_table = "user_reading_queue"
         unique_together = (("user", "book"),)
 
@@ -187,6 +189,7 @@ class UserNotification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        managed = False
         db_table = "user_notifications"
         ordering = ("-created_at", "-id")
 
@@ -202,6 +205,7 @@ class UserAchievement(models.Model):
     earned_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        managed = False
         db_table = "user_achievements"
         ordering = ("-earned_at", "-id")
         unique_together = (("user", "key"),)
@@ -218,6 +222,7 @@ class UserBookReview(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        managed = False
         db_table = "user_book_reviews"
 
 
