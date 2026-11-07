@@ -16,6 +16,7 @@ from urllib.parse import urlencode
 from pages.models import (
     Activity,
     Book,
+    BooktrackUser,
     Challenge,
     Genre,
     UserBook,
@@ -30,6 +31,24 @@ from pages.achievements import achievement_cards, evaluate_achievements
 
 def _get_user(request):
     return request.user
+
+
+def _touch_last_activity(user_id, timestamp=None):
+    timestamp = timestamp or timezone.now()
+    BooktrackUser.objects.filter(id=user_id).update(last_activity=timestamp)
+    return timestamp
+
+
+def _record_activity(user_id, book_id, pages_read=0, session_minutes=0, timestamp=None):
+    timestamp = _touch_last_activity(user_id, timestamp)
+    Activity.objects.create(
+        user_id=user_id,
+        book_id=book_id,
+        pages_read=pages_read,
+        session_minutes=session_minutes,
+        timestamp=timestamp,
+    )
+    return timestamp
 
 
 def _notify(request, user_id, message, notification_type="info"):
@@ -311,6 +330,7 @@ def create_challenge(request):
                 end_date=date(year, 12, 31),
                 status="active",
             )
+            _touch_last_activity(request.user.id)
             _notify(
                 request,
                 request.user.id,
@@ -419,14 +439,12 @@ def user_book_detail(request, user_book_id):
 
         if not error:
             with transaction.atomic():
-                if pages_read or session_minutes:
-                    Activity.objects.create(
-                        user_id=request.user.id,
-                        book_id=user_book.book_id,
-                        pages_read=pages_read,
-                        session_minutes=session_minutes,
-                        timestamp=timezone.now(),
-                    )
+                activity_timestamp = _record_activity(
+                    request.user.id,
+                    user_book.book_id,
+                    pages_read=pages_read,
+                    session_minutes=session_minutes,
+                )
 
                 if not is_finished:
                     user_book.current_page += pages_read
@@ -445,6 +463,7 @@ def user_book_detail(request, user_book_id):
                         "rating",
                     ]
                 )
+                request.user.last_activity = activity_timestamp
 
                 if should_finish or comment:
                     UserBookReview.objects.update_or_create(
@@ -558,11 +577,16 @@ def library_action(request):
         return redirect("library_search")
     book = get_object_or_404(Book, id=request.POST.get("book_id"))
     action = request.POST.get("action")
+    activity_recorded = False
     if action == "favorite":
         UserFavoriteBook.objects.get_or_create(user_id=request.user.id, book_id=book.id)
+        activity_recorded = True
         _notify(request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book")
     elif action == "unfavorite":
-        UserFavoriteBook.objects.filter(user_id=request.user.id, book_id=book.id).delete()
+        deleted, _ = UserFavoriteBook.objects.filter(
+            user_id=request.user.id, book_id=book.id
+        ).delete()
+        activity_recorded = deleted > 0
         _notify(
             request,
             request.user.id,
@@ -571,24 +595,35 @@ def library_action(request):
     elif action == "to_read":
         if not UserBook.objects.filter(user_id=request.user.id, book_id=book.id).exists():
             UserReadingQueue.objects.get_or_create(user_id=request.user.id, book_id=book.id)
+            activity_recorded = True
             _notify(request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book")
     elif action == "remove_to_read":
-        UserReadingQueue.objects.filter(user_id=request.user.id, book_id=book.id).delete()
+        deleted, _ = UserReadingQueue.objects.filter(
+            user_id=request.user.id, book_id=book.id
+        ).delete()
+        activity_recorded = deleted > 0
         _notify(
             request,
             request.user.id,
             "Zmiany zapisane. Twoja biblioteka została uporządkowana. ✅",
         )
     elif action == "start_reading":
-        UserBook.objects.get_or_create(
+        user_book, created = UserBook.objects.get_or_create(
             user_id=request.user.id,
             book_id=book.id,
             defaults={"status": "reading", "start_date": timezone.now()},
         )
-        UserReadingQueue.objects.filter(user_id=request.user.id, book_id=book.id).delete()
+        deleted, _ = UserReadingQueue.objects.filter(
+            user_id=request.user.id, book_id=book.id
+        ).delete()
+        activity_recorded = created or deleted > 0
         _notify(request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book")
     else:
         return redirect("library_search")
+    if activity_recorded:
+        _record_activity(request.user.id, book.id)
+    else:
+        _touch_last_activity(request.user.id)
     next_view = request.POST.get("next")
     if next_view not in {
         "library_search",

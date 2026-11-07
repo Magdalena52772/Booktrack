@@ -75,7 +75,11 @@ class UserRepository:
 
         query = f"""
             SELECT
-                u.id, u.username, u.name, u.email, u.status, u.last_activity,
+                u.id, u.username, u.name, u.email, u.status,
+                COALESCE(
+                    u.last_activity,
+                    (SELECT MAX(timestamp) FROM activity WHERE user_id = u.id)
+                ) AS last_activity,
                 u.date_joined, u.birth_date, u.r_tier,
                 (SELECT COUNT(*) FROM user_books ub WHERE ub.user_id = u.id AND ub.status = 'finished') AS books_count,
                 COALESCE((SELECT SUM(pages_read) FROM activity WHERE user_id = u.id {act_time_filter}), 0) AS total_pages
@@ -214,7 +218,12 @@ class UserRepository:
             cursor.execute(
                 """
                 SELECT
-                    u.external_id, u.birth_date, u.last_activity, u.date_joined,
+                    u.external_id, u.birth_date,
+                    COALESCE(
+                        u.last_activity,
+                        (SELECT MAX(timestamp) FROM activity WHERE user_id = u.id)
+                    ) AS last_activity,
+                    u.date_joined,
                     u.name, u.username, u.status,
                     (SELECT SUM(pages_read) FROM activity WHERE user_id = u.id) as total_pages,
                     AVG(CAST(c.current_value AS FLOAT) / c.target_value * 100) as avg_progress

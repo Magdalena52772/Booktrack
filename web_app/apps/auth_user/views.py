@@ -32,9 +32,14 @@ def _update_login_streak(user, today):
         else None
     )
     if last_activity_date == today:
-        if (user.current_streak or 0) < 1:
-            BooktrackUser.objects.filter(id=user.id).update(current_streak=1)
-            user.current_streak = 1
+        now = timezone.now()
+        current_streak = max(user.current_streak or 0, 1)
+        BooktrackUser.objects.filter(id=user.id).update(
+            last_activity=now,
+            current_streak=current_streak,
+        )
+        user.last_activity = now
+        user.current_streak = current_streak
         return False
 
     if last_activity_date == today - timedelta(days=1):
@@ -108,6 +113,8 @@ def login_view(request):
 
 def _registration_form_data(request):
     return {
+        "registration_first_name": (request.POST.get("first_name") or "").strip(),
+        "registration_last_name": (request.POST.get("last_name") or "").strip(),
         "registration_email": (request.POST.get("email") or "").strip(),
         "registration_username": (request.POST.get("username") or "").strip(),
         "registration_birth_date": (request.POST.get("birth_date") or "").strip(),
@@ -116,12 +123,16 @@ def _registration_form_data(request):
 
 def register_st1(request):
     form_data = {
+        "registration_first_name": "",
+        "registration_last_name": "",
         "registration_email": "",
         "registration_username": "",
         "registration_birth_date": "",
     }
     if request.method == "POST":
         form_data = _registration_form_data(request)
+        first_name = form_data["registration_first_name"]
+        last_name = form_data["registration_last_name"]
         email = form_data["registration_email"]
         username = form_data["registration_username"]
         password = request.POST.get("password") or ""
@@ -133,7 +144,9 @@ def register_st1(request):
         except ValidationError:
             email_is_valid = False
 
-        if not email_is_valid:
+        if not first_name or not last_name:
+            messages.error(request, "Podaj imię i nazwisko.")
+        elif not email_is_valid:
             messages.error(request, "Podaj poprawny adres e-mail.")
         elif not username:
             messages.error(request, "Podaj nazwę użytkownika.")
@@ -155,6 +168,7 @@ def register_st1(request):
                     messages.error(request, "Data urodzenia musi być wcześniejsza niż dzisiaj.")
                 else:
                     request.session["registration_pending"] = {
+                        "name": f"{first_name} {last_name}",
                         "username": username,
                         "email": email,
                         "birth_date": birth_date.isoformat(),
@@ -216,11 +230,14 @@ def register_st3(request):
                 with transaction.atomic():
                     pending = request.session["registration_pending"]
                     user = BooktrackUser(
+                        name=pending["name"],
                         username=pending["username"],
                         email=pending["email"],
                         password=pending["password_hash"],
                         birth_date=date.fromisoformat(pending["birth_date"]),
                         date_joined=timezone.now(),
+                        last_activity=timezone.now(),
+                        current_streak=1,
                     )
                     user.save(force_insert=True)
                     genres = Genre.objects.filter(name__in=selected_genres)

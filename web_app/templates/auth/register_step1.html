@@ -17,6 +17,30 @@
 
 <form method="post">
       {% csrf_token %}
+      <label for="first-name">Imię</label>
+      <input
+        type="text"
+        class="form-control"
+        id="first-name"
+        name="first_name"
+        placeholder="Wprowadź imię"
+        value="{{ registration_first_name }}"
+        maxlength="100"
+        required
+      />
+
+      <label for="last-name">Nazwisko</label>
+      <input
+        type="text"
+        class="form-control"
+        id="last-name"
+        name="last_name"
+        placeholder="Wprowadź nazwisko"
+        value="{{ registration_last_name }}"
+        maxlength="100"
+        required
+      />
+
       <label for="email">Adres e-mail</label>
       <input
         type="email"

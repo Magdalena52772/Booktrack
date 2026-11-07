@@ -10,8 +10,8 @@ class UserProfileFormatter:
     @staticmethod
     def format_profile(profile, user_ppd, system_avg, current_filter):
         """Formatuje HTML profilu użytkownika"""
-        full_name = profile.get("name", "Unknown")
-        username = profile.get("username", "unknown")
+        full_name = str(profile.get("name") or profile.get("username") or "Unknown")
+        username = str(profile.get("username") or "unknown")
         streak = profile["streak"]
         streak_text = f"🔥 {streak} DAYS" if streak > 0 else "❄️ NO STREAK"
         streak_color = "#e67e22" if streak > 0 else "#95a5a6"
@@ -49,13 +49,16 @@ class UserProfileFormatter:
         reading_list = profile["reading_now"] if profile["reading_now"] else []
         user_status = profile.get("status", "active")
         reading_str = (
-            ", ".join(f"{i+1}. {book}" for i, book in enumerate(reading_list))
+            ", ".join(
+                f"{i+1}. {book or 'Unknown book'}" for i, book in enumerate(reading_list)
+            )
             if reading_list
             else ("None (inactive account)" if user_status == "inactive" else "None")
         )
+        selected_filter = str(current_filter or "all")
         filter_label = (
-            f"({current_filter.upper()})"
-            if current_filter.lower() != "all"
+            f"({selected_filter.upper()})"
+            if selected_filter.lower() != "all"
             else "(ALL TIME)"
         )
 
