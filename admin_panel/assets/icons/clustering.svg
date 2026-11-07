@@ -1,0 +1,8 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+	<defs>
+		<image  width="13" height="13" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANBAMAAACAxflPAAAAAXNSR0IB2cksfwAAADBQTFRFurm4urm4urm4AAAAurm4urm4urm4urm4urm4urm4urm4urm4urm4urm4urm4urm4CavAigAAABB0Uk5TG7TwAAJ/4bz/leeQMxg0DtnBBxoAAABNSURBVHicY2RUeGQgpHCbsULg9YHUDxyMGgmzBUofSID5rRc0GEHykxZEMxozMDCsVrgEphkY/sJpkPw5hftg9a4CL8D6vybMgPOh8gDnEiMeMv+xtAAAAABJRU5ErkJggg=="/>
+	</defs>
+	<style>
+	</style>
+	<use id="Warstwa 2" href="#img1" x="2" y="2"/>
+</svg>

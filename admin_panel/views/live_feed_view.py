@@ -1,4 +1,4 @@
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, Qt
 from PySide6.QtWidgets import QWidget, QListWidgetItem
 from datetime import datetime
 
@@ -21,7 +21,7 @@ class LiveFeedView(QWidget):
             print("Błąd ładowania UI LiveFeed!")
             return
 
-        # Konfiguracja
+        # Konfiguracja podpowiedzi
         self.setup_tooltips()
 
         # Sygnały
@@ -33,30 +33,27 @@ class LiveFeedView(QWidget):
     def setup_tooltips(self):
         """Podpowiedzi dla sekcji Live Feed."""
         tooltips = {
-            "frame_clusters": "Future AI module: grouping users by reading patterns.",
             "list_events": "Real-time log of recent database changes and user actions.",
-            "btn_refresh_live": "Manually refresh to see the latest events.",
+            "btn_refresh_live": "Manually refresh to see the latest events and daily metrics.",
         }
         apply_tooltips(self.ui, tooltips)
 
     def load_view(self):
-        """Odświeża wszystkie sekcje widoku Live Feed."""
+        """Odświeża logi oraz wskaźniki KPI w widoku Live Feed."""
         self.statusMessage.emit(*StatusMsg.get("LOAD_START", "Live Feed"))
         try:
             self.refresh_event_log()
-            self.update_clustering_status()
+            self.update_daily_metrics()
 
             self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", "Live Feed"))
         except Exception as e:
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
 
     def refresh_event_log(self):
-        """
-        Pobiera i wyświetla ostatnie logi aktywności z bazy danych.
-        """
+        """Pobiera i wyświetla ostatnie logi aktywności z bazy danych."""
         from data.repositories.activity_repo import ActivityRepository
 
-        # czyści listę
+        # Czyści listę
         self.ui.list_events.clear()
 
         # Pobiera ostatnie 50 logów
@@ -64,24 +61,42 @@ class LiveFeedView(QWidget):
         logs = activity_repo.get_recent_activity_logs(limit=50)
 
         if logs:
-            # Dodaje każdy log do listy (w chronologicznym porządku) z timestamp z bazy
             for time_str, message in logs:
                 self.add_log_entry(message, timestamp=time_str)
         else:
-            # Jeśli brak logów, pokazuje placeholder
-            from PySide6.QtWidgets import QListWidgetItem
-
             item = QListWidgetItem(
                 "ℹ️ Monitoring system is ready... Waiting for activity logs."
             )
             self.ui.list_events.addItem(item)
 
-    def update_clustering_status(self):
-        """TODO. Miejsce na logikę przyszłej klasteryzacji."""
-        self.ui.lbl_cluster_info.setText(
-            "Gathering data points for K-Means analysis... \n" "Status: [Pending]"
-        )
-        self.ui.lbl_cluster_info.setStyleSheet("color: #7f8c8d; font-style: italic;")
+    def update_daily_metrics(self):
+        """Pobiera i wyświetla dzisiejsze KPI (rozpoczęte i ukończone książki)."""
+        try:
+            cursor = self.conn.cursor()
+            today_str = datetime.now().strftime("%Y-%m-%d")
+
+            # Książki rozpoczęte dzisiaj
+            cursor.execute("""
+                SELECT COUNT(*) FROM user_books
+                WHERE date(start_date) = ?
+            """, (today_str,))
+            start_date = cursor.fetchone()[0] or 0
+
+            # Książki ukończone dzisiaj
+            cursor.execute("""
+                SELECT COUNT(*) FROM user_books
+                WHERE status = 'finished' AND date(finish_date) = ?
+            """, (today_str,))
+            finish_date = cursor.fetchone()[0] or 0
+
+            # Aktualizacja etykiet w UI
+            if hasattr(self.ui, "lbl_books_started_title"):
+                self.ui.lbl_books_started_title.setText(f"📚 Books Started Today: {start_date}")
+            if hasattr(self.ui, "lbl_books_finished_title"):
+                self.ui.lbl_books_finished_title.setText(f"✅ Books Finished Today: {finish_date}")
+
+        except Exception as e:
+            print(f"[METRICS ERROR] Nie udało się pobrać dzisiejszych KPI: {e}")
 
     def add_log_entry(self, message, timestamp=None):
         """Dodaje wpis logu do listy w widoku Live Feed"""
@@ -89,7 +104,6 @@ class LiveFeedView(QWidget):
             timestamp = datetime.now().strftime("%H:%M:%S")
 
         item = QListWidgetItem(f"[{timestamp}] {message}")
-
         self.ui.list_events.insertItem(0, item)
 
         # Ogranicza listę do ostatnich 50 wpisów

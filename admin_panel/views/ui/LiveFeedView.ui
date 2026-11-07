@@ -27,53 +27,29 @@
      </property>
     </widget>
    </item>
+   <!-- Sekcja KPI / Metryk dzisiejszych -->
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QFrame" name="frame_clusters">
-       <property name="frameShape">
-        <enum>QFrame::Shape::StyledPanel</enum>
-       </property>
-       <layout class="QVBoxLayout" name="v4">
-        <item>
-         <widget class="QLabel" name="lbl_cluster_title">
-          <property name="font">
-           <font>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>AI CLUSTERING</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_cluster_info">
-          <property name="text">
-           <string>Waiting for data points...</string>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="s1">
-          <property name="orientation">
-           <enum>Qt::Orientation::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QFrame" name="frame_metrics">
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <layout class="QHBoxLayout" name="metricsLayout">
+      <item>
+       <widget class="QLabel" name="lbl_books_started_title">
+        <property name="text">
+         <string>📚 Books Started Today: 0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_books_finished_title">
+        <property name="text">
+         <string>✅ Books Finished Today: 0</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QFrame" name="frame_events">
@@ -106,19 +82,6 @@
    <item>
     <layout class="QHBoxLayout" name="buttonLayout">
      <item>
-      <spacer name="s2">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QPushButton" name="btn_refresh_live">
        <property name="minimumSize">
         <size>
@@ -129,24 +92,7 @@
        <property name="text">
         <string>Refresh Feed</string>
        </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>assets/icons/refresh.svg</normaloff>assets/icons/refresh.svg</iconset>
-       </property>
       </widget>
-     </item>
-     <item>
-      <spacer name="s3">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
      </item>
     </layout>
    </item>

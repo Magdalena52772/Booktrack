@@ -73,6 +73,11 @@ class MainWindow(QMainWindow):
                 "container": self.ui.page_live_feed,
                 "instance": None,
             },
+            self.ui.btn_clustering: {
+                        "class_name": "ClusteringView",
+                        "container": self.ui.page_clustering,
+                        "instance": None,
+            }
         }
 
         print(
@@ -138,6 +143,7 @@ class MainWindow(QMainWindow):
             "ActivityView": ("views.activity_view", "ActivityView"),
             "ReportsView": ("views.reports_view", "ReportsView"),
             "LiveFeedView": ("views.live_feed_view", "LiveFeedView"),
+            "ClusteringView": ("views.clustering_view", "ClusteringView")
         }
 
         if class_name in view_modules:

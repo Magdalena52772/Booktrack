@@ -1,6 +1,6 @@
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 
 from data.config.generator import AGE_BASED_GENRES, GENRES, RATING_SETTINGS
@@ -97,6 +97,12 @@ def generate_books(conn, users):
                 else:
                     current_page = random.randint(1, total_pages - 1)
 
+            if days_on_platform > 0:
+                start_offset = random.randint(0, days_on_platform)
+                start_date = reg_date + timedelta(days=start_offset)
+            else:
+                start_date = reg_date
+
             if selected_pool:
                 book_title = selected_pool.get("title") or f"{get_fake().word().title()} {get_fake().word().title()}"
                 author = selected_pool.get("authors") or f"{get_fake().first_name()} {get_fake().last_name()}"
@@ -130,10 +136,11 @@ def generate_books(conn, users):
             # Powiązanie książki z konkretnym użytkownikiem w tabeli user_books
             cursor.execute(
                 """
-                INSERT OR IGNORE INTO user_books (user_id, book_id, current_page, status, rating)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT OR IGNORE INTO user_books
+                    (user_id, book_id, current_page, status, rating, start_date)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (user["id"], book_id, current_page, status, rating),
+                (user["id"], book_id, current_page, status, rating, start_date),
             )
 
             # Przechowywanie metadanych

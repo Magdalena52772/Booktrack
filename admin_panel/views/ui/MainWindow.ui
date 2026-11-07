@@ -183,6 +183,26 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btn_clustering">
+         <property name="mouseTracking">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>  Clustering</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>assets/icons/clustering.svg</normaloff>assets/icons/clustering.svg</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="class" stdset="0">
+          <string>sidebarButton</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btn_reports">
          <property name="mouseTracking">
           <bool>true</bool>
@@ -364,6 +384,25 @@
          </widget>
          <widget class="QWidget" name="page_reports">
           <layout class="QVBoxLayout" name="layout_reports">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_clustering">
+          <layout class="QVBoxLayout" name="layout_clustering">
            <property name="spacing">
             <number>0</number>
            </property>

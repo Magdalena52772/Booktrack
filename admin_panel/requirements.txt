@@ -6,3 +6,4 @@ python-dateutil
 reportlab
 sqlite-utils
 requests
+scikit-learn
