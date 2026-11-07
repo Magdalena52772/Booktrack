@@ -1,0 +1,41 @@
+{% extends "base_account.html" %}
+
+{% block account_content %}
+<section class="account-page">
+  <div class="stats-page-heading">
+    <p class="stats-eyebrow">BOOK TRACK · TWOJE CELE</p>
+    <h1>Wszystkie wyzwania</h1>
+    <p class="text-muted">Aktywne i ukończone wyzwania czytelnicze.</p>
+  </div>
+
+  <div class="challenge-list-page">
+    {% for challenge in challenges %}
+      {% widthratio challenge.current_value challenge.target_value 100 as challenge_percent %}
+      <article class="challenge-list-item">
+        <div class="challenge-title-row">
+          <strong>{{ challenge.title }}</strong>
+          {% if challenge.status == "finished" %}
+            <span class="challenge-finished-label">Ukończone</span>
+          {% else %}
+            <span>{{ challenge.current_value }}/{{ challenge.target_value }}</span>
+          {% endif %}
+        </div>
+        <div class="progress">
+          <div class="progress-bar {% if challenge.status == 'finished' %}challenge-progress-finished{% endif %}"
+            style="width: {{ challenge_percent }}%;"></div>
+        </div>
+        <small class="text-muted">
+          {% if challenge.status == "finished" %}Wyzwanie ukończone{% else %}Do {{ challenge.end_date|date:"d.m.Y" }}{% endif %}
+        </small>
+      </article>
+    {% empty %}
+      <div class="dashboard-empty-widget">
+        <span class="material-symbols-outlined">flag</span>
+        <p>Nie masz jeszcze żadnego wyzwania.</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <a href="{% url 'create_challenge' %}" class="btn-minimal">+ Dodaj własne wyzwanie</a>
+</section>
+{% endblock %}

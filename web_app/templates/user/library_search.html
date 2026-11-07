@@ -22,25 +22,33 @@
           <div>
             <strong>{{ book.title }}</strong>
             <span>{{ book.authors|default:"Nieznany autor" }}</span>
+            <div class="book-status-list">
+              {% if book.id in finished_ids %}<span class="book-status book-status-finished">Przeczytana</span>{% endif %}
+              {% if book.id in reading_ids %}<span class="book-status book-status-reading">W trakcie</span>{% endif %}
+              {% if book.id in queue_ids %}<span class="book-status book-status-queued">Do przeczytania</span>{% endif %}
+              {% if book.id in favorite_ids %}<span class="book-status book-status-favorite">Ulubiona</span>{% endif %}
+            </div>
           </div>
           <div class="library-result-actions">
             <form method="post" action="{% url 'library_action' %}">
-              {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="next" value="library_search">
+              {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="next" value="library_search"><input type="hidden" name="query" value="{{ query }}">
               {% if book.id in favorite_ids %}
                 <input type="hidden" name="action" value="unfavorite"><button class="library-action library-action-active" type="submit" title="Usuń z ulubionych">♥</button>
               {% else %}
                 <input type="hidden" name="action" value="favorite"><button class="library-action" type="submit" title="Dodaj do ulubionych">♡</button>
               {% endif %}
             </form>
-            {% if book.id in reading_ids %}
-              <a class="library-action library-action-reading" href="{% url 'reading_list' %}">Czytasz</a>
+              {% if book.id in finished_ids %}
+                <a class="library-action library-action-reading" href="{% url 'book_detail' book.id %}">Przeczytana</a>
+              {% elif book.id in reading_ids %}
+                <a class="library-action library-action-reading" href="{% url 'reading_list' %}">Czytasz</a>
             {% elif book.id in queue_ids %}
               <form method="post" action="{% url 'library_action' %}">
-                {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="action" value="start_reading"><input type="hidden" name="next" value="library_search"><button class="library-action library-action-primary" type="submit">Zacznij czytać</button>
+                {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="action" value="start_reading"><input type="hidden" name="next" value="library_search"><input type="hidden" name="query" value="{{ query }}"><button class="library-action library-action-primary" type="submit">Zacznij czytać</button>
               </form>
             {% else %}
               <form method="post" action="{% url 'library_action' %}">
-                {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="action" value="to_read"><input type="hidden" name="next" value="library_search"><button class="library-action" type="submit">Do przeczytania</button>
+                {% csrf_token %}<input type="hidden" name="book_id" value="{{ book.id }}"><input type="hidden" name="action" value="to_read"><input type="hidden" name="next" value="library_search"><input type="hidden" name="query" value="{{ query }}"><button class="library-action" type="submit">Do przeczytania</button>
               </form>
             {% endif %}
           </div>

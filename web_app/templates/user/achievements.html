@@ -1,0 +1,30 @@
+{% extends "base_account.html" %}
+{% load static %}
+{% block account_content %}
+<section class="account-panel profile-page">
+  <div class="profile-heading">
+    <div>
+      <p class="stats-eyebrow">GRYWALIZACJA</p>
+      <h1>Twoje odznaki</h1>
+      <p class="text-muted">Każda odznaka ma własny cel i zostaje z Tobą na stałe.</p>
+    </div>
+    <span class="material-symbols-outlined">emoji_events</span>
+  </div>
+  <div class="achievement-grid achievement-detail-grid">
+    {% for achievement in achievements %}
+      <article class="achievement-card {% if not achievement.earned %}achievement-locked{% endif %}">
+        <img src="{% static 'img/badges/' %}{{ achievement.icon }}" alt="{{ achievement.name }}">
+        <div>
+          <strong>{{ achievement.name }}</strong>
+          <small>{{ achievement.description }}</small>
+          {% if achievement.earned %}
+            <small class="achievement-earned-date">Zdobyto {{ achievement.earned_at|date:"d.m.Y" }}</small>
+          {% else %}
+            <small>Jeszcze niezdobyta</small>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
