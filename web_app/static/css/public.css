@@ -752,6 +752,92 @@ section h3 a:hover {
   justify-self: start;
 }
 
+.home-genres {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border-radius: 1rem;
+  background: rgba(255, 250, 245, 0.68);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.05);
+}
+
+.home-genres-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home-genres-heading h2 {
+  margin: 0;
+  color: var(--public-header-bg);
+  font-size: 1.35rem;
+}
+
+.home-genres-heading > a,
+.open-library-attribution {
+  color: var(--public-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.home-genres-heading > a:hover,
+.open-library-attribution:hover {
+  color: var(--public-accent-hover);
+  text-decoration: underline;
+}
+
+.home-genre-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.home-genre-card {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(120, 76, 54, 0.16);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--public-header-bg);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.home-genre-card > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-genre-card .material-symbols-outlined {
+  color: var(--public-accent);
+  font-size: 1.2rem;
+}
+
+.home-genre-card .home-genre-arrow {
+  margin-left: auto;
+  font-size: 1rem;
+}
+
+.home-genre-card:hover {
+  border-color: var(--public-accent);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+  color: var(--public-accent-hover);
+  transform: translateY(-2px);
+}
+
+.open-library-attribution {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+}
+
 .benefits-list {
   list-style: none;
   padding-left: 0;
@@ -828,6 +914,10 @@ section h3 a:hover {
   }
 
   .home-book-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-genre-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

@@ -17,8 +17,74 @@
   color: #f1d2b5 !important;
 }
 
+.navbar[style*="--account-accent"] {
+  min-height: 4rem;
+  padding: 0.45rem 1rem;
+  box-shadow: 0 2px 12px rgba(44, 24, 16, 0.16);
+}
+
+.navbar[style*="--account-accent"] .navbar-nav {
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .nav-notifications {
   position: relative;
+}
+
+.account-nav-search {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d8cec6;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.account-nav-search input {
+  width: 12rem;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  outline: 0;
+  background: #fff;
+  color: var(--account-text);
+  font-size: 0.9rem;
+}
+
+.account-nav-search input::placeholder {
+  color: #756b64;
+}
+
+.account-nav-search button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-left: 1px solid #d8cec6;
+  background: #f4e8de;
+  color: var(--account-accent);
+}
+
+.account-nav-search .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.nav-avatar {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-left: 0.35rem;
+  border-radius: 50%;
+  background: var(--account-highlight);
+  font-weight: 700;
+  border: 2px solid rgba(255, 250, 245, 0.7);
+  box-shadow: 0 2px 5px rgba(44, 24, 16, 0.2);
+}
+
+.navbar .dropdown-toggle::after {
+  margin-left: 0.35rem;
 }
 
 .notification-bell {
@@ -203,6 +269,10 @@ body {
   grid-column: span 2;
 }
 
+.card-rec {
+  grid-column: span 2;
+}
+
 /* Karty */
 .card {
   background-color: #fff !important;
@@ -210,11 +280,84 @@ body {
   border: none !important;
 }
 
+.card-main-stats .card-body,
+.card-challenge .card-body,
+.card-achievements .card-body,
+.card-rec .card-body {
+  min-height: 13rem;
+}
+
+.card-challenge .card-body {
+  min-height: 20rem;
+}
+
+.card-reading-now .card-body {
+  min-height: 17rem;
+}
+
+.card-library .card-body {
+  min-height: 11rem;
+}
+
 /* Statystyki */
 .huge-number {
   font-size: 3rem;
   color: var(--account-accent);
   line-height: 1;
+}
+
+.dashboard-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.5rem 0 0.9rem;
+}
+
+.dashboard-summary-item {
+  display: flex;
+  min-height: 4.5rem;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.8rem;
+  border-radius: 0.75rem;
+  background: var(--account-bg);
+}
+
+.dashboard-summary-value {
+  color: var(--account-accent);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dashboard-summary-item span {
+  color: #756b64;
+  font-size: 0.75rem;
+}
+
+.dashboard-summary-icon {
+  margin-bottom: 0.2rem;
+  color: var(--account-highlight);
+  font-size: 1.25rem !important;
+  line-height: 1;
+}
+
+.dashboard-header-icon {
+  color: var(--account-highlight);
+  font-size: 1.65rem !important;
+}
+
+.dashboard-summary-genres strong {
+  color: var(--account-accent);
+  font-size: 0.85rem;
+}
+
+.dashboard-summary-genres span {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.25rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 /* PROGRESS BAR */
@@ -334,17 +477,56 @@ body {
 }
 
 .dashboard-reading-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
   padding: 1rem;
   border: 1px dashed #c9b7a8;
   border-radius: 0.75rem;
   color: #756b64;
   background: #fbfaf8;
+  text-align: center;
+}
+
+.dashboard-reading-empty .material-symbols-outlined {
+  color: var(--account-highlight);
+  font-size: 2rem;
+}
+
+.dashboard-inline-search {
+  display: flex;
+  width: min(100%, 24rem);
+  margin-top: 0.35rem;
+}
+
+.dashboard-inline-search input {
+  min-width: 0;
+  flex: 1;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #d8c8bc;
+  border-radius: 0.45rem 0 0 0.45rem;
+  background: #fff;
+}
+
+.dashboard-inline-search button {
+  border-radius: 0 0.45rem 0.45rem 0;
 }
 
 .dashboard-recommendation {
   display: flex;
   align-items: center;
   gap: 0.7rem;
+}
+
+.card-rec .rec-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.card-rec .dashboard-recommendation {
+  min-height: 7rem;
+  margin-bottom: 0 !important;
 }
 
 .challenge-title-row {
@@ -366,6 +548,28 @@ body {
 
 .dashboard-challenge + .dashboard-challenge {
   margin-top: 1rem;
+}
+
+.challenge-finished-label {
+  color: #4f7658;
+  font-weight: 700;
+}
+
+.challenge-progress-finished {
+  background-color: #6f9c76 !important;
+}
+
+.challenge-list-page {
+  display: grid;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.challenge-list-item {
+  padding: 1.1rem 1.25rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(44, 24, 16, 0.06);
 }
 
 .dashboard-empty-widget {
@@ -415,6 +619,22 @@ body {
   margin: 0.8rem 0 0.4rem;
 }
 
+.stats-period-switcher-wide {
+  align-items: center;
+  margin: 1.1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(44, 24, 16, 0.06);
+}
+
+.stats-period-switcher-wide > span {
+  margin-right: auto;
+  color: #756b64;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
 .stats-period-switcher a {
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
@@ -459,6 +679,52 @@ body {
   gap: 0.75rem;
 }
 
+.dashboard-achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-achievement-card {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0.3rem;
+  border: 1px solid #e5d8ce;
+  border-radius: 0.65rem;
+  color: var(--account-text);
+  font-size: 0.7rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.dashboard-achievement-card:hover {
+  border-color: var(--account-highlight);
+  color: var(--account-accent);
+}
+
+.dashboard-achievement-card img,
+.dashboard-achievement-card > img,
+.card-achievements .dashboard-achievement-grid img {
+  display: block;
+  width: 4rem !important;
+  height: 4rem !important;
+  max-width: 4rem !important;
+  max-height: 4rem !important;
+  object-fit: contain;
+}
+
+.dashboard-section-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dashboard-section-link:hover {
+  color: var(--account-highlight);
+}
+
 .dashboard-library-card {
   display: grid;
   gap: 0.2rem;
@@ -482,6 +748,42 @@ body {
 .dashboard-library-card small,
 .library-result-card span {
   color: #756b64;
+}
+
+.book-status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.book-status {
+  display: inline-flex;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem !important;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.book-status-reading {
+  background: #e7f0e9;
+  color: #376344 !important;
+}
+
+.book-status-finished {
+  background: #eee8e2;
+  color: #66544a !important;
+}
+
+.book-status-queued {
+  background: #f0e5dc;
+  color: var(--account-accent) !important;
+}
+
+.book-status-favorite {
+  background: #f8e1e2;
+  color: #9a4146 !important;
 }
 
 .library-search-link {
@@ -558,10 +860,28 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.9rem 1rem;
+  min-height: 7rem;
+  padding: 1.15rem 1.25rem;
   border: 1px solid rgba(119, 73, 54, 0.1);
   border-radius: 0.75rem;
   background: #fff;
+}
+
+.recommendation-card {
+  min-height: 8.5rem;
+  padding: 1.25rem 1.35rem;
+}
+
+.recommendation-book {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 1rem;
+}
+
+.recommendation-card .dashboard-book-cover-small {
+  width: 3.6rem;
+  height: 5.4rem;
 }
 
 .library-result-card > div:first-child {
@@ -753,15 +1073,35 @@ body {
   grid-template-columns: repeat(14, minmax(1.4rem, 1fr));
   gap: 0.5rem;
   align-items: end;
-  min-height: 10rem;
-  margin-top: 1.5rem;
+  min-height: 8rem;
+  margin-top: 1rem;
   padding-top: 0.5rem;
   border-bottom: 1px solid var(--account-bg-secondary);
 }
 
+.stats-chart-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.stats-chart-period-14 {
+  grid-template-columns: repeat(14, 3.4rem);
+  width: max-content;
+}
+
+.stats-chart-period-30 {
+  grid-template-columns: repeat(30, 3.4rem);
+  width: max-content;
+}
+
+.stats-chart-period-year {
+  grid-template-columns: repeat(12, minmax(2.5rem, 1fr));
+}
+
 .stats-chart-column {
   display: grid;
-  grid-template-rows: 7rem auto auto;
+  grid-template-rows: 5.5rem auto auto;
   align-items: end;
   min-width: 0;
   text-align: center;
@@ -771,7 +1111,7 @@ body {
   display: flex;
   align-items: end;
   justify-content: center;
-  height: 7rem;
+  height: 5.5rem;
 }
 
 .stats-chart-bar {
@@ -804,6 +1144,60 @@ body {
   color: #756b64;
 }
 
+.stats-genre-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.25rem;
+}
+
+.stats-genre-pie {
+  flex: 0 0 12rem;
+  width: 12rem;
+  height: 12rem;
+  box-shadow: inset 0 0 0 1px rgba(44, 24, 16, 0.08);
+}
+
+.stats-genre-pie path {
+  cursor: help;
+  transition: opacity 0.15s ease;
+}
+
+.stats-genre-pie:hover path {
+  opacity: 0.65;
+}
+
+.stats-genre-pie path:hover {
+  opacity: 1;
+}
+
+.stats-genre-legend {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 13rem;
+}
+
+.stats-genre-item {
+  display: grid;
+  grid-template-columns: 0.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  color: #756b64;
+  font-size: 0.85rem;
+}
+
+.stats-genre-item i {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+
+.stats-genre-item strong {
+  color: var(--account-text);
+  font-size: 0.8rem;
+}
+
 .stats-heatmap-card {
   margin-top: 1.25rem;
   padding: clamp(1rem, 3vw, 1.5rem);
@@ -814,15 +1208,43 @@ body {
 
 .stats-heatmap-scroll {
   overflow-x: auto;
-  padding: 1.6rem 0 0.5rem;
+  padding: 0.2rem 1rem 0.5rem;
+  scrollbar-width: thin;
+}
+
+.stats-heatmap-period-year {
+  overflow-x: scroll;
+  scrollbar-gutter: stable;
+}
+
+.stats-heatmap-months {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: 1rem;
+  grid-auto-columns: 1.5rem;
+  gap: 0.35rem;
+  width: max-content;
+  min-height: 1.1rem;
+  margin: 0 0 0.45rem;
+  padding-right: 0.2rem;
+}
+
+.stats-heatmap-months span {
+  grid-row: 1;
+  display: block;
+  min-width: 3.8rem;
+  color: #756b64;
+  font-size: 0.65rem;
+  line-height: 1rem;
+  white-space: nowrap;
 }
 
 .stats-heatmap {
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(7, 0.75rem);
-  grid-auto-columns: 0.75rem;
-  gap: 0.25rem;
+  grid-template-rows: repeat(7, 1.5rem);
+  grid-auto-columns: 1.5rem;
+  gap: 0.35rem;
   width: max-content;
 }
 
@@ -837,13 +1259,52 @@ body {
 .stats-heatmap-level-3 { background: #936044; }
 .stats-heatmap-level-4 { background: #774936; }
 
-.stats-heatmap-month {
+.stats-heading-with-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.stats-heading-with-info h2 {
+  margin: 0;
+}
+
+.stats-info-button {
+  position: relative;
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--account-highlight);
+  cursor: help;
+}
+
+.stats-info-button .material-symbols-outlined {
+  font-size: 1.15rem;
+}
+
+.stats-info-tooltip {
   position: absolute;
-  top: -1.3rem;
-  left: 0;
-  color: #756b64;
-  font-size: 0.65rem;
-  white-space: nowrap;
+  z-index: 5;
+  bottom: calc(100% + 0.55rem);
+  left: 50%;
+  display: none;
+  width: min(22rem, 75vw);
+  padding: 0.7rem 0.8rem;
+  transform: translateX(-50%);
+  border-radius: 0.55rem;
+  background: var(--account-text);
+  color: var(--account-light-text);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  box-shadow: 0 5px 16px rgba(44, 24, 16, 0.2);
+}
+
+.stats-info-button:hover .stats-info-tooltip,
+.stats-info-button:focus .stats-info-tooltip {
+  display: block;
 }
 
 .stats-heatmap-legend {
@@ -1365,8 +1826,10 @@ body {
   }
 
   .card-main-stats,
+  .card-challenge,
   .card-reading-now,
-  .card-library {
+  .card-library,
+  .card-rec {
     grid-column: span 1;
   }
 
@@ -1376,6 +1839,22 @@ body {
 
   .dashboard-library-grid {
     grid-template-columns: 1fr;
+  }
+
+  .card-rec .rec-list {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-nav-search {
+    margin: 0.5rem 0.75rem 0.75rem;
+  }
+
+  .account-nav-search input {
+    width: 100%;
   }
 }
 
