@@ -1,5 +1,5 @@
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtWidgets import QWidget, QLabel, QSizePolicy, QPushButton, QMessageBox, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QLabel, QSizePolicy, QPushButton, QMessageBox, QHBoxLayout, QApplication
 from PySide6.QtGui import QPixmap
 
 from data.utils.status_manager import StatusMsg
@@ -73,13 +73,13 @@ class ClusteringView(QWidget):
 
         details = (
             "• <b>Cluster 0: Casual Readers (Low Engagement)</b><br>"
-            "  - Range: Low activity index, sporadically read books (< 20 books), lower pages per day.<br><br>"
+            "  - Range: Low activity index, sporadically read books (&lt; 20 books), lower pages per day.<br><br>"
             "• <b>Cluster 1: Regular Readers (Stable Habits)</b><br>"
             "  - Range: Consistent habits, moderate books read (20–50), and steady daily page count.<br><br>"
             "• <b>Cluster 2: Engaged Readers (High Activity)</b><br>"
             "  - Range: High activity, strong reading streak, and regular platform engagement.<br><br>"
             "• <b>Cluster 3: Power Users (Platform Leaders)</b><br>"
-            "  - Range: Maximum metrics in database (> 80 books read, highest pages/day and streak)."
+            "  - Range: Maximum metrics in database (&gt; 80 books read, highest pages/day and streak)."
         )
         dialog.setInformativeText(details)
         dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
@@ -92,6 +92,14 @@ class ClusteringView(QWidget):
 
         size_policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.lbl_cluster_image.setSizePolicy(size_policy)
+
+        # Stan początkowy przed wygenerowaniem wykresu
+        self.lbl_cluster_image.setText(
+            "<div style='text-align: center; color: #747d8c; font-size: 12pt;'>"
+            "<b>No behavioral segmentation chart generated yet</b><br>"
+            "<span style='font-size: 10pt;'>Click the <b>Run Clustering</b> button above to generate the chart.</span>"
+            "</div>"
+        )
 
         self.ui.v4.addWidget(self.lbl_cluster_image)
 
@@ -116,31 +124,48 @@ class ClusteringView(QWidget):
             self.update_image_display(self.current_pixmap_path)
 
     def execute_clustering(self):
-        # Uruchomienie procesu klastrowania użytkowników
-        # i aktualizacja interfejsu użytkownika
+        # Uruchomienie procesu klastrowania użytkowników z natychmiastową informacją w UI
         from data.services.clustering_service import run_user_clustering
 
         self.statusMessage.emit(*StatusMsg.get("LOAD_START", "AI Clustering"))
-        self.lbl_cluster_image.clear()
 
-        self.ui.btn_run_clustering.setText("Processing...")
+        # Wyraźny stan ładowania w miejscu wykresu i na przycisku
+        self.lbl_cluster_image.clear()
+        self.lbl_cluster_image.setText(
+            "<div style='text-align: center; color: #57606f; font-size: 13pt;'>"
+            "<b>Generating behavioral clusters...</b><br>"
+            "<span style='font-size: 10pt;'>Running K-Means segmentation and rendering charts, please wait.</span>"
+            "</div>"
+        )
+
+        self.ui.btn_run_clustering.setText("Generating...")
         self.ui.btn_run_clustering.setEnabled(False)
+        self.btn_info.setEnabled(False)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+        # Wymuszenie natychmiastowego odświeżenia UI przed startem ciężkich obliczeń
+        QApplication.processEvents()
 
         try:
             result = run_user_clustering(self.conn)
 
             if result["success"]:
+                self.lbl_cluster_image.setText("")
                 self.current_pixmap_path = result['output_path']
                 self.update_image_display(self.current_pixmap_path)
                 self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", "AI Clustering"))
             else:
+                self.lbl_cluster_image.setText(f"<span style='color: #c0392b;'>Error: {result['message']}</span>")
                 self.statusMessage.emit(*StatusMsg.get("DB_ERROR", result['message']))
 
         except Exception as e:
+            self.lbl_cluster_image.setText(f"<span style='color: #c0392b;'>Unexpected error: {str(e)}</span>")
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
         finally:
+            QApplication.restoreOverrideCursor()
             self.ui.btn_run_clustering.setText("Run Clustering")
             self.ui.btn_run_clustering.setEnabled(True)
+            self.btn_info.setEnabled(True)
 
     def update_image_display(self, image_path):
         # Aktualizacja wyświetlanego obrazu wykresu klastrów w QLabel

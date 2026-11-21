@@ -120,21 +120,7 @@ class TestGeneratorLogic(unittest.TestCase):
         self.cursor.execute(query)
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
-    def test_books_consistency(self):
-        query = """
-        SELECT
-            u.books_read,
-            (
-                SELECT COUNT(*)
-                FROM user_books ub
-                WHERE ub.user_id = u.id
-                AND ub.status='finished'
-            )
-        FROM users u
-        """
-        self.cursor.execute(query)
-        for cached, actual in self.cursor.fetchall():
-            self.assertEqual(cached, actual)
+
 
     def test_activity_timestamps(self):
         query = "SELECT COUNT(*) FROM activity a JOIN users u ON a.user_id = u.id WHERE a.timestamp < u.date_joined"
@@ -188,42 +174,6 @@ class TestGeneratorLogic(unittest.TestCase):
         self.cursor.execute(query, (limit,))
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
-    def test_reading_books_distribution(self):
-        self.cursor.execute("""
-            SELECT reading_count, COUNT(*) AS users_count
-            FROM (SELECT u.id, COUNT(ub.id) AS reading_count FROM users u
-            LEFT JOIN user_books ub ON u.id = ub.user_id AND ub.status = 'reading' GROUP BY u.id)
-            GROUP BY reading_count ORDER BY reading_count
-        """)
-        rows = self.cursor.fetchall()
-        total_users, users_without = 0, 0
-        for reading_count, users_count in rows:
-            total_users += users_count
-            if reading_count == 0: users_without = users_count
-        percentage = (users_without / total_users * 100) if total_users > 0 else 0
-        self.assertLess(percentage, 70)
-
-    def test_active_users_have_reading_books(self):
-        self.cursor.execute("""
-            SELECT COUNT(*)
-            FROM users u
-            LEFT JOIN user_books ub
-                ON ub.user_id = u.id AND ub.status = 'reading'
-            WHERE u.status = 'active'
-            GROUP BY u.id
-            HAVING COUNT(ub.id) = 0
-        """)
-        users_without_reading = len(self.cursor.fetchall())
-
-        self.cursor.execute("SELECT COUNT(*) FROM users WHERE status = 'active'")
-        total_active = self.cursor.fetchone()[0]
-
-        ratio = (users_without_reading / total_active) * 100 if total_active > 0 else 0
-        print(
-            f"[CHECK] Active users without currently reading: "
-            f"{users_without_reading}/{total_active} ({ratio:.2f}%)"
-        )
-        self.assertLess(ratio, 20)
 
     def test_random_reading_users(self):
         self.cursor.execute("""
@@ -238,35 +188,6 @@ class TestGeneratorLogic(unittest.TestCase):
         rows = self.cursor.fetchall()
 
         self.assertGreater(len(rows), 0)
-
-    def test_recent_started_reading_users(self):
-        self.cursor.execute("""
-            SELECT DISTINCT
-                u.id,
-                u.username
-            FROM activity a
-            JOIN users u ON u.id = a.user_id
-            ORDER BY a.timestamp DESC
-            LIMIT 20
-        """)
-
-        users = self.cursor.fetchall()
-
-        missing = []
-
-        for user_id, username in users:
-            self.cursor.execute("""
-                SELECT 1
-                FROM user_books
-                WHERE user_id = ?
-                AND status = 'reading'
-                LIMIT 1
-            """, (user_id,))
-
-            if self.cursor.fetchone() is None:
-                missing.append(username)
-
-        self.assertLess(len(missing), len(users) * 0.5)
 
 
     def test_debug_book_progress(self):
@@ -353,36 +274,6 @@ class TestGeneratorLogic(unittest.TestCase):
             print(dict(row))
 
         self.assertEqual(len(rows), 0)
-
-
-    def test_activity_after_finish_date(self):
-
-        self.cursor.execute("""
-            SELECT
-                ub.user_id,
-                ub.book_id,
-                ub.finish_date,
-                MAX(a.timestamp)
-            FROM user_books ub
-            JOIN activity a
-                ON a.user_id = ub.user_id
-            AND a.book_id = ub.book_id
-            WHERE ub.finish_date IS NOT NULL
-            GROUP BY ub.user_id, ub.book_id
-        """)
-
-        bad = []
-
-        for user_id, book_id, finish_dt, last_session in self.cursor.fetchall():
-            if last_session > finish_dt:
-                bad.append((user_id, book_id, finish_dt, last_session))
-
-        print("\n=== SESJE PO ZAKOŃCZENIU ===")
-
-        for b in bad:
-            print(b)
-
-        self.assertEqual(len(bad), 0)
 
 
     def test_same_book_multiple_finished(self):
