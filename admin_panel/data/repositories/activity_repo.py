@@ -39,7 +39,6 @@ class ActivityRepository:
         # Zwrot przetworzonych wskaźników z zaokrągleniem wartości średniej
         return int(total_pages), round(float(avg_per_day), 1)
 
-
     def get_activity_kpi_core(self, time_filter="week"):
         """
         Pobieranie total_pages i active_days. Używane przez ActivityView
@@ -64,7 +63,6 @@ class ActivityRepository:
         active_days = cursor.fetchone()[0] or 0
 
         return int(total_pages), active_days
-
 
     def get_activity_trend(self, time_filter="week"):
         """Pobieranie trendu aktywności w formie listy krotek (data, suma_stron) dla wykresu liniowego"""

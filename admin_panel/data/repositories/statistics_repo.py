@@ -115,11 +115,12 @@ class StatsRepository:
 
         return total_users, new_users, avg_engagement
 
-
     def get_average_streak(self) -> float:
         """Pobiera średni streak dla wszystkich zarejestrowanych użytkowników."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT AVG(current_streak) FROM users WHERE current_streak IS NOT NULL")
+        cursor.execute(
+            "SELECT AVG(current_streak) FROM users WHERE current_streak IS NOT NULL"
+        )
         res = cursor.fetchone()
         return round(float(res[0]), 1) if res and res[0] else 0.0
 
@@ -134,4 +135,3 @@ class StatsRepository:
             LIMIT 3
         """)
         return cursor.fetchall()
-    

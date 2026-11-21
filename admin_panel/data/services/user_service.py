@@ -15,8 +15,8 @@ def get_user_identity(fake, index=None):
     try:
         f_name = fake.unique.first_name()
         l_name = fake.unique.last_name()
-    except:
-    # Jeśli Fakerowi skończą się unikalne imiona, czyści cache i losuje dalej
+    except BaseException:
+        # Jeśli Fakerowi skończą się unikalne imiona, czyści cache i losuje dalej
         fake.unique.clear()
         f_name = fake.first_name()
         l_name = fake.last_name()
@@ -50,10 +50,10 @@ def update_user_ppd(cursor, user_id):
     """Oblicza realne PPD na podstawie historii sesji i aktualizuje tabelę users."""
     cursor.execute(
         """
-        SELECT 
+        SELECT
             SUM(pages_read) as total_pages,
             COUNT(DISTINCT strftime('%Y-%m-%d', timestamp)) as active_days
-        FROM activity 
+        FROM activity
         WHERE user_id = ?
     """,
         (user_id,),
@@ -76,18 +76,15 @@ def finalize_database_consistency(conn):
 
     # Synchronizacja licznika książek z tabeli USER_BOOKS
     # Liczy faktycznie przeczytane pozycje na podstawie relacyji N:M
-    cursor.execute(
-        """
-        UPDATE users 
+    cursor.execute("""
+        UPDATE users
         SET books_read = (
-            SELECT COUNT(*) 
-            FROM user_books 
-            WHERE user_books.user_id = users.id 
+            SELECT COUNT(*)
+            FROM user_books
+            WHERE user_books.user_id = users.id
               AND user_books.status = 'finished'
         )
-    """
-    )
+    """)
 
     conn.commit()
     print("Baza zsynchronizowana: Dane wynikają z rekordów aktywności.")
-    

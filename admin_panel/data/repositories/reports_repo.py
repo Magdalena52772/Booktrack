@@ -64,13 +64,13 @@ class ReportsRepository:
         cursor.execute(query, (*params, limit))
         return cursor.fetchall()
 
-# ==========================================================
-# MOST POPULAR BOOKS
-# ==========================================================
+    # ==========================================================
+    # MOST POPULAR BOOKS
+    # ==========================================================
 
     def get_top_books(self, period="all", limit=20):
-        """ Pobiera listę najpopularniejszych książek w danym okresie.
-        Popularność jest mierzona liczbą unikalnych użytkowników, 
+        """Pobiera listę najpopularniejszych książek w danym okresie.
+        Popularność jest mierzona liczbą unikalnych użytkowników,
         którzy przeczytali książkę w tym okresie."""
         cursor = self.conn.cursor()
 
@@ -184,7 +184,8 @@ class ReportsRepository:
 
     def get_most_active_day(self, period="all"):
         """
-        Pobiera dzień z największą aktywnością (najwięcej przeczytanych stron) w danym okresie."""
+        Pobiera dzień z największą aktywnością (najwięcej przeczytanych stron) w danym okresie.
+        """
         cursor = self.conn.cursor()
 
         where, params = self._time_filter(period)
@@ -237,4 +238,3 @@ class ReportsRepository:
 
         cursor.execute(query, params)
         return cursor.fetchall()
-    

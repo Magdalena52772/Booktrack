@@ -8,6 +8,8 @@ i weryfikuje źródła (API vs Pool vs Generated)
 - SOURCE BREAKDOWN reporting
 """
 
+from data.data_generator.activity import simulate_incremental_activity
+from data.database import initialize_database, get_connection
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -23,9 +25,6 @@ root_path = next(
 )
 if str(root_path) not in sys.path:
     sys.path.insert(0, str(root_path))
-
-from data.database import initialize_database, get_connection
-from data.data_generator.activity import simulate_incremental_activity
 
 
 def main():
@@ -107,15 +106,15 @@ def main():
                             activity_counter["pool"] += 1
                         else:
                             activity_counter["generated"] += 1
-                        print(f"[{i+1}] {log}")
+                        print(f"[{i + 1}] {log}")
 
                 conn.commit()
             except TimeoutError:
-                print(f"[{i+1}] [TIMEOUT] API too slow, skipping this iteration")
+                print(f"[{i + 1}] [TIMEOUT] API too slow, skipping this iteration")
                 conn.rollback()
                 continue
             except Exception as e:
-                print(f"[{i+1}] [ERROR] {str(e)[:80]}, using fallback")
+                print(f"[{i + 1}] [ERROR] {str(e)[:80]}, using fallback")
                 conn.rollback()
                 continue
 
@@ -160,14 +159,14 @@ def main():
             for book_id, title, openlibrary_id in api_books[:5]:
                 print(f"     - {title} (OL: {openlibrary_id})")
             if len(api_books) > 5:
-                print(f"     ... and {len(api_books)-5} more")
+                print(f"     ... and {len(api_books) - 5} more")
 
         if pool_books:
             print(f"\n  Pool Books (sample):")
             for book_id, title in pool_books[:5]:
                 print(f"     - {title}")
             if len(pool_books) > 5:
-                print(f"     ... and {len(pool_books)-5} more")
+                print(f"     ... and {len(pool_books) - 5} more")
 
         if gen_books:
             print(f"\n  Generated Books:")

@@ -1,6 +1,7 @@
 from PySide6.QtCore import QThread, Signal
 from data.services.maintenance_service import run_maintenance, update_genre_stats
 
+
 class DatabaseWorker(QThread):
     """Asynchroniczny pracownik do ciężkich zadań SQL/API"""
 
@@ -43,7 +44,8 @@ class DatabaseWorker(QThread):
                 finally:
                     worker_conn.close()
             elif self.task_type == "update_genre_stats":
-                # Aktualizacja statystyk gatunków w osobnym wątku - nowe connection dla thread'a
+                # Aktualizacja statystyk gatunków w osobnym wątku - nowe connection dla
+                # thread'a
                 from data.database import get_connection
 
                 worker_conn = get_connection()
@@ -59,7 +61,8 @@ class DatabaseWorker(QThread):
                 self.finished.emit(result)
 
             elif self.task_type == "check_activity_latest":
-                # Lekki check: zwraca ostatni timestamp z tabeli activity (string) lub None
+                # Lekki check: zwraca ostatni timestamp z tabeli activity (string) lub
+                # None
                 result = self._check_latest_activity()
                 self.finished.emit(result)
         except Exception as e:
@@ -83,13 +86,22 @@ class DatabaseWorker(QThread):
 
             t1 = dt.now()
             metrics = stats_repo.get_dashboard_metrics()
-            
-            # Bezpieczne rozpakowanie wszystkich 5 wartości zwracanych przez zaktualizowane repozytorium
+
+            # Bezpieczne rozpakowanie wszystkich 5 wartości zwracanych przez
+            # zaktualizowane repozytorium
             if metrics:
-                total_users, new_users, avg_pages, books_read, active_challenges = metrics
+                total_users, new_users, avg_pages, books_read, active_challenges = (
+                    metrics
+                )
             else:
-                total_users, new_users, avg_pages, books_read, active_challenges = (0, 0, 0.0, 0, 0)
-                
+                total_users, new_users, avg_pages, books_read, active_challenges = (
+                    0,
+                    0,
+                    0.0,
+                    0,
+                    0,
+                )
+
             print(
                 f"[TIMING-DB] get_dashboard_metrics: {(dt.now() - t1).total_seconds():.3f}s"
             )
@@ -109,7 +121,8 @@ class DatabaseWorker(QThread):
             total = (dt.now() - start_time).total_seconds()
             print(f"[TIMING-DB] TOTAL dashboard queries: {total:.3f}s")
 
-            # Mapowanie wyliczonych książek na klucz books_month oczekiwany przez DashboardView
+            # Mapowanie wyliczonych książek na klucz books_month oczekiwany przez
+            # DashboardView
             return {
                 "total_users": total_users,
                 "new_users": new_users,
@@ -144,10 +157,12 @@ class DatabaseWorker(QThread):
                 if m and m[0]:
                     return m[0]
             except Exception:
-                # Jeśli tabela meta lub klucz nie istnieje, przechodzi do fallbacku bez przerywania działania
+                # Jeśli tabela meta lub klucz nie istnieje, przechodzi do fallbacku bez
+                # przerywania działania
                 pass
 
-            # Fallback: jeśli meta nie jest dostępne, wykonuje szybkie zapytanie do activity
+            # Fallback: jeśli meta nie jest dostępne, wykonuje szybkie zapytanie do
+            # activity
             cur.execute("SELECT MAX(timestamp) FROM activity")
             row = cur.fetchone()
             if row:

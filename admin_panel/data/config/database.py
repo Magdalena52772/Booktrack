@@ -10,6 +10,4 @@ DB_PATH = BASE_DIR / "booktrack.db"
 SCHEMA_PATH = BASE_DIR / "data" / "schema.sql"
 
 # Poprawny hash Django używany przez generowane konta testowe.
-DJANGO_HASHED_PWD = (
-    "pbkdf2_sha256$1200000$E7oe6arSCV9SMgLpYtSXj0$Ci1DMQ8AErkiNBCcUc8Xw/R7R9qv7NgWc+05+bUpHEs="
-)
+DJANGO_HASHED_PWD = "pbkdf2_sha256$1200000$E7oe6arSCV9SMgLpYtSXj0$Ci1DMQ8AErkiNBCcUc8Xw/R7R9qv7NgWc+05+bUpHEs="

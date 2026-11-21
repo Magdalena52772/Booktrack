@@ -37,7 +37,8 @@ def generate_activity(conn, users, books):
     cursor = conn.cursor()
     user_map = {_get_val(u, "id"): u for u in users}
 
-    # Filtruje książki, które mają sesje zarejestrowane w aplikacji (nie dodane jako stary import)
+    # Filtruje książki, które mają sesje zarejestrowane w aplikacji (nie
+    # dodane jako stary import)
     active_books = [b for b in books if _get_val(b, "added_by_generator") == 1]
 
     activity_data = []
@@ -56,14 +57,17 @@ def generate_activity(conn, users, books):
             continue
         processed_pairs.add(pair)
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT EXISTS(
                 SELECT 1
                 FROM activity
                 WHERE user_id = ?
                 AND book_id = ?
             )
-        """, (user_id, book_id))
+        """,
+            (user_id, book_id),
+        )
 
         if cursor.fetchone()[0]:
             continue
@@ -79,14 +83,16 @@ def generate_activity(conn, users, books):
         reg_dt = _get_val(b, "date_joined")
         if isinstance(reg_dt, str):
             from data.utils.helpers.date_helpers import DateHelper
+
             reg_dt = DateHelper.to_datetime(reg_dt)
 
         is_finished = book_status == "finished"
         is_inactive = _get_val(user, "status") == "inactive"
         user_last_activity = _get_val(user, "last_activity")
-        
+
         if isinstance(user_last_activity, str):
             from data.utils.helpers.date_helpers import DateHelper
+
             user_last_activity = DateHelper.to_datetime(user_last_activity)
 
         # Wyznaczanie daty zakończenia (lub punktu odniesienia dla 'reading')
@@ -97,15 +103,9 @@ def generate_activity(conn, users, books):
             if end_limit <= reg_dt:
                 end_limit = reg_dt + timedelta(hours=2)
 
-            reading_days = max(
-                3,
-                total_pages // random.randint(15, 35)
-            )
+            reading_days = max(3, total_pages // random.randint(15, 35))
 
-            finish_dt = min(
-                end_limit,
-                reg_dt + timedelta(days=reading_days)
-            )
+            finish_dt = min(end_limit, reg_dt + timedelta(days=reading_days))
         else:
             finish_dt = user_last_activity if user_last_activity else datetime.now()
 
@@ -121,12 +121,16 @@ def generate_activity(conn, users, books):
 
         row = cursor.fetchone()
 
-        # Jeśli istnieje wpis user_books odczytaj current_page, w przeciwnym razie traktuj jako brak
+        # Jeśli istnieje wpis user_books odczytaj current_page, w przeciwnym razie
+        # traktuj jako brak
         current_page = row[0] if row and row[0] is not None else None
 
-        # Oblicza ile stron brakuje do pełnego przeczytania 
+        # Oblicza ile stron brakuje do pełnego przeczytania
         # (z uwzględnieniem już istniejących sesji activity)
-        cursor.execute("SELECT COALESCE(SUM(pages_read),0) FROM activity WHERE user_id = ? AND book_id = ?", (user_id, book_id))
+        cursor.execute(
+            "SELECT COALESCE(SUM(pages_read),0) FROM activity WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        )
         existing_pages = int(cursor.fetchone()[0] or 0)
         target_pages = int(current_page or 0)
 
@@ -141,7 +145,8 @@ def generate_activity(conn, users, books):
         # Generowanie sesji "wstecz" od daty zakończenia
         while remaining > 0:
             # Nie generuje sesji sprzed rejestracji.
-            # Jeśli osiągnie granicę, dosynchronizuje brakujące strony na minimalnie późniejszym znaczniku.
+            # Jeśli osiągnie granicę, dosynchronizuje brakujące strony na minimalnie
+            # późniejszym znaczniku.
             if current_date <= reg_dt:
                 current_date = reg_dt + timedelta(minutes=1)
 
@@ -162,7 +167,8 @@ def generate_activity(conn, users, books):
             # Caps & safety (min 1 strona, nie więcej niż zostało)
             pages_read = max(1, min(pages_read, remaining))
 
-            # Dodatkowe ograniczenie, aby nie przekroczyć pozostałych stron do przeczytania
+            # Dodatkowe ograniczenie, aby nie przekroczyć pozostałych stron do
+            # przeczytania
             pages_read = min(pages_read, remaining)
 
             # Czas trwania sesji oparty na page_pace_range i min_session_time
@@ -199,7 +205,9 @@ def generate_activity(conn, users, books):
 
         # Daty zakończenia dla tabeli user_books
         if is_finished:
-            book_updates.append((finish_dt.strftime("%Y-%m-%d %H:%M:%S"), user_id, book_id))
+            book_updates.append(
+                (finish_dt.strftime("%Y-%m-%d %H:%M:%S"), user_id, book_id)
+            )
 
     # BATCH INSERT dla sesji
     cursor.executemany(
@@ -222,17 +230,17 @@ def generate_activity(conn, users, books):
     # Synchronizacja dat zakończenia trafia do user_books
     cursor.executemany(
         """
-        UPDATE user_books 
-        SET finish_date = ? 
+        UPDATE user_books
+        SET finish_date = ?
         WHERE user_id = ? AND book_id = ?
-        """, 
-        book_updates
+        """,
+        book_updates,
     )
 
     conn.commit()
-    print(
-        f"SUCCESS: Generated {len(activity_data)} sessions for {len(active_books)} books."
-    )
+    print(f"SUCCESS: Generated {
+            len(activity_data)} sessions for {
+            len(active_books)} books.")
 
 
 # =========== SYMULACJA NOWYCH AKTYWNOŚCI (REAL-TIME) ============
@@ -260,15 +268,18 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
         u_id = _get_val(user, "id")
 
         # pobiera username, jeśli nie ma to name
-        user_name = _get_val(user, "username") or _get_val(user, "name") or f"User {u_id}"
+        user_name = (
+            _get_val(user, "username") or _get_val(user, "name") or f"User {u_id}"
+        )
 
         # Lista pomocnicza na logi z tej konkretnej iteracji dla jednego użytkownika
         user_iteration_logs = []
 
-        # Sprawdza co użytkownik czyta (pobiera dane z tabeli łączącej user_books połączonej z katalogiem books)
+        # Sprawdza co użytkownik czyta (pobiera dane z tabeli łączącej user_books
+        # połączonej z katalogiem books)
         cursor.execute(
             """
-            SELECT b.id, b.title, ub.current_page, b.total_pages 
+            SELECT b.id, b.title, ub.current_page, b.total_pages
             FROM user_books ub
             JOIN books b ON ub.book_id = b.id
             WHERE ub.user_id = ? AND ub.status = 'reading'
@@ -296,7 +307,9 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
             # Pobieranie ulubionych gatunków użytkownika
             try:
                 cursor.execute(
-                    "SELECT g.name FROM user_favorite_genres ufg JOIN genres g ON g.id = ufg.genre_id WHERE ufg.user_id = ?",
+                    "SELECT g.name FROM user_favorite_genres ufg "
+                    "JOIN genres g ON g.id = ufg.genre_id "
+                    "WHERE ufg.user_id = ?",
                     (u_id,),
                 )
                 fav_rows = [r[0] for r in cursor.fetchall()]
@@ -334,10 +347,12 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
             )
 
             book_id = _inserted_row_id(cursor)
-            
+
             # Jeśli książka już istniała w bazie, lastrowid zwróci None, pobiera jej id
             if not book_id and pool_id:
-                cursor.execute("SELECT id FROM books WHERE openlibrary_id = ?", (pool_id,))
+                cursor.execute(
+                    "SELECT id FROM books WHERE openlibrary_id = ?", (pool_id,)
+                )
                 res = cursor.fetchone()
                 if res:
                     book_id = res[0]
@@ -377,7 +392,10 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
         duration = int(duration * SEASONAL_IMPACT.get(month, 1.0))
 
         # Oblicza ilość już przeczytanych stron dla tej pary użytkownik-książka
-        cursor.execute("SELECT COALESCE(SUM(pages_read),0) FROM activity WHERE user_id = ? AND book_id = ?", (u_id, book_id))
+        cursor.execute(
+            "SELECT COALESCE(SUM(pages_read),0) FROM activity WHERE user_id = ? AND book_id = ?",
+            (u_id, book_id),
+        )
         existing_pages = int(cursor.fetchone()[0] or 0)
         cap = max(0, total_p - existing_pages)
         pages_read = max(0, min(pages_read, cap))
@@ -399,7 +417,8 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
                 (u_id, book_id, timestamp, pages_read, duration),
             )
 
-        # Aktualizacja książki, ale jeszcze nie dodaje logu o zakończeniu (bo może być więcej sesji)
+        # Aktualizacja książki, ale jeszcze nie dodaje logu o zakończeniu (bo może
+        # być więcej sesji)
         try:
             cursor.execute(
                 "REPLACE INTO meta (k, v) VALUES ('last_activity', ?)", (timestamp,)
@@ -412,8 +431,8 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
             rating = random.randint(3, 5)
             cursor.execute(
                 """
-                UPDATE user_books 
-                SET current_page = ?, status = 'finished', finish_date = ?, rating = ? 
+                UPDATE user_books
+                SET current_page = ?, status = 'finished', finish_date = ?, rating = ?
                 WHERE user_id = ? AND book_id = ?
                 """,
                 (total_p, timestamp, rating, u_id, book_id),
@@ -424,11 +443,11 @@ def simulate_incremental_activity(conn, users_meta, books_meta, count=5):
         else:
             cursor.execute(
                 """
-                UPDATE user_books 
-                SET current_page = ? 
+                UPDATE user_books
+                SET current_page = ?
                 WHERE user_id = ? AND book_id = ?
-                """, 
-                (new_page, u_id, book_id)
+                """,
+                (new_page, u_id, book_id),
             )
             user_iteration_logs.append(
                 f"📖 {user_name} read {pages_read} pages of '{title}'"

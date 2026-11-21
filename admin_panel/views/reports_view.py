@@ -57,9 +57,7 @@ class ReportsView(QWidget):
             report = self.ui.cb_report_type.currentText()
             period = self.ui.cb_time.currentText().lower()
 
-            self.statusMessage.emit(
-                *StatusMsg.get("LOAD_START", f"{report} report")
-            )
+            self.statusMessage.emit(*StatusMsg.get("LOAD_START", f"{report} report"))
 
             self.ui.table_reports.clearContents()
             self.ui.table_reports.setRowCount(0)
@@ -142,16 +140,14 @@ class ReportsView(QWidget):
                 QHeaderView.Stretch
             )
 
-            self.ui.input_report_text.setPlainText(
-                f"""REPORT GENERATED
+            self.ui.input_report_text.setPlainText(f"""REPORT GENERATED
                 Type: {report}
                 Period: {period}
 
                 Rows returned: {len(rows)}
 
                 Ready for CSV export.
-                """
-            )
+                """)
 
             if rows:
                 self.statusMessage.emit(
@@ -163,9 +159,7 @@ class ReportsView(QWidget):
                 )
 
         except Exception as e:
-            self.statusMessage.emit(
-                *StatusMsg.get("DB_ERROR", str(e))
-            )
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
 
     def export_to_csv(self):
         """
@@ -173,9 +167,7 @@ class ReportsView(QWidget):
         """
 
         if self.ui.table_reports.rowCount() == 0:
-            self.statusMessage.emit(
-                *StatusMsg.get("NO_DATA", "Export target")
-            )
+            self.statusMessage.emit(*StatusMsg.get("NO_DATA", "Export target"))
             return
 
         path, _ = QFileDialog.getSaveFileName(
@@ -186,9 +178,7 @@ class ReportsView(QWidget):
         )
 
         if not path:
-            self.statusMessage.emit(
-                *StatusMsg.get("EXPORT_CANCEL")
-            )
+            self.statusMessage.emit(*StatusMsg.get("EXPORT_CANCEL"))
             return
 
         try:
@@ -215,12 +205,8 @@ class ReportsView(QWidget):
 
                     writer.writerow(row)
 
-            self.statusMessage.emit(
-                *StatusMsg.get("EXPORT_SUCCESS", path)
-            )
+            self.statusMessage.emit(*StatusMsg.get("EXPORT_SUCCESS", path))
 
         except Exception as e:
 
-            self.statusMessage.emit(
-                *StatusMsg.get("DB_ERROR", f"Export: {e}")
-            )
+            self.statusMessage.emit(*StatusMsg.get("DB_ERROR", f"Export: {e}"))

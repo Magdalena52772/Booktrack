@@ -107,7 +107,8 @@ class ActivityView(QWidget):
 
             # Renderowanie HTML
             summary_html = (
-                f"<div style='background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px;'>"
+                f"<div style='background-color: #ffffff; border: 1px solid "
+                f"#e0e0e0; border-radius: 12px; padding: 15px;'>"
                 f"<table width='100%' style='font-family: Segoe UI, sans-serif;'>"
                 f"<tr>"
                 f"<td align='center' width='50%'>"

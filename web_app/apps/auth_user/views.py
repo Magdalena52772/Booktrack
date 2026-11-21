@@ -27,9 +27,7 @@ def auth_welcome(request):
 
 def _update_login_streak(user, today):
     last_activity_date = (
-        timezone.localtime(user.last_activity).date()
-        if user.last_activity
-        else None
+        timezone.localtime(user.last_activity).date() if user.last_activity else None
     )
     if last_activity_date == today:
         now = timezone.now()
@@ -83,7 +81,9 @@ def login_view(request):
         password = request.POST.get("password") or ""
         username = identifier
         if "@" in identifier:
-            matched_user = BooktrackUser.objects.filter(email__iexact=identifier).first()
+            matched_user = BooktrackUser.objects.filter(
+                email__iexact=identifier
+            ).first()
             username = matched_user.username if matched_user else identifier
         user = authenticate(request, username=username, password=password)
 
@@ -165,7 +165,9 @@ def register_st1(request):
                 messages.error(request, "Podaj poprawną datę urodzenia.")
             else:
                 if birth_date >= date.today():
-                    messages.error(request, "Data urodzenia musi być wcześniejsza niż dzisiaj.")
+                    messages.error(
+                        request, "Data urodzenia musi być wcześniejsza niż dzisiaj."
+                    )
                 else:
                     request.session["registration_pending"] = {
                         "name": f"{first_name} {last_name}",
@@ -181,6 +183,7 @@ def register_st1(request):
         "auth/register_step1.html",
         {**form_data, "today": date.today().isoformat()},
     )
+
 
 def register_st2(request):
     if "registration_pending" not in request.session:
@@ -203,6 +206,7 @@ def register_st2(request):
         {"genres": GENRE_LABELS, "selected_genres": selected_genres},
     )
 
+
 def register_st3(request):
     if "registration_pending" not in request.session:
         return redirect("register_st1")
@@ -210,9 +214,7 @@ def register_st3(request):
     if not selected_genres:
         return redirect("register_st2")
 
-    available_tags = {
-        genre: TAGS_BY_GENRE.get(genre, {}) for genre in selected_genres
-    }
+    available_tags = {genre: TAGS_BY_GENRE.get(genre, {}) for genre in selected_genres}
     if request.method == "POST":
         selected_tags = (
             []
@@ -242,10 +244,7 @@ def register_st3(request):
                     user.save(force_insert=True)
                     genres = Genre.objects.filter(name__in=selected_genres)
                     UserFavoriteGenre.objects.bulk_create(
-                        [
-                            UserFavoriteGenre(user=user, genre=genre)
-                            for genre in genres
-                        ]
+                        [UserFavoriteGenre(user=user, genre=genre) for genre in genres]
                     )
             except IntegrityError:
                 messages.error(

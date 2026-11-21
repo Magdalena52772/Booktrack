@@ -11,18 +11,42 @@ from .models import (
     UserNotification,
 )
 
-
 ACHIEVEMENTS = (
-    ("books_bronze", "Początkujący Czytelnik", "books_bronze.svg", "Przeczytana 1 książka"),
+    (
+        "books_bronze",
+        "Początkujący Czytelnik",
+        "books_bronze.svg",
+        "Przeczytana 1 książka",
+    ),
     ("books_silver", "Biblioteczka", "books_silver.svg", "Przeczytanych 5 książek"),
     ("books_gold", "Mól Książkowy", "books_gold.svg", "Przeczytanych 20 książek"),
     ("pages_bronze", "Sprint", "pages_bronze.svg", "Przeczytanych 100 stron"),
     ("pages_silver", "Maratończyk", "pages_silver.svg", "Przeczytanych 1000 stron"),
     ("pages_gold", "Niestrudzony", "pages_gold.svg", "Przeczytanych 5000 stron"),
-    ("strike_bronze", "Rozgrzewka", "strike_bronze.svg", "Aktywność przez 3 dni z rzędu"),
-    ("strike_silver", "Tydzień Mocy", "strike_silver.svg", "Aktywność przez 7 dni z rzędu"),
-    ("strike_gold", "Mistrz Rutyny", "strike_gold.svg", "Aktywność przez 30 dni w danym roku"),
-    ("challenge_bronze", "Nowicjusz Wyzwań", "challenge_bronze.svg", "Ukończone 1 wyzwanie"),
+    (
+        "strike_bronze",
+        "Rozgrzewka",
+        "strike_bronze.svg",
+        "Aktywność przez 3 dni z rzędu",
+    ),
+    (
+        "strike_silver",
+        "Tydzień Mocy",
+        "strike_silver.svg",
+        "Aktywność przez 7 dni z rzędu",
+    ),
+    (
+        "strike_gold",
+        "Mistrz Rutyny",
+        "strike_gold.svg",
+        "Aktywność przez 30 dni w danym roku",
+    ),
+    (
+        "challenge_bronze",
+        "Nowicjusz Wyzwań",
+        "challenge_bronze.svg",
+        "Ukończone 1 wyzwanie",
+    ),
     ("challenge_silver", "Strateg", "challenge_silver.svg", "Ukończone 3 wyzwania"),
     ("challenge_gold", "Mistrz Wyzwań", "challenge_gold.svg", "Ukończone 5 wyzwań"),
 )
@@ -44,7 +68,9 @@ def _longest_streak(dates):
 def evaluate_achievements(user):
     finished_books = UserBook.objects.filter(user_id=user.id, status="finished").count()
     total_pages = (
-        Activity.objects.filter(user_id=user.id).aggregate(total=Sum("pages_read"))["total"]
+        Activity.objects.filter(user_id=user.id).aggregate(total=Sum("pages_read"))[
+            "total"
+        ]
         or 0
     )
     activity_dates = set(
@@ -71,7 +97,9 @@ def evaluate_achievements(user):
         "challenge_silver": finished_challenges >= 3,
         "challenge_gold": finished_challenges >= 5,
     }
-    metadata = {key: (name, description) for key, name, icon, description in ACHIEVEMENTS}
+    metadata = {
+        key: (name, description) for key, name, icon, description in ACHIEVEMENTS
+    }
     newly_earned = []
     for key, earned in values.items():
         if earned:

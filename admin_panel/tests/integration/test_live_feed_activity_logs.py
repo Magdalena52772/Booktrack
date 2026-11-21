@@ -4,6 +4,9 @@ Testuje czy ostatnie logi aktywności są poprawnie pobierane
 i wyświetlane w widoku Live Feed
 """
 
+from data.repositories.activity_repo import ActivityRepository
+from data.data_generator.activity import simulate_incremental_activity
+from data.database import initialize_database, get_connection
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -19,10 +22,6 @@ root_path = next(
 )
 if str(root_path) not in sys.path:
     sys.path.insert(0, str(root_path))
-
-from data.database import initialize_database, get_connection
-from data.data_generator.activity import simulate_incremental_activity
-from data.repositories.activity_repo import ActivityRepository
 
 
 def main():
@@ -97,14 +96,14 @@ def main():
                 if logs:
                     log_count += len(logs)
                     for log in logs:
-                        print(f"[{i+1}] {log}")
+                        print(f"[{i + 1}] {log}")
                 conn.commit()
             except TimeoutError:
-                print(f"[{i+1}] [TIMEOUT] API too slow, skipping this iteration")
+                print(f"[{i + 1}] [TIMEOUT] API too slow, skipping this iteration")
                 conn.rollback()
                 continue
             except Exception as e:
-                print(f"[{i+1}] [ERROR] {str(e)[:80]}")
+                print(f"[{i + 1}] [ERROR] {str(e)[:80]}")
                 conn.rollback()
                 continue
 

@@ -68,13 +68,13 @@ def generate_books(conn, users):
         # Wyciąganie danych niezależnie od formatu wejściowego
         user_id = get_val(user, "id")
         user_status = get_val(user, "status", "active")
-        
+
         # Sprawdza books_read oraz alias books_count z bazy
         books_read = get_val(user, "books_read") or get_val(user, "books_count") or 2
-        
+
         bd_raw = get_val(user, "birth_date", "1990-01-01")
         reg_date_raw = get_val(user, "date_joined", now.strftime("%Y-%m-%d"))
-        
+
         # Konwersja dat na obiekty datetime dla poprawności obliczeń
         bd = DateHelper.to_datetime(bd_raw)
         reg_date = DateHelper.to_datetime(reg_date_raw)
@@ -91,7 +91,7 @@ def generate_books(conn, users):
         # Preferencje użytkownika
         user_favs = get_val(user, "favorite_genres", [])
 
-        # Obliczenie współczynnika importu dla starszych kont 
+        # Obliczenie współczynnika importu dla starszych kont
         # (starsze konta mają większą szansę na import historii)
         days_on_platform = (now - reg_date).days
         import_ratio = max(0.2, 1.0 - (days_on_platform / 900))
@@ -143,9 +143,13 @@ def generate_books(conn, users):
                 else:
                     total_pages = random.randint(150, 600)
 
-                # Losowanie oceny książki tylko dla statusu "finished" i z określonym prawdopodobieństwem
+                # Losowanie oceny książki tylko dla statusu "finished" i z określonym
+                # prawdopodobieństwem
                 rating = None
-                if is_finished and random.random() < RATING_SETTINGS["review_probability"]:
+                if (
+                    is_finished
+                    and random.random() < RATING_SETTINGS["review_probability"]
+                ):
                     rating = random.choices(
                         RATING_SETTINGS["scores"], weights=RATING_SETTINGS["weights"]
                     )[0]
@@ -165,19 +169,27 @@ def generate_books(conn, users):
                     else:
                         current_page = random.randint(1, total_pages - 1)
 
-                # Zapis do globalnego słownika książek z ignorowaniem duplikatów z puli JSON
+                # Zapis do globalnego słownika książek z ignorowaniem duplikatów z puli
+                # JSON
                 cursor.execute(
                     """
-                    INSERT OR IGNORE INTO books (title, authors, openlibrary_id, genre_id, total_pages, added_by_generator)
+                    INSERT OR IGNORE INTO books (
+                        title, authors, openlibrary_id, genre_id, total_pages,
+                        added_by_generator
+                    )
                     VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     (book_title, author, pool_id, genre_id, total_pages, added_by_gen),
                 )
                 book_id = _inserted_row_id(cursor)
 
-                # Jeśli książka już była w bazie, pobiera jej istniejące ID oraz właściwy genre_id
+                # Jeśli książka już była w bazie, pobiera jej istniejące ID oraz
+                # właściwy genre_id
                 if not book_id and pool_id:
-                    cursor.execute("SELECT id, genre_id FROM books WHERE openlibrary_id = ?", (pool_id,))
+                    cursor.execute(
+                        "SELECT id, genre_id FROM books WHERE openlibrary_id = ?",
+                        (pool_id,),
+                    )
                     res = cursor.fetchone()
                     if res:
                         book_id = res[0]
@@ -187,10 +199,15 @@ def generate_books(conn, users):
                 if not book_id or book_id in used_book_ids:
                     continue
 
-                # Pobranie canonical_total_pages z bazy, aby uniknąć niespójności między user_books a books
+                # Pobranie canonical_total_pages z bazy, aby uniknąć niespójności między
+                # user_books a books
                 cursor.execute("SELECT total_pages FROM books WHERE id = ?", (book_id,))
                 db_book_row = cursor.fetchone()
-                canonical_total_pages = int(db_book_row[0]) if db_book_row and db_book_row[0] else int(total_pages)
+                canonical_total_pages = (
+                    int(db_book_row[0])
+                    if db_book_row and db_book_row[0]
+                    else int(total_pages)
+                )
 
                 if status == "finished":
                     current_page = canonical_total_pages
@@ -198,7 +215,8 @@ def generate_books(conn, users):
                     max_reading_page = max(0, canonical_total_pages - 1)
                     current_page = min(max(0, int(current_page)), max_reading_page)
 
-                # Zapis powiązania użytkownika z książką (N:M) - OR IGNORE chroni przed duplikatem pary
+                # Zapis powiązania użytkownika z książką (N:M) - OR IGNORE chroni przed
+                # duplikatem pary
                 cursor.execute(
                     """
                     INSERT OR IGNORE INTO user_books (user_id, book_id, current_page, status, rating)
@@ -207,7 +225,8 @@ def generate_books(conn, users):
                     (user_id, book_id, current_page, status, rating),
                 )
 
-                # Jeśli relacja nie została utworzona (duplikat user_id+book_id), spróbuje inną książkę.
+                # Jeśli relacja nie została utworzona (duplikat user_id+book_id),
+                # spróbuje inną książkę.
                 if cursor.rowcount == 0:
                     continue
 
@@ -228,5 +247,8 @@ def generate_books(conn, users):
             slot_index += 1
 
     conn.commit()
-    print(f"SUCCESS: Zindeksowano {len(book_metadata)} pozycji w katalogu globalnym i przypisano użytkownikom.")
+    print(
+        f"SUCCESS: Zindeksowano {
+            len(book_metadata)} pozycji w katalogu globalnym i przypisano użytkownikom."
+    )
     return book_metadata

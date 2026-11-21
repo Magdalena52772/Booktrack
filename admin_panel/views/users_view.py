@@ -78,7 +78,8 @@ class UsersView(QWidget):
             child = self.childAt(event.pos())
 
             # Sprawdza, czy kliknięcie trafiło w viewport tabeli (obszar z danymi)
-            # Jeśli tak, to nie resetuje zaznaczenia, bo użytkownik może chcieć kliknąć w wiersz tabeli
+            # Jeśli tak, to nie resetuje zaznaczenia, bo użytkownik może chcieć
+            # kliknąć w wiersz tabeli
             if child == self.ui.table_users.viewport():
                 return super().eventFilter(obj, event)
 
@@ -107,7 +108,7 @@ class UsersView(QWidget):
 
     def setup_table_ui(self):
         """Ustawienia wizualne i rozmiary kolumn tabeli użytkowników."""
-        
+
         table = self.ui.table_users
         header = table.horizontalHeader()
         header.setStretchLastSection(False)
@@ -152,7 +153,6 @@ class UsersView(QWidget):
         self.ui.btn_next.clicked.connect(self.next_page)
         self.ui.btn_last.clicked.connect(self.last_page)
         self.ui.spin_page.valueChanged.connect(self.go_to_page)
-
 
     # --- METODY PAGINACJI ---
     def reset_pagination_and_load(self):
@@ -230,8 +230,8 @@ class UsersView(QWidget):
             all_total, all_without, all_pct = self.repo.get_currently_reading_coverage(
                 active_only=False
             )
-            active_total, active_without, active_pct = self.repo.get_currently_reading_coverage(
-                active_only=True
+            active_total, active_without, active_pct = (
+                self.repo.get_currently_reading_coverage(active_only=True)
             )
             print(
                 "[USERS][COVERAGE] currently reading = none | "

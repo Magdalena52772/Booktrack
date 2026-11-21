@@ -1,3 +1,6 @@
+from views.main_window import MainWindow
+from data.services.maintenance_service import update_genre_stats
+from data.database import get_connection, initialize_database
 import sys
 import time
 import os
@@ -13,9 +16,6 @@ base_dir = next(
 )
 sys.path.insert(0, str(base_dir))
 
-from data.database import get_connection, initialize_database
-from data.services.maintenance_service import update_genre_stats
-from views.main_window import MainWindow
 
 app = QApplication.instance() or QApplication(sys.argv)
 

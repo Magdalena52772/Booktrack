@@ -12,7 +12,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         _t_start = time.perf_counter()
         self.conn = conn
-        # Flaga do kontrolowania, czy sekwencja startowa została zakończona (używana do optymalizacji sprawdzania aktualizacji podczas startupu)
+        # Flaga do kontrolowania, czy sekwencja startowa została zakończona
+        # (używana do optymalizacji sprawdzania aktualizacji podczas startupu)
         self._startup_generation_done = False
         print(f"[TIMING] MainWindow.__init__ START", file=sys.stderr, flush=True)
 
@@ -22,11 +23,13 @@ class MainWindow(QMainWindow):
         if not ui_file.open(QFile.ReadOnly):
             return
 
-        print(f"[TIMING] UI file opened: {(time.perf_counter()-_t_start)*1000:.0f}ms")
+        print(
+            f"[TIMING] UI file opened: {(time.perf_counter() - _t_start) * 1000:.0f}ms"
+        )
 
         self.ui = loader.load(ui_file, self)
         print(
-            f"[TIMING] UI loaded from file: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+            f"[TIMING] UI loaded from file: {(time.perf_counter() - _t_start) * 1000:.0f}ms"
         )
         ui_file.close()
 
@@ -37,7 +40,7 @@ class MainWindow(QMainWindow):
             self.setCentralWidget(self.ui)
 
         print(
-            f"[TIMING] Central widget set: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+            f"[TIMING] Central widget set: {(time.perf_counter() - _t_start) * 1000:.0f}ms"
         )
 
         # Konfiguracja mapowania nawigacji (Lazy Loading views)
@@ -74,14 +77,14 @@ class MainWindow(QMainWindow):
                 "instance": None,
             },
             self.ui.btn_clustering: {
-                        "class_name": "ClusteringView",
-                        "container": self.ui.page_clustering,
-                        "instance": None,
-            }
+                "class_name": "ClusteringView",
+                "container": self.ui.page_clustering,
+                "instance": None,
+            },
         }
 
         print(
-            f"[TIMING] View config created: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+            f"[TIMING] View config created: {(time.perf_counter() - _t_start) * 1000:.0f}ms"
         )
 
         # Rejestracja zdarzeń dla przycisków nawigacyjnych
@@ -89,11 +92,13 @@ class MainWindow(QMainWindow):
             btn.clicked.connect(self.handle_navigation)
 
         print(
-            f"[TIMING] Navigation buttons connected: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+            f"[TIMING] Navigation buttons connected: {(time.perf_counter() - _t_start) * 1000:.0f}ms"
         )
 
         self.load_styles()
-        print(f"[TIMING] Styles loaded: {(time.perf_counter()-_t_start)*1000:.0f}ms")
+        print(
+            f"[TIMING] Styles loaded: {(time.perf_counter() - _t_start) * 1000:.0f}ms"
+        )
 
         self.ui.btn_logout.clicked.connect(self.handle_logout)
         self.status = self.statusBar()
@@ -103,7 +108,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_dashboard.setChecked(True)
 
         print(
-            f"[TIMING] MainWindow.__init__ DONE: {(time.perf_counter()-_t_start)*1000:.0f}ms"
+            f"[TIMING] MainWindow.__init__ DONE: {(time.perf_counter() - _t_start) * 1000:.0f}ms"
         )
 
         # Opóźnia Dashboard loading (50ms) - Qt wyrenderuje template, potem matplotlib
@@ -129,9 +134,9 @@ class MainWindow(QMainWindow):
         self._preloaded_dashboard_data = data
         from datetime import datetime as dt
 
-        print(
-            f"[TIMING] Dashboard preload FINISHED at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
-        )
+        print(f"[TIMING] Dashboard preload FINISHED at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-3]}")
 
     def _get_view_class(self, class_name):
         """Importuje view class dynamicznie (lazy loading)"""
@@ -143,7 +148,7 @@ class MainWindow(QMainWindow):
             "ActivityView": ("views.activity_view", "ActivityView"),
             "ReportsView": ("views.reports_view", "ReportsView"),
             "LiveFeedView": ("views.live_feed_view", "LiveFeedView"),
-            "ClusteringView": ("views.clustering_view", "ClusteringView")
+            "ClusteringView": ("views.clustering_view", "ClusteringView"),
         }
 
         if class_name in view_modules:
@@ -163,9 +168,9 @@ class MainWindow(QMainWindow):
         """Pokazuje Dashboard view natychmiast z placeholderami, dane ładują się w tle."""
         from datetime import datetime as dt
 
-        print(
-            f"[TIMING] _deferred_load_dashboard START at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
-        )
+        print(f"[TIMING] _deferred_load_dashboard START at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-3]}")
 
         # Switch page natychmiast pokazuje view z placeholderami
         self.switch_page(self.view_config[self.ui.btn_dashboard])
@@ -173,9 +178,9 @@ class MainWindow(QMainWindow):
         # Preload w tle, bez czekania na startup
         self._preload_dashboard_data()
 
-        print(
-            f"[TIMING] _deferred_load_dashboard DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
-        )
+        print(f"[TIMING] _deferred_load_dashboard DONE at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-3]}")
 
     def switch_page(self, config):
         """Zarządzanie przełączaniem stron i leniwą inicjalizacją widoków."""

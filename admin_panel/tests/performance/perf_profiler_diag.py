@@ -1,3 +1,5 @@
+from views.main_window import MainWindow
+from data.database import get_connection, initialize_database
 import sys
 import os
 import time
@@ -19,8 +21,6 @@ log = logging.getLogger(__name__)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 # Importy
-from data.database import get_connection, initialize_database
-from views.main_window import MainWindow
 
 
 # ================= PROFILER TABLE =================

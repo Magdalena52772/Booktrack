@@ -1,11 +1,10 @@
+from data.repositories.reports_repo import ReportsRepository
+from data.database import get_connection
 import sys
 from pathlib import Path
 
 # Zapewnienie dostępu do katalogu głównego projektu
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from data.database import get_connection
-from data.repositories.reports_repo import ReportsRepository
 
 
 def run_checks():
@@ -26,9 +25,13 @@ def run_checks():
             print(f"Returned rows: {len(rows)}")
             if rows:
                 sample = rows[0]
-                print(
-                    f"Sample row: User={sample[0]}, Streak={sample[1]}, Books={sample[2]}, Pages={sample[3]}, Longest={sample[4]}, Joined={sample[5]}"
-                )
+                print(f"Sample row: User={
+                        sample[0]}, Streak={
+                        sample[1]}, Books={
+                        sample[2]}, Pages={
+                        sample[3]}, Longest={
+                        sample[4]}, Joined={
+                            sample[5]}")
 
         elif report == "Books":
             # get_top_books przyjmuje limit, pobiera topowe książki
@@ -36,9 +39,11 @@ def run_checks():
             print(f"Returned rows: {len(rows)}")
             if rows:
                 sample = rows[0]
-                print(
-                    f"Sample row: Title='{sample[0]}', Readers={sample[1]}, Rating={sample[2]}, Genre='{sample[3]}'"
-                )
+                print(f"Sample row: Title='{
+                        sample[0]}', Readers={
+                        sample[1]}, Rating={
+                        sample[2]}, Genre='{
+                        sample[3]}'")
 
         elif report == "Activity":
             for period in periods:

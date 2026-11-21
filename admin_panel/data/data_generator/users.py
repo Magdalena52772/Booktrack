@@ -50,15 +50,15 @@ def generate_users(conn, count=1000):
         days_on_platform = (now - register_date).days
         account_years = max(0.1, days_on_platform / 365.25)
 
-        # Losowanie archetypu na podstawie zdefiniowanych wag z konfiguracji 
+        # Losowanie archetypu na podstawie zdefiniowanych wag z konfiguracji
         arch_name = random.choices(
             ["casual", "regular", "avid", "power"],
             weights=[
                 ARCHETYPE_SETTINGS["casual"]["chance"],
                 ARCHETYPE_SETTINGS["regular"]["chance"],
                 ARCHETYPE_SETTINGS["avid"]["chance"],
-                ARCHETYPE_SETTINGS["power"]["chance"]
-            ]
+                ARCHETYPE_SETTINGS["power"]["chance"],
+            ],
         )[0]
 
         arch_cfg = ARCHETYPE_SETTINGS[arch_name]
@@ -207,15 +207,19 @@ def generate_users(conn, count=1000):
 
 # ========== GENEROWANIE POJEDYNCZEGO UŻYTKOWNIKA (REAL-TIME) ===========
 
+
 def generate_realtime_user(conn):
     """Symuluje rejestrację nowego użytkownika z zachowaniem unikalności danych."""
     cursor = conn.cursor()
     now = datetime.now()
 
-    # Zapewnienie unikalności nazwy użytkownika poprzez losowanie nowej tożsamości przy kolizji
+    # Zapewnienie unikalności nazwy użytkownika poprzez losowanie nowej
+    # tożsamości przy kolizji
     while True:
         identity = get_user_identity(get_fake())
-        cursor.execute("SELECT 1 FROM users WHERE username = ?", (identity["nickname"],))
+        cursor.execute(
+            "SELECT 1 FROM users WHERE username = ?", (identity["nickname"],)
+        )
         if not cursor.fetchone():
             break
 

@@ -3,7 +3,6 @@
 import os
 import sys
 
-
 DEFAULT_ADDRESS = "127.0.0.1:8000"
 
 

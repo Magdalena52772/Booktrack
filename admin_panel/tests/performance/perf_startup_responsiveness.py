@@ -6,6 +6,8 @@ Mierzy rzeczywiste czasy:
 - Dashboard render: moment gdy wykresy się wyrenderują
 """
 
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
 import sys
 import time
 from pathlib import Path
@@ -18,8 +20,6 @@ root_path = next(
 if str(root_path) not in sys.path:
     sys.path.insert(0, str(root_path))
 
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QTimer
 
 print("\n" + "=" * 70)
 print("STARTUP RESPONSIVENESS TEST")
@@ -31,40 +31,40 @@ try:
     t = time.perf_counter()
     from data.database import initialize_database, get_connection
 
-    print(f"[IMPORT] database module: {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[IMPORT] database module: {(time.perf_counter() - t) * 1000:.0f}ms")
 
     t = time.perf_counter()
     from views.main_window import MainWindow
 
-    print(f"[IMPORT] MainWindow module: {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[IMPORT] MainWindow module: {(time.perf_counter() - t) * 1000:.0f}ms")
 
     t = time.perf_counter()
     initialize_database()
-    print(f"[INIT] Database: {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[INIT] Database: {(time.perf_counter() - t) * 1000:.0f}ms")
 
     t = time.perf_counter()
     conn = get_connection()
-    print(f"[INIT] get_connection(): {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[INIT] get_connection(): {(time.perf_counter() - t) * 1000:.0f}ms")
 
     t = time.perf_counter()
     app = QApplication.instance() or QApplication(sys.argv)
-    print(f"[INIT] QApplication: {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[INIT] QApplication: {(time.perf_counter() - t) * 1000:.0f}ms")
 
     t = time.perf_counter()
     window = MainWindow(conn)
-    print(f"[CREATE] MainWindow instance: {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[CREATE] MainWindow instance: {(time.perf_counter() - t) * 1000:.0f}ms")
 
     t = time.perf_counter()
     t_before_show = time.perf_counter()
     window.setWindowState(
         __import__("PySide6.QtCore", fromlist=["Qt"]).Qt.WindowMaximized
     )
-    print(f"[SETUP] setWindowState: {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[SETUP] setWindowState: {(time.perf_counter() - t) * 1000:.0f}ms")
 
     t = time.perf_counter()
     window.show()
     t_after_show = time.perf_counter()
-    print(f"[SHOW] window.show(): {(time.perf_counter()-t)*1000:.0f}ms")
+    print(f"[SHOW] window.show(): {(time.perf_counter() - t) * 1000:.0f}ms")
 
     # moment kiedy UI trafia do event loop
     test_state = {"first_paint_time": None, "dashboard_render_time": None}
@@ -83,9 +83,8 @@ try:
             test_state["dashboard_render_time"] = (
                 time.perf_counter() - start_time
             ) * 1000
-            print(
-                f"[DASHBOARD] Charts rendered at {test_state['dashboard_render_time']:.0f}ms"
-            )
+            print(f"[DASHBOARD] Charts rendered at {
+                    test_state['dashboard_render_time']:.0f}ms")
             finish()
 
     def check_dashboard_loaded():
@@ -123,16 +122,16 @@ try:
         if ui_ready_time <= targets["UI ready"]:
             print(f"[OK] UI ready < {targets['UI ready']}ms")
         else:
-            print(
-                f"[SLOW] UI ready {ui_ready_time:.0f}ms > {targets['UI ready']}ms target"
-            )
+            print(f"[SLOW] UI ready {
+                    ui_ready_time:.0f}ms > {
+                    targets['UI ready']}ms target")
 
         if test_state["first_paint_time"] <= targets["First paint"]:
             print(f"[OK] First paint < {targets['First paint']}ms")
         else:
-            print(
-                f"[SLOW] First paint {test_state['first_paint_time']:.0f}ms > {targets['First paint']}ms target"
-            )
+            print(f"[SLOW] First paint {
+                    test_state['first_paint_time']:.0f}ms > {
+                    targets['First paint']}ms target")
 
         print("=" * 70 + "\n")
 

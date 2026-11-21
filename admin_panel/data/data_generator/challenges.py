@@ -40,9 +40,9 @@ def generate_challenges(conn, users, count_per_user=2):
         # Pobranie liczby książek ukończonych w bieżącym roku
         cursor.execute(
             """
-            SELECT COUNT(*) FROM user_books 
-            WHERE user_id = ? 
-              AND status = 'finished' 
+            SELECT COUNT(*) FROM user_books
+            WHERE user_id = ?
+              AND status = 'finished'
               AND strftime('%Y', finish_date) = ?
             """,
             (user_id, str(current_year)),
@@ -58,8 +58,9 @@ def generate_challenges(conn, users, count_per_user=2):
             )
             current_val = real_finished_this_year
 
-            # Ustala datę rozpoczęcia wyzwania: jeśli użytkownik zarejestrował się w bieżącym roku, 
-            # start jest losowany od daty rejestracji; w przeciwnym razie start jest losowany od początku roku.
+            # Ustala datę rozpoczęcia wyzwania: jeśli użytkownik zarejestrował się w bieżącym roku,
+            # start jest losowany od daty rejestracji; w przeciwnym razie start jest
+            # losowany od początku roku.
             if reg_date and reg_date.year == current_year:
                 year_start = reg_date
             else:
@@ -73,7 +74,8 @@ def generate_challenges(conn, users, count_per_user=2):
             # Data zakończenia to zawsze koniec bieżącego roku
             end_date = datetime(current_year, 12, 31, 23, 59, 59)
 
-            # Bezpieczne parsowanie obiektów dat zwracanych przez Faker do obiektów datetime
+            # Bezpieczne parsowanie obiektów dat zwracanych przez Faker do obiektów
+            # datetime
             start_date_dt = (
                 DateHelper.to_datetime(start_date)
                 if isinstance(start_date, str)
@@ -126,8 +128,8 @@ def generate_challenges(conn, users, count_per_user=2):
                 )
 
     conn.commit()
-    print(
-        f"[SUCCESS] Wygenerowano {len(challenges_list)} wyzwań dla {len(users)} użytkowników."
-    )
+    print(f"[SUCCESS] Wygenerowano {
+            len(challenges_list)} wyzwań dla {
+            len(users)} użytkowników.")
 
     return challenges_list

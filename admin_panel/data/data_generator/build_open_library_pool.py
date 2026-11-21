@@ -74,7 +74,7 @@ def _fetch_payload(url: str, timeout: int) -> dict | None:
 
 
 def _get_edition_title(edition_key: str | None) -> str | None:
-    # Próba pozyskania tytułu, jeśli główny tytuł zawiera cyrylicę, 
+    # Próba pozyskania tytułu, jeśli główny tytuł zawiera cyrylicę,
     # ale może być dostępny w edycji łacińskiej
     if not edition_key:
         return None
@@ -91,7 +91,8 @@ def _normalize_item(item: dict, genre: str) -> dict | None:
     authors = item.get("author_name", ["Unknown"])
     authors_text = ", ".join(str(a) for a in authors)
 
-    # Odrzucenie, jeśli tytuł jest zapisany cyrylicą (ale próba alternatywnego tytułu z edycji)
+    # Odrzucenie, jeśli tytuł jest zapisany cyrylicą (ale próba alternatywnego
+    # tytułu z edycji)
     if not _is_latin_only(title):
         edition_key = item.get("cover_edition_key")
         alt_title = _get_edition_title(edition_key)

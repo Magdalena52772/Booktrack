@@ -7,8 +7,9 @@ from django.core.exceptions import ImproperlyConfigured
 # Katalog projektu webowego, względem którego budowane są pozostałe ścieżki.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Klucz aplikacji musi pozostać tajny i nie powinien być ujawniany w repozytorium kodu źródłowego.
-SECRET_KEY = 'django-insecure-g5^fz+ezq^&%3mm78!r#3l1q(n5dtg#$o8cqf8fmrf-4hmagsr'
+# Klucz aplikacji musi pozostać tajny i nie powinien być ujawniany w
+# repozytorium kodu źródłowego.
+SECRET_KEY = "django-insecure-g5^fz+ezq^&%3mm78!r#3l1q(n5dtg#$o8cqf8fmrf-4hmagsr"
 
 # W środowisku produkcyjnym DEBUG powinno być ustawione na False.
 DEBUG = True
@@ -19,69 +20,69 @@ ALLOWED_HOSTS = []
 # Zainstalowane aplikacje Django i aplikacje domenowe BookTrack.
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'apps.main',
-    'apps.auth_user',
-    'apps.books',
-    'apps.user',
-    'pages',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "apps.main",
+    "apps.auth_user",
+    "apps.books",
+    "apps.user",
+    "pages",
 ]
 
 # Custom user model zgodny z tabelą users z panelu.
-AUTH_USER_MODEL = 'pages.BooktrackUser'
+AUTH_USER_MODEL = "pages.BooktrackUser"
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 # Sesje webowe są przechowywane w osobnej tabeli Django w tej samej bazie.
 # Tabele panelu pozostają własnością panelu, a migracje niezarządzanych modeli
 # nie tworzą ani nie zmieniają tabel `users`, `books`, `activity` itd.
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = False
 
-ROOT_URLCONF = 'core.urls'
+ROOT_URLCONF = "core.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'apps.user.context_processors.notification_summary',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "apps.user.context_processors.notification_summary",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = "core.wsgi.application"
 
 
 # Wspólna baza SQLite panelu administracyjnego.
 #
 # Przy pracy z worktree pełna baza może znajdować się w głównym checkoutcie
 # repozytorium, a lokalny plik worktree może zawierać wyłącznie pusty schemat.
-WORKTREE_BOOKTRACK_DB = BASE_DIR.parent / 'admin_panel' / 'booktrack.db'
+WORKTREE_BOOKTRACK_DB = BASE_DIR.parent / "admin_panel" / "booktrack.db"
 MAIN_CHECKOUT_BOOKTRACK_DB = (
-    BASE_DIR.parent.parent.parent / 'Booktrack' / 'admin_panel' / 'booktrack.db'
+    BASE_DIR.parent.parent.parent / "Booktrack" / "admin_panel" / "booktrack.db"
 )
-CONFIGURED_BOOKTRACK_DB = os.getenv('BOOKTRACK_DB_PATH')
+CONFIGURED_BOOKTRACK_DB = os.getenv("BOOKTRACK_DB_PATH")
 
 if CONFIGURED_BOOKTRACK_DB:
     BOOKTRACK_DB = Path(CONFIGURED_BOOKTRACK_DB)
@@ -99,9 +100,9 @@ if not BOOKTRACK_DB.is_file():
     )
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(BOOKTRACK_DB),
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(BOOKTRACK_DB),
     }
 }
 
@@ -110,25 +111,25 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 
 # Ustawienia języka i strefy czasowej.
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -137,7 +138,7 @@ USE_TZ = True
 
 # Pliki statyczne: arkusze stylów, skrypty i obrazy.
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",

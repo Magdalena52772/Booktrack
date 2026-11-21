@@ -1,4 +1,5 @@
 """Zarządza połączeniem z bazą danych i jej inicjalizacją"""
+
 import sqlite3
 from data.config import DB_PATH, SCHEMA_PATH
 

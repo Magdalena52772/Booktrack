@@ -76,24 +76,34 @@ class LiveFeedView(QWidget):
             today_str = datetime.now().strftime("%Y-%m-%d")
 
             # Książki rozpoczęte dzisiaj
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT COUNT(*) FROM user_books
                 WHERE date(start_date) = ?
-            """, (today_str,))
+            """,
+                (today_str,),
+            )
             start_date = cursor.fetchone()[0] or 0
 
             # Książki ukończone dzisiaj
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT COUNT(*) FROM user_books
                 WHERE status = 'finished' AND date(finish_date) = ?
-            """, (today_str,))
+            """,
+                (today_str,),
+            )
             finish_date = cursor.fetchone()[0] or 0
 
             # Aktualizacja etykiet w UI
             if hasattr(self.ui, "lbl_books_started_title"):
-                self.ui.lbl_books_started_title.setText(f"📚 Books Started Today: {start_date}")
+                self.ui.lbl_books_started_title.setText(
+                    f"📚 Books Started Today: {start_date}"
+                )
             if hasattr(self.ui, "lbl_books_finished_title"):
-                self.ui.lbl_books_finished_title.setText(f"✅ Books Finished Today: {finish_date}")
+                self.ui.lbl_books_finished_title.setText(
+                    f"✅ Books Finished Today: {finish_date}"
+                )
 
         except Exception as e:
             print(f"[METRICS ERROR] Nie udało się pobrać dzisiejszych KPI: {e}")

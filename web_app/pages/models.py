@@ -76,8 +76,10 @@ class BooktrackUser(AbstractBaseUser):
     @property
     def age(self):
         today = timezone.localdate()
-        return today.year - self.birth_date.year - (
-            (today.month, today.day) < (self.birth_date.month, self.birth_date.day)
+        return (
+            today.year
+            - self.birth_date.year
+            - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
         )
 
 
@@ -155,8 +157,18 @@ class UserBook(models.Model):
 
 
 class UserFavoriteBook(models.Model):
-    user = models.ForeignKey(BooktrackUser, on_delete=models.CASCADE, db_column="user_id", related_name="favorite_book_links")
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, db_column="book_id", related_name="favorite_book_links")
+    user = models.ForeignKey(
+        BooktrackUser,
+        on_delete=models.CASCADE,
+        db_column="user_id",
+        related_name="favorite_book_links",
+    )
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        db_column="book_id",
+        related_name="favorite_book_links",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -166,8 +178,18 @@ class UserFavoriteBook(models.Model):
 
 
 class UserReadingQueue(models.Model):
-    user = models.ForeignKey(BooktrackUser, on_delete=models.CASCADE, db_column="user_id", related_name="reading_queue_links")
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, db_column="book_id", related_name="reading_queue_links")
+    user = models.ForeignKey(
+        BooktrackUser,
+        on_delete=models.CASCADE,
+        db_column="user_id",
+        related_name="reading_queue_links",
+    )
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        db_column="book_id",
+        related_name="reading_queue_links",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

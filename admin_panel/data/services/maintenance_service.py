@@ -23,7 +23,8 @@ def update_genre_stats(conn):
     cursor = conn.cursor()
 
     try:
-        # Agregacja statystyk poprzez złączenie tabeli gatunków, katalogu książek oraz relacji użytkowników
+        # Agregacja statystyk poprzez złączenie tabeli gatunków, katalogu książek
+        # oraz relacji użytkowników
         cursor.execute("""
             SELECT
                 g.id,
@@ -77,13 +78,14 @@ def update_challenges_progress(conn):
     cursor = conn.cursor()
 
     try:
-        # Aktualizacja postępów na podstawie rekordów ukończenia przypisanych do tabeli user_books
+        # Aktualizacja postępów na podstawie rekordów ukończenia przypisanych do
+        # tabeli user_books
         cursor.execute("""
             UPDATE challenges
             SET current_value = (
-                SELECT COUNT(*) 
-                FROM user_books 
-                WHERE user_books.user_id = challenges.user_id 
+                SELECT COUNT(*)
+                FROM user_books
+                WHERE user_books.user_id = challenges.user_id
                   AND user_books.status = 'finished'
                   AND user_books.finish_date BETWEEN challenges.start_date AND challenges.end_date
             )
@@ -91,14 +93,14 @@ def update_challenges_progress(conn):
         """)
 
         cursor.execute("""
-            UPDATE challenges 
-            SET status = 'finished' 
+            UPDATE challenges
+            SET status = 'finished'
             WHERE status = 'active' AND current_value >= target_value
         """)
 
         cursor.execute("""
-            UPDATE challenges 
-            SET status = 'failed' 
+            UPDATE challenges
+            SET status = 'failed'
             WHERE status = 'active' AND end_date < datetime('now')
         """)
 
@@ -164,27 +166,27 @@ def update_all_user_streaks(cursor):
 
 
 def run_maintenance(conn):
-    """Główny punkt wejścia do konserwacji danych Wywołuje wszystkie funkcje 
+    """Główny punkt wejścia do konserwacji danych Wywołuje wszystkie funkcje
     aktualizujące statystyki i synchronizujące postępy w wyzwaniach.
     """
     cursor = conn.cursor()
     try:
         # Przeliczanie ogólnej liczby ukończonych książek z poziomu tabeli user_books
         cursor.execute("""
-            UPDATE users 
+            UPDATE users
             SET books_read = (
-                SELECT COUNT(*) FROM user_books 
+                SELECT COUNT(*) FROM user_books
                 WHERE user_books.user_id = users.id AND user_books.status = 'finished'
             )
         """)
         cursor.execute("""
-            UPDATE users 
+            UPDATE users
             SET pages_per_day = COALESCE(
                 (
                     SELECT AVG(daily_sum) FROM (
                         SELECT SUM(pages_read) as daily_sum
-                        FROM activity 
-                        WHERE activity.user_id = users.id 
+                        FROM activity
+                        WHERE activity.user_id = users.id
                           AND timestamp > date('now', '-30 days')
                         GROUP BY date(timestamp)
                     )
@@ -204,9 +206,7 @@ def run_maintenance(conn):
         stats_repo = StatsRepository(conn)
         global_avg = stats_repo.get_system_wide_ppd("month")
 
-        print(
-            f"Maintenance complete. Global Avg PPD (last 30 days): {global_avg:.2f}"
-        )
+        print(f"Maintenance complete. Global Avg PPD (last 30 days): {global_avg:.2f}")
         return global_avg
     except Exception as e:
         conn.rollback()

@@ -1,5 +1,3 @@
-
-
 from datetime import datetime, timedelta
 import random
 
@@ -28,7 +26,7 @@ def generate_books(conn, users):
     for user in users:
         bd_raw = user.get("birth_date", "1990-01-01")
         reg_date_raw = user.get("date_joined", datetime.now().strftime("%Y-%m-%d"))
-        
+
         bd = DateHelper.to_datetime(bd_raw)
         reg_date = DateHelper.to_datetime(reg_date_raw)
 
@@ -44,7 +42,8 @@ def generate_books(conn, users):
         # Preferencje użytkownika jeśli dostępne
         user_favs = user.get("favorite_genres") or []
 
-        # Wyliczanie stażu i szansy na to, że książka jest starsza niż data dołączenia do apki
+        # Wyliczanie stażu i szansy na to, że książka jest starsza niż data
+        # dołączenia do apki
         days_on_platform = (now - reg_date).days
         import_ratio = max(0.2, 1.0 - (days_on_platform / 900))
 
@@ -58,7 +57,9 @@ def generate_books(conn, users):
 
             # Losowanie gatunku
             if user_favs:
-                genre_name = GeneratorService.generate_actual_reading_genre(bd, user_favs)
+                genre_name = GeneratorService.generate_actual_reading_genre(
+                    bd, user_favs
+                )
             else:
                 genre_name = random.choice(age_pref_list)
             genre_id = genre_map.get(genre_name, 1)
@@ -78,14 +79,17 @@ def generate_books(conn, users):
             else:
                 total_pages = random.randint(150, 600)
 
-            # Losowanie oceny książki, jeśli jest ukończona i spełnia warunek prawdopodobieństwa
+            # Losowanie oceny książki, jeśli jest ukończona i spełnia warunek
+            # prawdopodobieństwa
             rating = None
             if is_finished and random.random() < RATING_SETTINGS["review_probability"]:
                 rating = random.choices(
                     RATING_SETTINGS["scores"], weights=RATING_SETTINGS["weights"]
                 )[0]
 
-            is_old_import = False if status == "reading" else (random.random() < import_ratio)
+            is_old_import = (
+                False if status == "reading" else (random.random() < import_ratio)
+            )
 
             if is_old_import:
                 current_page = total_pages
@@ -104,15 +108,22 @@ def generate_books(conn, users):
                 start_date = reg_date
 
             if selected_pool:
-                book_title = selected_pool.get("title") or f"{get_fake().word().title()} {get_fake().word().title()}"
-                author = selected_pool.get("authors") or f"{get_fake().first_name()} {get_fake().last_name()}"
+                book_title = (
+                    selected_pool.get("title")
+                    or f"{get_fake().word().title()} {get_fake().word().title()}"
+                )
+                author = (
+                    selected_pool.get("authors")
+                    or f"{get_fake().first_name()} {get_fake().last_name()}"
+                )
                 pool_id = selected_pool.get("openlibrary_id")
             else:
                 book_title = f"{get_fake().word().title()} {get_fake().word().title()}"
                 author = f"{get_fake().first_name()} {get_fake().last_name()}"
                 pool_id = None
 
-            # Wstawienie pozycji do globalnego katalogu z ignorowaniem duplikatów API/JSON
+            # Wstawienie pozycji do globalnego katalogu z ignorowaniem duplikatów
+            # API/JSON
             cursor.execute(
                 """
                 INSERT OR IGNORE INTO books (title, authors, openlibrary_id, genre_id, total_pages, added_by_generator)
@@ -124,7 +135,9 @@ def generate_books(conn, users):
 
             # Jeśli książka już istniała w bazie, pobiera jej ID
             if not book_id and pool_id:
-                cursor.execute("SELECT id FROM books WHERE openlibrary_id = ?", (pool_id,))
+                cursor.execute(
+                    "SELECT id FROM books WHERE openlibrary_id = ?", (pool_id,)
+                )
                 res = cursor.fetchone()
                 if res:
                     book_id = res[0]
@@ -156,5 +169,8 @@ def generate_books(conn, users):
             )
 
     conn.commit()
-    print(f"SUCCESS: Zindeksowano {len(book_metadata)} pozycji w katalogu globalnym i przypisano użytkownikom.")
+    print(
+        f"SUCCESS: Zindeksowano {
+            len(book_metadata)} pozycji w katalogu globalnym i przypisano użytkownikom."
+    )
     return book_metadata

@@ -6,70 +6,110 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0001_initial'),
+        ("pages", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserAchievement',
+            name="UserAchievement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('key', models.CharField(max_length=50)),
-                ('earned_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("key", models.CharField(max_length=50)),
+                ("earned_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'user_achievements',
-                'ordering': ('-earned_at', '-id'),
-                'managed': False,
+                "db_table": "user_achievements",
+                "ordering": ("-earned_at", "-id"),
+                "managed": False,
             },
         ),
         migrations.CreateModel(
-            name='UserBookReview',
+            name="UserBookReview",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('comment', models.TextField(blank=True, default='')),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("comment", models.TextField(blank=True, default="")),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'user_book_reviews',
-                'managed': False,
+                "db_table": "user_book_reviews",
+                "managed": False,
             },
         ),
         migrations.CreateModel(
-            name='UserFavoriteBook',
+            name="UserFavoriteBook",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'user_favorite_books',
-                'managed': False,
+                "db_table": "user_favorite_books",
+                "managed": False,
             },
         ),
         migrations.CreateModel(
-            name='UserNotification',
+            name="UserNotification",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('message', models.TextField()),
-                ('notification_type', models.TextField(default='info')),
-                ('is_read', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("message", models.TextField()),
+                ("notification_type", models.TextField(default="info")),
+                ("is_read", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'user_notifications',
-                'ordering': ('-created_at', '-id'),
-                'managed': False,
+                "db_table": "user_notifications",
+                "ordering": ("-created_at", "-id"),
+                "managed": False,
             },
         ),
         migrations.CreateModel(
-            name='UserReadingQueue',
+            name="UserReadingQueue",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'user_reading_queue',
-                'managed': False,
+                "db_table": "user_reading_queue",
+                "managed": False,
             },
         ),
     ]

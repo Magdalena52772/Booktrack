@@ -11,12 +11,13 @@ class GenresRepository:
 
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
-        
+
     @staticmethod
-    # Buduje warunek WHERE dla grupy wiekowej, aby filtrować użytkowników w zależności od wieku.
+    # Buduje warunek WHERE dla grupy wiekowej, aby filtrować użytkowników w
+    # zależności od wieku.
     def _build_age_where_clause(age_group: str, prefix: str = "WHERE") -> str:
         sql_age_calc = """
-            (CAST(strftime('%Y', 'now') AS INT) - CAST(strftime('%Y', u.birth_date) AS INT) - 
+            (CAST(strftime('%Y', 'now') AS INT) - CAST(strftime('%Y', u.birth_date) AS INT) -
             (CASE WHEN strftime('%m%d', 'now') < strftime('%m%d', u.birth_date) THEN 1 ELSE 0 END))
         """
 
@@ -44,7 +45,6 @@ class GenresRepository:
         cursor.execute(query)
         return {name: gid for name, gid in cursor.fetchall()}
 
-
     def get_all(self, age_group: str = "All") -> List[Genre]:
         """
         Pobiera zagregowane statystyki gatunków z uwzględnieniem filtrów wiekowych.
@@ -55,7 +55,8 @@ class GenresRepository:
         # Buduje warunek WHERE dla grupy wiekowej
         where_clause = self._build_age_where_clause(age_group)
 
-        # Zapytanie SQL z CTE (Common Table Expression) dla lepszej czytelności i wydajności
+        # Zapytanie SQL z CTE (Common Table Expression) dla lepszej czytelności i
+        # wydajności
         query = f"""
             WITH FinishedBooks AS (
                 SELECT b.id as book_id, b.genre_id, ub.rating, ub.user_id

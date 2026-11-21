@@ -24,22 +24,22 @@ def run_data_generation():
 
         # Generowanie użytkowników
         users = generate_users(conn, count=USER_COUNT)
-        conn.commit()  
+        conn.commit()
         print(f"[OK] Wygenerowano {len(users)} użytkowników.")
 
         # Generowanie książek
         books = generate_books(conn, users)
-        conn.commit()  
+        conn.commit()
         print(f"[OK] Wygenerowano wolumen książek.")
 
         # Generowanie historycznej aktywności (sesje czytania)
         generate_activity(conn, users, books)
-        conn.commit()  
+        conn.commit()
         print(f"[OK] Historia aktywności naniesiona.")
 
-        # Generowanie wyzwań 
+        # Generowanie wyzwań
         generate_challenges(conn, users)
-        conn.commit()  
+        conn.commit()
         print(f"[OK] Wyzwania przypisane i zsynchronizowane z aktywnościami.")
 
         # Aktualizacja statystyk gatunkowych i postępów w wyzwaniach

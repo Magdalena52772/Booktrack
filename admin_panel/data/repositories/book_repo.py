@@ -8,7 +8,7 @@ class BookRepository:
 
     def count_books_read(self, period=None):
         """
-        Liczy ukończone książki z tabeli relacyjnej user_books. 
+        Liczy ukończone książki z tabeli relacyjnej user_books.
         Jeśli podano okres, filtruje wyniki według tego okresu (np. "month" dla ostatnich 30 dni)
         """
         cursor = self.conn.cursor()
@@ -19,8 +19,8 @@ class BookRepository:
                 "%Y-%m-%d %H:%M:%S"
             )
             query = """
-                SELECT COUNT(*) 
-                FROM user_books 
+                SELECT COUNT(*)
+                FROM user_books
                 WHERE status = 'read' AND finish_date >= ?
             """
             cursor.execute(query, (thirty_days_ago,))
@@ -29,7 +29,6 @@ class BookRepository:
             cursor.execute(query)
 
         return cursor.fetchone()[0] or 0
-
 
     def get_monthly_reading_trend(self):
         """
@@ -50,7 +49,6 @@ class BookRepository:
         cursor.execute(query, (thirty_days_ago,))
         return cursor.fetchall()
 
-
     def get_average_rating(self):
         """Zwraca średnią ocenę wszystkich ocenionych książek z tabeli user_books."""
         cursor = self.conn.cursor()
@@ -59,19 +57,17 @@ class BookRepository:
         result = cursor.fetchone()[0]
         return round(result, 2) if result else 0.0
 
-
     def get_highest_rated_books(self, limit=5):
         """Pobiera najlepiej oceniane książki na podstawie średniej ocen użytkowników."""
         cursor = self.conn.cursor()
         query = """
-            SELECT b.title, AVG(ub.rating) as avg_rating 
+            SELECT b.title, AVG(ub.rating) as avg_rating
             FROM user_books ub
             JOIN books b ON ub.book_id = b.id
-            WHERE ub.rating IS NOT NULL 
+            WHERE ub.rating IS NOT NULL
             GROUP BY b.id
-            ORDER BY avg_rating DESC 
+            ORDER BY avg_rating DESC
             LIMIT ?
         """
         cursor.execute(query, (limit,))
         return cursor.fetchall()
-    

@@ -60,7 +60,8 @@ class EngineeringPerformanceTest(unittest.TestCase):
         self.conn.close()
 
     def _print_formatted_result(self, test_name, elapsed, threshold):
-        # weryfikacja czy uzyskany czas miesci sie w zalozonym progu i formatowanie wyniku dla raportu
+        # weryfikacja czy uzyskany czas miesci sie w zalozonym progu i
+        # formatowanie wyniku dla raportu
         status = "ZGODNY" if elapsed < threshold else "PRZEKROCZONY"
         print(f"{test_name:<45} | {elapsed:>8.4f}s | {status}")
 
@@ -91,9 +92,9 @@ class EngineeringPerformanceTest(unittest.TestCase):
 
         # zapytanie wykorzystujace funkcje agregujace i grupowanie po dacie
         query = """
-            SELECT date(timestamp), SUM(pages_read) 
-            FROM activity 
-            WHERE timestamp >= date('now', '-1 year') 
+            SELECT date(timestamp), SUM(pages_read)
+            FROM activity
+            WHERE timestamp >= date('now', '-1 year')
             GROUP BY date(timestamp)
         """
         self.cursor.execute(query)
@@ -111,9 +112,9 @@ class EngineeringPerformanceTest(unittest.TestCase):
 
         # zliczanie powiazanych rekordów przy uzyciu relacji kluczy obcych
         query = """
-            SELECT g.name, COUNT(b.id) 
-            FROM genres g 
-            LEFT JOIN books b ON g.id = b.genre_id 
+            SELECT g.name, COUNT(b.id)
+            FROM genres g
+            LEFT JOIN books b ON g.id = b.genre_id
             GROUP BY g.id
         """
         self.cursor.execute(query)
@@ -126,7 +127,8 @@ class EngineeringPerformanceTest(unittest.TestCase):
         self.assertLess(total_duration, 1.0)
 
     def test_view_user_details_sequential_io(self):
-        # test symulujący scenariusz, w którym wiele zapytań jest wykonywanych sekwencyjnie dla jednego użytkownika
+        # test symulujący scenariusz, w którym wiele zapytań jest wykonywanych
+        # sekwencyjnie dla jednego użytkownika
         self.cursor.execute("SELECT id FROM users LIMIT 1")
         row = self.cursor.fetchone()
         if not row:
@@ -137,7 +139,10 @@ class EngineeringPerformanceTest(unittest.TestCase):
 
         # pobieranie danych rozproszonych w strukturze bazy dla jednego profilu
         self.cursor.execute("SELECT * FROM users WHERE id = ?", (user_target_id,))
-        self.cursor.execute("SELECT * FROM user_books ub JOIN books b ON ub.book_id = b.id WHERE ub.user_id = ?", (user_target_id,))
+        self.cursor.execute(
+            "SELECT * FROM user_books ub JOIN books b ON ub.book_id = b.id WHERE ub.user_id = ?",
+            (user_target_id,),
+        )
         self.cursor.execute(
             "SELECT SUM(pages_read) FROM activity WHERE user_id = ?", (user_target_id,)
         )

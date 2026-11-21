@@ -10,7 +10,7 @@ class ActivityChart(FigureCanvas):
 
     def __init__(self, parent=None):
         """Inicjalizacja komponentu wykresu i konfiguracja podstawowych parametrów figury."""
-        # zdefiniowanie figury i osi przed wywołaniem super() dla uniknięcia problemów 
+        # zdefiniowanie figury i osi przed wywołaniem super() dla uniknięcia problemów
         # z importami matplotlib podczas inicjalizacji Qt
         from matplotlib.figure import Figure
 
@@ -85,7 +85,13 @@ class ActivityChart(FigureCanvas):
         # Rysowanie obszaru pod linią (wypełnienie) oraz samej linii danych
         self.axes.fill_between(dates, values, color="#daa520", alpha=0.3, zorder=1)
         (self.line,) = self.axes.plot(
-            dates, values, marker="o", markersize=3, color="#daa520", linewidth=2.0, zorder=2
+            dates,
+            values,
+            marker="o",
+            markersize=3,
+            color="#daa520",
+            linewidth=2.0,
+            zorder=2,
         )
 
         # Konfiguracja estetyki wykresu przy użyciu helperów
@@ -94,6 +100,7 @@ class ActivityChart(FigureCanvas):
 
         # Konfiguracja skalowania osi Y dla zapobiegania przepełnieniu dużymi liczbami
         from matplotlib.ticker import FuncFormatter
+
         max_val = max(values) if values else 0
 
         def y_axis_formatter(x, pos):
@@ -103,18 +110,28 @@ class ActivityChart(FigureCanvas):
 
         self.axes.get_yaxis().set_major_formatter(FuncFormatter(y_axis_formatter))
 
-        # Dynamiczne określenie jednostki na osi Y oraz ustawienie czytelnego formatu etykiet
+        # Dynamiczne określenie jednostki na osi Y oraz ustawienie czytelnego
+        # formatu etykiet
         if max_val >= 1000:
-            self.axes.set_ylabel("Pages read (k)", fontsize=10, labelpad=8, color="#555555")
+            self.axes.set_ylabel(
+                "Pages read (k)", fontsize=10, labelpad=8, color="#555555"
+            )
         else:
             self.axes.set_ylabel("Pages read", fontsize=10, labelpad=8, color="#555555")
 
         # Dostosowanie rozmiaru czcionki etykiet osi dla zwiększenia czytelności
-        self.axes.set_title("Daily Reading Volume Trend", fontsize=12, pad=10, color="#333333", weight="semibold")
+        self.axes.set_title(
+            "Daily Reading Volume Trend",
+            fontsize=12,
+            pad=10,
+            color="#333333",
+            weight="semibold",
+        )
         self.axes.set_xlabel("Date", fontsize=10, labelpad=8, color="#555555")
-        self.axes.tick_params(axis='both', which='major', labelsize=9)
+        self.axes.tick_params(axis="both", which="major", labelsize=9)
 
-        # Bezpieczne ustawienie skali osi Y chroniące przed błędami przy pustych danych lub zerowych wartościach
+        # Bezpieczne ustawienie skali osi Y chroniące przed błędami przy pustych
+        # danych lub zerowych wartościach
         if values:
             if max_val > 0:
                 self.axes.set_ylim(bottom=0, top=max_val * 1.3)
@@ -131,7 +148,7 @@ class ActivityHeatmap(FigureCanvas):
 
     def __init__(self, parent=None):
         """Inicjalizacja mapy cieplnej i definicja palety kolorów."""
-        # zdefiniowanie figury i osi przed wywołaniem super() dla uniknięcia problemów 
+        # zdefiniowanie figury i osi przed wywołaniem super() dla uniknięcia problemów
         # z importami matplotlib podczas inicjalizacji Qt
         from matplotlib.figure import Figure
         from matplotlib.colors import LinearSegmentedColormap
@@ -233,22 +250,34 @@ class ActivityHeatmap(FigureCanvas):
         self.axes.set_ylim(rows - 0.5, -0.5)
 
         self.axes.set_aspect("equal")
-        
+
         # Wyświetlenie etykiet tekstowych dni tygodnia i bloków
         for spine in self.axes.spines.values():
             spine.set_visible(False)
 
         # Wyłączenie renderowania kresek znaczników osi
-        self.axes.tick_params(axis='both', which='both', length=0)
+        self.axes.tick_params(axis="both", which="both", length=0)
 
         # Konfiguracja podpisów dni tygodnia i bloków czasowych
         self.axes.set_yticks(range(rows))
-        self.axes.set_yticklabels([f"W{r+1}" for r in range(rows)], fontsize=9, color="#555555")
+        self.axes.set_yticklabels(
+            [f"W{r + 1}" for r in range(rows)], fontsize=9, color="#555555"
+        )
         self.axes.set_xticks(range(cols))
-        self.axes.set_xticklabels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], fontsize=9, color="#555555")
+        self.axes.set_xticklabels(
+            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            fontsize=9,
+            color="#555555",
+        )
 
         # Przypisanie tytułu wewnętrznego dla sekcji mapy cieplnej
-        self.axes.set_title("Activity Distribution Grid (Last 30 Days)", fontsize=12, pad=10, color="#333333", weight="semibold")
+        self.axes.set_title(
+            "Activity Distribution Grid (Last 30 Days)",
+            fontsize=12,
+            pad=10,
+            color="#333333",
+            weight="semibold",
+        )
 
         self.fig.subplots_adjust(left=0.06, right=0.94, top=0.88, bottom=0.1)
         self.draw()

@@ -17,7 +17,7 @@ class UserRepository:
         cursor = self.conn.cursor()
         rows = cursor.execute(
             """
-            SELECT g.name 
+            SELECT g.name
             FROM user_favorite_genres ufg
             JOIN genres g ON ufg.genre_id = g.id
             WHERE ufg.user_id = ?
@@ -41,7 +41,8 @@ class UserRepository:
         since = None if period.lower() == "all" else period_start(period)
         since_str = since.strftime("%Y-%m-%d %H:%M:%S") if since else None
 
-        # Konfiguracja okresu kroczącego dla Systematic PPD (brutalna średnia, suma stron / liczba dni w wybranym filtrze)
+        # Konfiguracja okresu kroczącego dla Systematic PPD (brutalna średnia,
+        # suma stron / liczba dni w wybranym filtrze)
         p_lower = period.lower()
         fixed_days = {"week": 7, "month": 30, "year": 365}.get(p_lower)
 
@@ -77,8 +78,10 @@ class UserRepository:
             SELECT
                 u.id, u.username, u.name, u.email, u.status, u.last_activity,
                 u.date_joined, u.birth_date, u.r_tier,
-                (SELECT COUNT(*) FROM user_books ub WHERE ub.user_id = u.id AND ub.status = 'finished') AS books_count,
-                COALESCE((SELECT SUM(pages_read) FROM activity WHERE user_id = u.id {act_time_filter}), 0) AS total_pages
+                (SELECT COUNT(*) FROM user_books ub
+                 WHERE ub.user_id = u.id AND ub.status = 'finished') AS books_count,
+                COALESCE((SELECT SUM(pages_read) FROM activity
+                          WHERE user_id = u.id {act_time_filter}), 0) AS total_pages
             FROM users u
             {where_sql}
             ORDER BY {sort_column} {order}
@@ -205,7 +208,9 @@ class UserRepository:
         try:
             # Pobieranie aktualnie czytanych książek z limitem
             cursor.execute(
-                "SELECT b.title FROM user_books ub JOIN books b ON ub.book_id = b.id WHERE ub.user_id = ? AND ub.status = 'reading' LIMIT 3",
+                "SELECT b.title FROM user_books ub JOIN books b "
+                "ON ub.book_id = b.id WHERE ub.user_id = ? "
+                "AND ub.status = 'reading' LIMIT 3",
                 (user_id,),
             )
             reading_now = [r[0] for r in cursor.fetchall()]
@@ -243,7 +248,8 @@ class UserRepository:
             ) = u_data
             total_pages_sum = total_pages_sum or 0
 
-            # Statystyki aktywności i wyliczanie Potential PPD na podstawie faktycznych dni czytania
+            # Statystyki aktywności i wyliczanie Potential PPD na podstawie
+            # faktycznych dni czytania
             streak = self.get_user_streak(user_id)
             real_active_days = self.get_active_reading_days(user_id)
             potential_ppd = UserPerformanceService.get_potential_ppd(
@@ -303,7 +309,6 @@ class UserRepository:
             "SELECT current_streak FROM users WHERE id = ?", (user_id,)
         ).fetchone()
         return res[0] if res and res[0] else 0
-    
 
     def get_user_report_metrics(self, period: str = "all"):
         """Pobiera metryki dla User Report - total, growth, average PPD."""
@@ -358,7 +363,8 @@ class UserRepository:
             SELECT
                 u.id,
                 u.username,
-                COALESCE((SELECT SUM(pages_read) FROM activity WHERE user_id = u.id {time_filter}), 0) as pages_in_period,
+                COALESCE((SELECT SUM(pages_read) FROM activity
+                          WHERE user_id = u.id {time_filter}), 0) as pages_in_period,
                 u.current_streak,
                 u.date_joined
             FROM users u
@@ -372,7 +378,8 @@ class UserRepository:
 
         result = []
         for user_id, username, pages_period, streak, date_joined in rows:
-            # Obliczenie współczynnika regularności użytkownika w wyznaczonym oknie czasowym
+            # Obliczenie współczynnika regularności użytkownika w wyznaczonym oknie
+            # czasowym
             reg_date_dt = datetime.strptime(date_joined, "%Y-%m-%d %H:%M:%S")
             reg_date = reg_date_dt.date()
 

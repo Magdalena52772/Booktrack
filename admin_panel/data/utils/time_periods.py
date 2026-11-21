@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 
+
 def period_start(period: str) -> datetime:
     now = datetime.now()
     if period == "week":

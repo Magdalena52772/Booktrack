@@ -1,5 +1,6 @@
 """Zarządza komunikatami statusu w aplikacji"""
 
+
 class StatusMsg:
     INFO = "info"
     SUCCESS = "success"
@@ -13,17 +14,14 @@ class StatusMsg:
         "DB_ERROR": ("Database error: {}.", ERROR),
         "VIEW_LOADED_COUNT": ("View: {} loaded.", SUCCESS),
         "ACTIVITY_UPDATED": ("Activity updated for: {} (Total: {}).", INFO),
-        
         # Dashboard & Activity
         "STATS_UPDATED": ("Metrics updated for: {}.", INFO),
         "NO_TREND_DATA": ("KPIs updated, but no trend data available for {}.", WARNING),
-        
         # Users
         "DATA_COUNT": ("Displaying {} records.", SUCCESS),
         "NO_DATA": ("No records found for: {}.", WARNING),
         "USER_DETAILS": ("Details loaded for user: {}.", INFO),
         "RESET_FILTERS": ("All filters have been reset.", INFO),
-        
         # Reports
         "REPORT_GEN": ("Report '{}' generated successfully.", SUCCESS),
         "REPORT_EMPTY": ("Report '{}' for {} is empty.", WARNING),
@@ -38,5 +36,5 @@ class StatusMsg:
         template, level = StatusMsg.MESSAGES.get(key, ("{}", "info"))
         try:
             return template.format(*args), level
-        except:
+        except BaseException:
             return template, level

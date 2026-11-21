@@ -73,9 +73,7 @@ def home(request):
 
 def most_added(request):
     books = (
-        UserBook.objects.values(
-            "book__title", "book__authors", "book__openlibrary_id"
-        )
+        UserBook.objects.values("book__title", "book__authors", "book__openlibrary_id")
         .annotate(readers=Count("user_id", distinct=True))
         .order_by("-readers", "book__title")[:10]
     )
@@ -94,9 +92,7 @@ def most_added(request):
 def trending(request):
     rows = (
         UserBook.objects.filter(status="finished")
-        .values(
-            "book_id", "book__title", "book__authors", "book__openlibrary_id"
-        )
+        .values("book_id", "book__title", "book__authors", "book__openlibrary_id")
         .annotate(readers=Count("user_id", distinct=True))
         .order_by("-readers", "book__title")[:10]
     )
@@ -117,7 +113,12 @@ def trending(request):
 def genres(request, genre_name):
     db_genre_name = GENRE_SLUG_TO_NAME.get(genre_name)
     if not db_genre_name:
-        return render(request, "books/genres.html", {"genre_label": "Nieznany gatunek", "books": []}, status=404)
+        return render(
+            request,
+            "books/genres.html",
+            {"genre_label": "Nieznany gatunek", "books": []},
+            status=404,
+        )
 
     books_queryset = (
         Book.objects.filter(genre__name=db_genre_name)
@@ -151,10 +152,9 @@ def searching(request):
         query_error = "Wyszukiwana fraza może mieć maksymalnie 100 znaków."
         query = ""
     if query:
-        books = (
-            Book.objects.filter(Q(title__icontains=query) | Q(authors__icontains=query))
-            .order_by("title")[:30]
-        )
+        books = Book.objects.filter(
+            Q(title__icontains=query) | Q(authors__icontains=query)
+        ).order_by("title")[:30]
     context = {
         "query": query,
         "books": books,

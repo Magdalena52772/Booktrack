@@ -52,7 +52,8 @@ class GenresView(QWidget):
         self.setup_tooltips()
         self.setup_connections()
 
-        # Wywołanie ładowania danych zostaje odroczone do momentu pierwszego wyświetlenia widgetu.
+        # Wywołanie ładowania danych zostaje odroczone do momentu pierwszego
+        # wyświetlenia widgetu.
 
     def showEvent(self, event):
         """
@@ -90,7 +91,7 @@ class GenresView(QWidget):
         self.statusMessage.emit(*StatusMsg.get("LOAD_START", f"Genres ({age_group})"))
 
         try:
-           # Dane deklaratywne (ulubione gatunki)
+            # Dane deklaratywne (ulubione gatunki)
             declared = self.repo.get_declared_preferences(age_group)
 
             # Dane o realnym czytaniu
@@ -115,7 +116,9 @@ class GenresView(QWidget):
 
             # Obliczanie sumarycznych statystyk deklaratywnych
             total_picks = sum(g.books_read for g in declared)
-            total_users_declared = self.repo.count_declaring_users_by_age_group(age_group)
+            total_users_declared = self.repo.count_declaring_users_by_age_group(
+                age_group
+            )
 
             top_genre = max(declared, key=lambda x: x.books_read) if declared else None
 
@@ -125,7 +128,7 @@ class GenresView(QWidget):
 
             self.ui.lbl_most_declared.setText(
                 f"Favorite: {top_genre.name if top_genre else 'None'}"
-)
+            )
 
             # Wypełnianie tabeli danymi o realnej aktywności
             self.ui.table_genres.setRowCount(len(genres))
@@ -163,9 +166,8 @@ class GenresView(QWidget):
                 progress.setStyleSheet(get_progress_bar_style())
 
                 # Dodanie tooltipa bezpośrednio do widgetu paska postępu w tabeli
-                progress.setToolTip(
-                    f"This genre accounts for {genre.percent_of_total_time}% of total reading time."
-                )
+                progress.setToolTip(f"This genre accounts for {
+                        genre.percent_of_total_time}% of total reading time.")
 
                 self.ui.table_genres.setCellWidget(row, 4, progress)
 

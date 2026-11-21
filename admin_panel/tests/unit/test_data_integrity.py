@@ -33,7 +33,10 @@ class TestGeneratorLogic(unittest.TestCase):
 
     def test_user_age_distribution(self):
         self.cursor.execute("SELECT birth_date FROM users")
-        birth_dates = [datetime.strptime(row[0].split()[0], "%Y-%m-%d") for row in self.cursor.fetchall()]
+        birth_dates = [
+            datetime.strptime(row[0].split()[0], "%Y-%m-%d")
+            for row in self.cursor.fetchall()
+        ]
         ages = [(datetime.now() - bd).days // 365 for bd in birth_dates]
         avg_age = sum(ages) / len(ages) if ages else 0
         self.assertTrue(25 <= avg_age <= 45)
@@ -57,9 +60,13 @@ class TestGeneratorLogic(unittest.TestCase):
         self.assertTrue(2 <= ratio <= 15)
 
     def test_weekend_multiplier_effect(self):
-        self.cursor.execute("SELECT AVG(pages_read) FROM activity WHERE strftime('%w', timestamp) IN ('0', '6')")
+        self.cursor.execute(
+            "SELECT AVG(pages_read) FROM activity WHERE strftime('%w', timestamp) IN ('0', '6')"
+        )
         avg_we = self.cursor.fetchone()[0] or 0
-        self.cursor.execute("SELECT AVG(pages_read) FROM activity WHERE strftime('%w', timestamp) NOT IN ('0', '6')")
+        self.cursor.execute(
+            "SELECT AVG(pages_read) FROM activity WHERE strftime('%w', timestamp) NOT IN ('0', '6')"
+        )
         avg_wd = self.cursor.fetchone()[0] or 0
         self.assertGreater(avg_we, avg_wd)
 
@@ -76,7 +83,9 @@ class TestGeneratorLogic(unittest.TestCase):
         rows = self.cursor.fetchall()
         if not rows:
             return
-        anomalies = [r[0] for r in rows if r[0] in ["Biography", "Crime", "Historical fiction"]]
+        anomalies = [
+            r[0] for r in rows if r[0] in ["Biography", "Crime", "Historical fiction"]
+        ]
         ratio = len(anomalies) / len(rows)
         self.assertLess(ratio, 0.20)
 
@@ -85,13 +94,18 @@ class TestGeneratorLogic(unittest.TestCase):
     def test_birth_date_not_null_constraint(self):
         self.cursor.execute("PRAGMA foreign_keys = ON")
         with self.assertRaises(sqlite3.IntegrityError):
-            self.cursor.execute("INSERT INTO users (password, username, date_joined) VALUES ('p','u','2026-01-01')")
+            self.cursor.execute(
+                "INSERT INTO users (password, username, date_joined) VALUES ('p','u','2026-01-01')"
+            )
         self.conn.rollback()
 
     def test_unique_user_id(self):
         test_id = 99999
         user_data = (test_id, "h", "t", 0, 0, "2026-01-01", "1990-01-01")
-        query = "INSERT INTO users (id, password, username, is_superuser, is_staff, date_joined, birth_date) VALUES (?,?,?,?,?,?,?)"
+        query = (
+            "INSERT INTO users (id, password, username, is_superuser, is_staff, "
+            "date_joined, birth_date) VALUES (?,?,?,?,?,?,?)"
+        )
         self.cursor.execute(query, user_data)
         with self.assertRaises(sqlite3.IntegrityError):
             self.cursor.execute(query, user_data)
@@ -100,27 +114,37 @@ class TestGeneratorLogic(unittest.TestCase):
     def test_foreign_key_constraint(self):
         self.cursor.execute("PRAGMA foreign_keys = ON")
         with self.assertRaises(sqlite3.IntegrityError):
-            self.cursor.execute("INSERT INTO user_books (user_id, book_id, current_page, status) VALUES (999999, 1, 0, 'reading')")
+            self.cursor.execute(
+                "INSERT INTO user_books (user_id, book_id, current_page, status) VALUES (999999, 1, 0, 'reading')"
+            )
         self.conn.rollback()
 
     def test_orphan_records_activity(self):
-        self.cursor.execute("SELECT COUNT(*) FROM activity WHERE user_id NOT IN (SELECT id FROM users)")
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM activity WHERE user_id NOT IN (SELECT id FROM users)"
+        )
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     def test_genre_integrity_constraint(self):
-        self.cursor.execute("SELECT COUNT(*) FROM books WHERE genre_id NOT IN (SELECT id FROM genres)")
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM books WHERE genre_id NOT IN (SELECT id FROM genres)"
+        )
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     # --- KATEGORIA: SPÓJNOŚĆ LOGICZNA I STATUSY ---
 
     def test_inactive_anomalies(self):
-        self.cursor.execute("SELECT COUNT(*) FROM users WHERE status = 'inactive' AND pages_per_day > 0")
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE status = 'inactive' AND pages_per_day > 0"
+        )
         self.assertEqual(self.cursor.fetchone()[0], 0)
-        query = "SELECT COUNT(*) FROM users u JOIN activity a ON u.id = a.user_id WHERE u.status = 'inactive' AND a.timestamp > datetime('now', '-6 months')"
+        query = (
+            "SELECT COUNT(*) FROM users u JOIN activity a ON u.id = a.user_id "
+            "WHERE u.status = 'inactive' AND a.timestamp > "
+            "datetime('now', '-6 months')"
+        )
         self.cursor.execute(query)
         self.assertEqual(self.cursor.fetchone()[0], 0)
-
-
 
     def test_activity_timestamps(self):
         query = "SELECT COUNT(*) FROM activity a JOIN users u ON a.user_id = u.id WHERE a.timestamp < u.date_joined"
@@ -138,7 +162,9 @@ class TestGeneratorLogic(unittest.TestCase):
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     def test_external_id_uniqueness(self):
-        self.cursor.execute("SELECT COUNT(external_id), COUNT(DISTINCT external_id) FROM users")
+        self.cursor.execute(
+            "SELECT COUNT(external_id), COUNT(DISTINCT external_id) FROM users"
+        )
         total, distinct = self.cursor.fetchone()
         self.assertEqual(total, distinct)
 
@@ -152,28 +178,39 @@ class TestGeneratorLogic(unittest.TestCase):
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     def test_challenge_status_logic(self):
-        self.cursor.execute("SELECT target_value, current_value, status, end_date FROM challenges")
+        self.cursor.execute(
+            "SELECT target_value, current_value, status, end_date FROM challenges"
+        )
         now = datetime.now()
         for target, progress, status, end_date_str in self.cursor.fetchall():
-            clean_date = end_date_str.split(".")[0] if "." in end_date_str else end_date_str
+            clean_date = (
+                end_date_str.split(".")[0] if "." in end_date_str else end_date_str
+            )
             try:
                 end_date = datetime.strptime(clean_date, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 end_date = datetime.strptime(clean_date, "%Y-%m-%d")
-            if progress >= target: self.assertEqual(status, "finished")
-            elif end_date < now: self.assertEqual(status, "failed")
-            else: self.assertEqual(status, "active")
+            if progress >= target:
+                self.assertEqual(status, "finished")
+            elif end_date < now:
+                self.assertEqual(status, "failed")
+            else:
+                self.assertEqual(status, "active")
 
     def test_empty_book_titles(self):
-        self.cursor.execute("SELECT COUNT(*) FROM books WHERE title IS NULL OR title = '' OR genre_id IS NULL")
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM books WHERE title IS NULL OR title = '' OR genre_id IS NULL"
+        )
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     def test_inactive_users_no_recent_sessions(self):
         limit = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d %H:%M:%S")
-        query = "SELECT COUNT(*) FROM users u JOIN activity a ON u.id = a.user_id WHERE u.status = 'inactive' AND a.timestamp > ?"
+        query = (
+            "SELECT COUNT(*) FROM users u JOIN activity a ON u.id = a.user_id "
+            "WHERE u.status = 'inactive' AND a.timestamp > ?"
+        )
         self.cursor.execute(query, (limit,))
         self.assertEqual(self.cursor.fetchone()[0], 0)
-
 
     def test_random_reading_users(self):
         self.cursor.execute("""
@@ -188,7 +225,6 @@ class TestGeneratorLogic(unittest.TestCase):
         rows = self.cursor.fetchall()
 
         self.assertGreater(len(rows), 0)
-
 
     def test_debug_book_progress(self):
         self.cursor.execute("""
@@ -225,7 +261,6 @@ class TestGeneratorLogic(unittest.TestCase):
 
         self.assertEqual(len(rows), 0)
 
-
     def test_debug_book_progress_details(self):
         self.cursor.execute("""
             SELECT
@@ -246,7 +281,6 @@ class TestGeneratorLogic(unittest.TestCase):
 
         for row in rows:
             print(row)
-
 
     def test_debug_activity_sum(self):
         print("\n===== SUMA SESJI =====")
@@ -275,7 +309,6 @@ class TestGeneratorLogic(unittest.TestCase):
 
         self.assertEqual(len(rows), 0)
 
-
     def test_same_book_multiple_finished(self):
 
         self.cursor.execute("""
@@ -294,7 +327,6 @@ class TestGeneratorLogic(unittest.TestCase):
 
         for row in rows[:20]:
             print(row)
-
 
     def test_debug_one_overflow(self):
         """
@@ -344,7 +376,8 @@ class TestGeneratorLogic(unittest.TestCase):
         print(f"finish_date  = {row['finish_date']}")
         print(f"SUM(activity)= {row['pages']}")
 
-        self.cursor.execute("""
+        self.cursor.execute(
+            """
             SELECT
                 timestamp,
                 pages_read
@@ -352,7 +385,9 @@ class TestGeneratorLogic(unittest.TestCase):
             WHERE user_id = ?
             AND book_id = ?
             ORDER BY timestamp
-        """, (row["user_id"], row["book_id"]))
+        """,
+            (row["user_id"], row["book_id"]),
+        )
 
         print("\nHistoria sesji:\n")
 
@@ -365,9 +400,7 @@ class TestGeneratorLogic(unittest.TestCase):
             if total > row["total_pages"]:
                 marker = "   <<< PRZEKROCZENIE"
 
-            print(
-                f"{ts} | +{pages:3} | suma={total:4}{marker}"
-            )
+            print(f"{ts} | +{pages:3} | suma={total:4}{marker}")
 
         self.fail("Overflow znaleziony.")
 
@@ -388,8 +421,11 @@ if __name__ == "__main__":
     print(f"{'ID Metody Testowej':<45} | {'Status':<12} | {'Wynik'}")
     print("-" * 80)
 
-    test_classes = [obj for _, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass) 
-                    if issubclass(obj, unittest.TestCase) and obj is not unittest.TestCase]
+    test_classes = [
+        obj
+        for _, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
+        if issubclass(obj, unittest.TestCase) and obj is not unittest.TestCase
+    ]
 
     fail_names = {t[0]._testMethodName for t in result.failures}
     err_names = {t[0]._testMethodName for t in result.errors}
@@ -412,6 +448,12 @@ if __name__ == "__main__":
             print(f"{m_name:<45} | {status:<12} | Pozytywny")
 
     print("-" * 80)
-    print(f"PODSUMOWANIE: Wykonano {result.testsRun} testów. Błędy: {len(result.errors)}, Niepowodzenia: {len(result.failures)}")
-    print(f"Status końcowy: {'SUKCES (OK)' if result.wasSuccessful() else 'WYKRYTO NIEPRAWIDŁOWOŚCI'}")
+    print(f"PODSUMOWANIE: Wykonano {
+            result.testsRun} testów. Błędy: {
+            len(
+                result.errors)}, Niepowodzenia: {
+                    len(
+                        result.failures)}")
+    print(f"Status końcowy: {
+            'SUKCES (OK)' if result.wasSuccessful() else 'WYKRYTO NIEPRAWIDŁOWOŚCI'}")
     print("=" * 80 + "\n")

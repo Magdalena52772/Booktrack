@@ -65,9 +65,9 @@ def _get_recommendations(user, limit=10):
     if not user:
         return []
 
-    favorite_genre_ids = UserFavoriteGenre.objects.filter(
-        user_id=user.id
-    ).values_list("genre_id", flat=True)
+    favorite_genre_ids = UserFavoriteGenre.objects.filter(user_id=user.id).values_list(
+        "genre_id", flat=True
+    )
     already_assigned = UserBook.objects.filter(user_id=user.id).values_list(
         "book_id", flat=True
     )
@@ -157,10 +157,15 @@ def _prepare_challenges(challenges, user):
     for challenge in challenges:
         if challenge.status == "active" and challenge.end_date < today:
             challenge.status = "failed"
-            Challenge.objects.filter(id=challenge.id, user_id=user.id).update(status="failed")
+            Challenge.objects.filter(id=challenge.id, user_id=user.id).update(
+                status="failed"
+            )
             continue
         challenge.current_value = _challenge_progress(challenge, user)
-        if challenge.status == "active" and challenge.current_value >= challenge.target_value:
+        if (
+            challenge.status == "active"
+            and challenge.current_value >= challenge.target_value
+        ):
             challenge.status = "finished"
             Challenge.objects.filter(id=challenge.id, user_id=user.id).update(
                 current_value=challenge.current_value,
@@ -186,9 +191,7 @@ def dashboard(request):
     favorite_genres = []
     if user:
         evaluate_achievements(user)
-        books_read = (
-            UserBook.objects.filter(user_id=user.id, status="finished").count()
-        )
+        books_read = UserBook.objects.filter(user_id=user.id, status="finished").count()
         reading_rows = list(
             UserBook.objects.filter(user_id=user.id, status="reading")
             .select_related("book")
@@ -216,7 +219,8 @@ def dashboard(request):
         to_read_count = UserReadingQueue.objects.filter(user_id=user.id).count()
         account_age_days = max(
             1,
-            (timezone.localdate() - timezone.localtime(user.date_joined).date()).days + 1,
+            (timezone.localdate() - timezone.localtime(user.date_joined).date()).days
+            + 1,
         )
         favorite_genres = list(
             UserFavoriteGenre.objects.filter(user_id=user.id)
@@ -224,9 +228,7 @@ def dashboard(request):
             .order_by("genre__name")
             .values_list("genre__name", flat=True)
         )
-    recommendations = _add_library_status(
-        _get_recommendations(user, limit=4), user
-    )
+    recommendations = _add_library_status(_get_recommendations(user, limit=4), user)
 
     return render(
         request,
@@ -277,9 +279,9 @@ def notifications(request):
     user_notifications = list(
         UserNotification.objects.filter(user_id=request.user.id)[:10]
     )
-    UserNotification.objects.filter(
-        user_id=request.user.id, is_read=False
-    ).update(is_read=True)
+    UserNotification.objects.filter(user_id=request.user.id, is_read=False).update(
+        is_read=True
+    )
     return render(
         request,
         "user/notifications.html",
@@ -305,7 +307,10 @@ def create_challenge(request):
         year = today.year
         if target < 1 or target > 1000:
             error = "Cel musi być liczbą od 1 do 1000."
-        elif challenge_type == "genre" and not Genre.objects.filter(id=selected_genre_id).exists():
+        elif (
+            challenge_type == "genre"
+            and not Genre.objects.filter(id=selected_genre_id).exists()
+        ):
             error = "Wybierz gatunek."
         if not error:
             genre = (
@@ -426,9 +431,13 @@ def user_book_detail(request, user_book_id):
             if rating is None or rating not in range(1, 6):
                 error = "Ocena musi być wybrana w skali od 1 do 5."
 
-        should_finish = is_finished or mark_finished or (
-            user_book.book.total_pages
-            and user_book.current_page + pages_read >= user_book.book.total_pages
+        should_finish = (
+            is_finished
+            or mark_finished
+            or (
+                user_book.book.total_pages
+                and user_book.current_page + pages_read >= user_book.book.total_pages
+            )
         )
         if should_finish and rating is None:
             rating = user_book.rating
@@ -503,8 +512,7 @@ def user_book_detail(request, user_book_id):
 def favourite_books(request):
     user = _get_user(request)
     books = list(
-        Book.objects.filter(favorite_book_links__user_id=user.id)
-        .order_by("title")
+        Book.objects.filter(favorite_book_links__user_id=user.id).order_by("title")
     )
     return render(
         request,
@@ -516,8 +524,9 @@ def favourite_books(request):
 @login_required(login_url="login")
 def to_read_books(request):
     books = list(
-        Book.objects.filter(reading_queue_links__user_id=request.user.id)
-        .order_by("title")
+        Book.objects.filter(reading_queue_links__user_id=request.user.id).order_by(
+            "title"
+        )
     )
     return render(
         request,
@@ -541,20 +550,24 @@ def library_search(request):
             ).order_by("title")[:30]
         )
     favorite_ids = set(
-        UserFavoriteBook.objects.filter(user_id=request.user.id).values_list("book_id", flat=True)
+        UserFavoriteBook.objects.filter(user_id=request.user.id).values_list(
+            "book_id", flat=True
+        )
     )
     queue_ids = set(
-        UserReadingQueue.objects.filter(user_id=request.user.id).values_list("book_id", flat=True)
+        UserReadingQueue.objects.filter(user_id=request.user.id).values_list(
+            "book_id", flat=True
+        )
     )
     reading_ids = set(
-        UserBook.objects.filter(
-            user_id=request.user.id, status="reading"
-        ).values_list("book_id", flat=True)
+        UserBook.objects.filter(user_id=request.user.id, status="reading").values_list(
+            "book_id", flat=True
+        )
     )
     finished_ids = set(
-        UserBook.objects.filter(
-            user_id=request.user.id, status="finished"
-        ).values_list("book_id", flat=True)
+        UserBook.objects.filter(user_id=request.user.id, status="finished").values_list(
+            "book_id", flat=True
+        )
     )
     return render(
         request,
@@ -581,7 +594,9 @@ def library_action(request):
     if action == "favorite":
         UserFavoriteBook.objects.get_or_create(user_id=request.user.id, book_id=book.id)
         activity_recorded = True
-        _notify(request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book")
+        _notify(
+            request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book"
+        )
     elif action == "unfavorite":
         deleted, _ = UserFavoriteBook.objects.filter(
             user_id=request.user.id, book_id=book.id
@@ -593,10 +608,19 @@ def library_action(request):
             "Zmiany zapisane. Twoja biblioteka została uporządkowana. ✅",
         )
     elif action == "to_read":
-        if not UserBook.objects.filter(user_id=request.user.id, book_id=book.id).exists():
-            UserReadingQueue.objects.get_or_create(user_id=request.user.id, book_id=book.id)
+        if not UserBook.objects.filter(
+            user_id=request.user.id, book_id=book.id
+        ).exists():
+            UserReadingQueue.objects.get_or_create(
+                user_id=request.user.id, book_id=book.id
+            )
             activity_recorded = True
-            _notify(request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book")
+            _notify(
+                request,
+                request.user.id,
+                "Książka pomyślnie dodana do listy. 📚",
+                "book",
+            )
     elif action == "remove_to_read":
         deleted, _ = UserReadingQueue.objects.filter(
             user_id=request.user.id, book_id=book.id
@@ -617,7 +641,9 @@ def library_action(request):
             user_id=request.user.id, book_id=book.id
         ).delete()
         activity_recorded = created or deleted > 0
-        _notify(request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book")
+        _notify(
+            request, request.user.id, "Książka pomyślnie dodana do listy. 📚", "book"
+        )
     else:
         return redirect("library_search")
     if activity_recorded:
@@ -642,6 +668,8 @@ def library_action(request):
                 f"{reverse('library_search')}?{urlencode({'query': query})}"
             )
     return redirect(next_view)
+
+
 @login_required(login_url="login")
 def stats(request):
     user = _get_user(request)
@@ -665,8 +693,18 @@ def stats(request):
         book_chart_period = "year"
     activity_heatmap = []
     month_names_short = (
-        "sty", "lut", "mar", "kwi", "maj", "cze",
-        "lip", "sie", "wrz", "paź", "lis", "gru",
+        "sty",
+        "lut",
+        "mar",
+        "kwi",
+        "maj",
+        "cze",
+        "lip",
+        "sie",
+        "wrz",
+        "paź",
+        "lis",
+        "gru",
     )
     if user:
         evaluate_achievements(user)
@@ -682,9 +720,7 @@ def stats(request):
         )
         activity_aggregate = year_activity.aggregate(total_pages=Sum("pages_read"))
         account_start = (
-            timezone.localtime(user.date_joined).date()
-            if user.date_joined
-            else today
+            timezone.localtime(user.date_joined).date() if user.date_joined else today
         )
         account_age_days = max(1, (today - account_start).days + 1)
         activity_dates = set(
@@ -700,7 +736,11 @@ def stats(request):
             calculated_streak += 1
             streak_day -= timedelta(days=1)
         period_days = {"14": 14, "30": 30}.get(book_chart_period)
-        period_start = today - timedelta(days=period_days - 1) if period_days else date(today.year, 1, 1)
+        period_start = (
+            today - timedelta(days=period_days - 1)
+            if period_days
+            else date(today.year, 1, 1)
+        )
         daily_pages = {
             row["day"]: row["pages"] or 0
             for row in user_activity.filter(
@@ -725,7 +765,8 @@ def stats(request):
                     row["month"].date()
                     if hasattr(row["month"], "date")
                     else row["month"]
-                ): row["pages"] or 0
+                ): row["pages"]
+                or 0
                 for row in year_activity.annotate(month=TruncMonth("timestamp"))
                 .values("month")
                 .annotate(pages=Sum("pages_read"))
@@ -741,9 +782,9 @@ def stats(request):
         activity_chart = [
             {
                 **row,
-                "bar_height": round((row["pages"] / max_pages) * 110)
-                if max_pages
-                else 0,
+                "bar_height": (
+                    round((row["pages"] / max_pages) * 110) if max_pages else 0
+                ),
             }
             for row in chart_rows
         ]
@@ -827,8 +868,7 @@ def stats(request):
                 100 + 100 * sin(radians(end_angle)),
             )
             path = (
-                "M 100 100 L 100 0 A 100 100 0 1 1 100 200 "
-                "A 100 100 0 1 1 100 0 Z"
+                "M 100 100 L 100 0 A 100 100 0 1 1 100 200 " "A 100 100 0 1 1 100 0 Z"
                 if percentage >= 99.9
                 else (
                     f"M 100 100 L {start_point[0]:.3f} {start_point[1]:.3f} "
@@ -851,18 +891,14 @@ def stats(request):
         book_chart = [
             {
                 **row,
-                "bar_height": round((row["count"] / max_books) * 110)
-                if max_books
-                else 0,
+                "bar_height": (
+                    round((row["count"] / max_books) * 110) if max_books else 0
+                ),
             }
             for row in book_rows
         ]
         heatmap_end = today
-        heatmap_start = (
-            period_start
-            if period_days
-            else today - timedelta(days=364)
-        )
+        heatmap_start = period_start if period_days else today - timedelta(days=364)
         heatmap_dates = [
             heatmap_start + timedelta(days=offset)
             for offset in range((heatmap_end - heatmap_start).days + 1)
@@ -905,18 +941,28 @@ def stats(request):
                     }
                 )
                 seen_months.add(month_key)
-            activity_heatmap.append({
-                "date": day,
-                "label": day.strftime("%d.%m.%Y"),
-                "pages": heatmap_pages.get(day, 0),
-                "level": (
-                    1
-                    if heatmap_pages.get(day, 0) > 0 and heatmap_max < 4
-                    else min(4, max(1, round(heatmap_pages.get(day, 0) / heatmap_max * 4)))
-                    if heatmap_pages.get(day, 0)
-                    else 0
-                ),
-            })
+            activity_heatmap.append(
+                {
+                    "date": day,
+                    "label": day.strftime("%d.%m.%Y"),
+                    "pages": heatmap_pages.get(day, 0),
+                    "level": (
+                        1
+                        if heatmap_pages.get(day, 0) > 0 and heatmap_max < 4
+                        else (
+                            min(
+                                4,
+                                max(
+                                    1,
+                                    round(heatmap_pages.get(day, 0) / heatmap_max * 4),
+                                ),
+                            )
+                            if heatmap_pages.get(day, 0)
+                            else 0
+                        )
+                    ),
+                }
+            )
         stats_data = {
             "books_read": UserBook.objects.filter(
                 user_id=user.id, status="finished"
@@ -926,9 +972,11 @@ def stats(request):
             ).count(),
             "pages_total": activity_aggregate["total_pages"] or 0,
             "ppd": round(
-                ((activity_aggregate["total_pages"] or 0) / account_age_days)
-                if activity_aggregate["total_pages"]
-                else 0.0,
+                (
+                    ((activity_aggregate["total_pages"] or 0) / account_age_days)
+                    if activity_aggregate["total_pages"]
+                    else 0.0
+                ),
                 1,
             ),
             "streak": calculated_streak,
@@ -981,12 +1029,14 @@ def profile(request):
     if user:
         evaluate_achievements(user)
         favorite_genres = list(
-            Genre.objects.filter(user_links__user_id=user.id).values_list("name", flat=True)
+            Genre.objects.filter(user_links__user_id=user.id).values_list(
+                "name", flat=True
+            )
         )
 
-        ratings = UserBook.objects.filter(user_id=user.id, rating__isnull=False).aggregate(
-            avg=Avg("rating")
-        )
+        ratings = UserBook.objects.filter(
+            user_id=user.id, rating__isnull=False
+        ).aggregate(avg=Avg("rating"))
         avg_rating = round(float(ratings["avg"] or 0.0), 2)
         active_challenges = Challenge.objects.filter(
             user_id=user.id, status="active"

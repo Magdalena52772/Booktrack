@@ -29,7 +29,8 @@ class ChartRenderWorker(QThread):
         try:
             # Przetwarzanie danych wykresu
             processed = self.chart_data
-            # Przygotowanie payloadu do rysowania (rozpakowanie dat i wartości do osobnych list)
+            # Przygotowanie payloadu do rysowania (rozpakowanie dat i wartości do
+            # osobnych list)
             if (
                 processed
                 and isinstance(processed, (list, tuple))
@@ -107,9 +108,14 @@ class DashboardView(QWidget):
         # Załaduje dane dashboardu od razu
         QTimer.singleShot(50, self.load_view)
 
-        print(
-            f"[DASHBOARD_INIT] DONE at {dt.now().strftime('%H:%M:%S.%f')[:-3]} ({(dt.now()-t_init).total_seconds()*1000:.0f}ms)"
-        )
+        print(f"[DASHBOARD_INIT] DONE at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-
+                    3]} ({
+                (
+                    dt.now() -
+                    t_init).total_seconds() *
+                1000:.0f}ms)")
 
     def setup_charts(self):
         """Inicjalizacja wykresów z wymuszeniem elastyczności rozmiaru."""
@@ -178,9 +184,9 @@ class DashboardView(QWidget):
 
         from datetime import datetime as dt
 
-        print(
-            f"[TIMING] Dashboard.load_view() started at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
-        )
+        print(f"[TIMING] Dashboard.load_view() started at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-3]}")
 
         # Safety check - jeśli charts nie istnieją, trigger setup
         if self.canvas is None or self.heatmap is None:
@@ -203,7 +209,8 @@ class DashboardView(QWidget):
             and hasattr(parent_window, "_preloaded_dashboard_data")
             and parent_window._preloaded_dashboard_data
         ):
-            # Sprawdzenie czy preloaded zawiera rzeczywiste dane (nie jest pusty lub zerowy)
+            # Sprawdzenie czy preloaded zawiera rzeczywiste dane (nie jest pusty lub
+            # zerowy)
             preloaded_data = parent_window._preloaded_dashboard_data
             has_real_data = (
                 preloaded_data.get("total_users", 0) > 0
@@ -239,19 +246,22 @@ class DashboardView(QWidget):
         self._is_refreshing = False
         from datetime import datetime as dt
 
-        print(
-            f"[TIMING] Dashboard data received at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
-        )
+        print(f"[TIMING] Dashboard data received at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-3]}")
         try:
             if data:
-                # Dodatkowa walidacja: sprawdzenie, czy dane zawierają rzeczywiste wartości (nie są puste lub zerowe), zanim pokaże je na UI.
+                # Dodatkowa walidacja: sprawdzenie, czy dane zawierają rzeczywiste
+                # wartości (nie są puste lub zerowe), zanim pokaże je na UI.
                 total_users = data.get("total_users", 0)
                 books_month = data.get("books_month", 0)
                 activity_data = data.get("activity_data", []) or []
 
                 # Jeśli nie ma użytkowników i nie ma książek, to baza jest pusta
                 if total_users == 0 and books_month == 0:
-                    print("[TIMING] Worker returned zero users and books - keeping placeholder")
+                    print(
+                        "[TIMING] Worker returned zero users and books - keeping placeholder"
+                    )
                     self._set_loading_state(True)
                     self._schedule_background_recheck_if_needed()
                     return
@@ -262,7 +272,8 @@ class DashboardView(QWidget):
                     self._last_render_signature = new_signature
                     self._update_dashboard_ui(data)
                     # Ustawia flagę, że pokazały się już ważne dane, więc przy kolejnych
-                    # odświeżeniach można pokazywać placeholdery tylko dla wykresów, a nie dla całego UI.
+                    # odświeżeniach można pokazywać placeholdery tylko dla wykresów, a
+                    # nie dla całego UI.
                     self._has_seen_valid_data = True
                     self.statusMessage.emit(
                         *StatusMsg.get("ACTIVITY_UPDATED", "Dashboard", "Global")
@@ -299,11 +310,10 @@ class DashboardView(QWidget):
         self._schedule_background_recheck_if_needed()
 
     def _find_main_window(self):
-        # Pomocnicza metoda do znalezienia MainWindow (aby sprawdzić status generowania danych przy starcie)
+        # Pomocnicza metoda do znalezienia MainWindow (aby sprawdzić status
+        # generowania danych przy starcie)
         parent_window = self.parent()
-        while parent_window and not hasattr(
-            parent_window, "_startup_generation_done"
-        ):
+        while parent_window and not hasattr(parent_window, "_startup_generation_done"):
             parent_window = parent_window.parent()
         return parent_window
 
@@ -332,14 +342,17 @@ class DashboardView(QWidget):
         if self._is_refreshing:
             return
 
-        # Unika uruchamiania wielu workerów do sprawdzania aktywności - jeśli już jest jeden aktywny, nie startuje kolejnego
-        if self._current_check_worker and getattr(
-            self._current_check_worker, "isRunning", lambda: False
-        )():
+        # Unika uruchamiania wielu workerów do sprawdzania aktywności - jeśli już
+        # jest jeden aktywny, nie startuje kolejnego
+        if (
+            self._current_check_worker
+            and getattr(self._current_check_worker, "isRunning", lambda: False)()
+        ):
             return
 
         # Uruchamia lekkiego worker'a, który sprawdzi ostatni timestamp aktywności z tabeli meta (string)
-        # i porówna go z self._last_activity_stamp. Jeśli jest inny, triggeruje load_view() do pełnego przeładowania danych.
+        # i porówna go z self._last_activity_stamp. Jeśli jest inny, triggeruje
+        # load_view() do pełnego przeładowania danych.
         self._current_check_worker = DatabaseWorker(
             "check_activity_latest", db_connection=self.conn
         )
@@ -413,9 +426,10 @@ class DashboardView(QWidget):
                 self._set_loading_state(True, charts_only=True)
 
             # Debounce: nie uruchamia wielu równoległych workerów do renderu
-            if self._chart_worker and getattr(
-                self._chart_worker, "isRunning", lambda: False
-            )():
+            if (
+                self._chart_worker
+                and getattr(self._chart_worker, "isRunning", lambda: False)()
+            ):
                 print("[TIMING] Chart worker already running - skipping spawn")
             else:
                 # Uruchamia worker, który przygotuje payload do rysowania
@@ -443,17 +457,17 @@ class DashboardView(QWidget):
 
         from datetime import datetime as dt
 
-        print(
-            f"[TIMING] Dashboard UI fully rendered at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
-        )
+        print(f"[TIMING] Dashboard UI fully rendered at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-3]}")
 
     def _on_charts_rendered(self):
         """Callback kiedy wykresy się wyrenderują w tle"""
         from datetime import datetime as dt
 
-        print(
-            f"[DASHBOARD_READY] Charts fully rendered at {dt.now().strftime('%H:%M:%S.%f')[:-3]}"
-        )
+        print(f"[DASHBOARD_READY] Charts fully rendered at {
+                dt.now().strftime('%H:%M:%S.%f')[
+                    :-3]}")
         self.renderingFinished.emit()
 
     def _set_loading_state(self, is_loading, charts_only: bool = False):
@@ -485,7 +499,8 @@ class DashboardView(QWidget):
                     # które mogą wystąpić podczas szybkiego przełączania widoków
                     pass
 
-            # Pokazuje placeholdery wykresów zanim zostaną podmienione na canvasy matplotlib
+            # Pokazuje placeholdery wykresów zanim zostaną podmienione na canvasy
+            # matplotlib
             lbl_activity = getattr(self.ui, "lbl_activity_chart", None)
             if lbl_activity is not None:
                 try:
@@ -541,9 +556,11 @@ class DashboardView(QWidget):
                 except Exception:
                     pass
         else:
-            # Loading state ukryty - UI będzie aktualizowany przez _update_dashboard_ui()
+            # Loading state ukryty - UI będzie aktualizowany przez
+            # _update_dashboard_ui()
             try:
-                # Resetuje placeholdery, ale tylko jeśli nie było jeszcze ważnych danych (przy pierwszym załadowaniu)
+                # Resetuje placeholdery, ale tylko jeśli nie było jeszcze ważnych danych
+                # (przy pierwszym załadowaniu)
                 pass
             except Exception:
                 pass

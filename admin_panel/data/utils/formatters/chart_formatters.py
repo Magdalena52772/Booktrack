@@ -38,7 +38,8 @@ class ChartTooltipHelper:
                         # Przekształcenie danych do pikseli
                         points_px = transform(list(zip(xdata, ydata)))
 
-                        # Obliczenie odległości od kursora do każdego punktu i znalezienie minimalnej
+                        # Obliczenie odległości od kursora do każdego punktu i
+                        # znalezienie minimalnej
                         min_dist = float("inf")
                         for px, py in points_px:
                             dist = ((xpixel - px) ** 2 + (ypixel - py) ** 2) ** 0.5
@@ -49,7 +50,7 @@ class ChartTooltipHelper:
                         if min_dist > tolerance:
                             QToolTip.hideText()
                             return
-            except:
+            except BaseException:
                 pass
 
             # Pobiera wiadomość tylko jeśli blisko markerów

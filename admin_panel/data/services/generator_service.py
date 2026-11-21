@@ -83,7 +83,8 @@ class GeneratorService:
             # Grupa młodzieży
             age = random.randint(12, 17)
 
-        # Konwersja wyliczonego wieku na obiekt daty i formatowanie do stringa YYYY-MM-DD
+        # Konwersja wyliczonego wieku na obiekt daty i formatowanie do stringa
+        # YYYY-MM-DD
         dob_date = get_fake().date_of_birth(minimum_age=age, maximum_age=age)
         return dob_date.strftime("%Y-%m-%d")
 
@@ -105,10 +106,10 @@ class GeneratorService:
         """Generuje listę unikalnych ulubionych gatunków z uwzględnieniem wag dla wieku"""
         cat = GeneratorService.age_category_from_birth(birth_date)
         age_genres = AGE_BASED_GENRES.get(cat, GENRES)
-        
+
         fav_genres = set()
         fav_count = random.randint(1, 3)
-        
+
         # Filtruje globalne wagi specjalnie pod aktualną grupę wiekową
         age_weights = []
         for g in age_genres:
@@ -117,22 +118,22 @@ class GeneratorService:
                 age_weights.append(GENRE_WEIGHTS[idx])
             else:
                 age_weights.append(5)
-        
+
         attempts = 0
         while len(fav_genres) < fav_count and attempts < 15:
             attempts += 1
-            
+
             # Losuje z wagami
             if random.random() < FAVORITE_GENRE_BIAS.get("age_based_ratio", 0.9):
                 picked = random.choices(age_genres, weights=age_weights, k=1)[0]
             else:
                 picked = random.choices(GENRES, weights=GENRE_WEIGHTS, k=1)[0]
-                
+
             fav_genres.add(picked)
-            
+
         if not fav_genres:
             fav_genres.add(random.choices(GENRES, weights=GENRE_WEIGHTS, k=1)[0])
-            
+
         return list(fav_genres)
 
     @staticmethod

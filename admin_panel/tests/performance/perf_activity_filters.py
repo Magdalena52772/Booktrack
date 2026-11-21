@@ -1,3 +1,6 @@
+from views.main_window import MainWindow
+from data.repositories.activity_repo import ActivityRepository
+from data.database import get_connection
 import sys
 import time
 import unittest
@@ -12,9 +15,6 @@ base_dir = next(
 )
 sys.path.insert(0, str(base_dir))
 
-from data.database import get_connection
-from data.repositories.activity_repo import ActivityRepository
-from views.main_window import MainWindow
 
 app = QApplication.instance() or QApplication(sys.argv)
 
@@ -43,9 +43,11 @@ class TestActivityPerformance(unittest.TestCase):
         print("\n" + "=" * 95)
         print("          AUDYT WYDAJNOŚCI MODUŁU ANALITYCZNEGO (ACTIVITY)")
         print("=" * 95)
-        print(
-            f"{'Filtr':<10} | {'KPI [s]':<15} | {'Trend [s]':<15} | {'Total [s]':<12} | {'Verdict'}"
-        )
+        print(f"{
+                'Filtr':<10} | {
+                'KPI [s]':<15} | {
+                'Trend [s]':<15} | {
+                    'Total [s]':<12} | {'Verdict'}")
         print("-" * 100)
 
         # Pobiera opcje z ComboBoxa
@@ -100,15 +102,22 @@ class TestActivityPerformance(unittest.TestCase):
             else:
                 trend_verdict = "VERY SLOW"
 
-            print(
-                f"{f_text:<10} | {kpi_time:8.4f}s ({kpi_verdict:<10}) | {trend_time:8.4f}s ({trend_verdict:<10}) | {total_time:8.4f}s | {total_verdict}"
-            )
+            print(f"{
+                    f_text:<10} | {
+                    kpi_time:8.4f}s ({
+                    kpi_verdict:<10}) | {
+                    trend_time:8.4f}s ({
+                        trend_verdict:<10}) | {
+                            total_time:8.4f}s | {total_verdict}")
 
             # ASERCJA: Całkowity czas < 1.2s (łączy SQL + render matplotlib)
             self.assertLess(
                 total_time,
                 1.2,
-                f"Filter '{f_text}' exceeded 1.2s threshold (Total: {total_time:.3f}s, KPI: {kpi_time:.3f}s, Trend: {trend_time:.3f}s)",
+                f"Filter '{f_text}' exceeded 1.2s threshold (Total: {
+                    total_time:.3f}s, KPI: {
+                    kpi_time:.3f}s, Trend: {
+                    trend_time:.3f}s)",
             )
 
         print("-" * 100)

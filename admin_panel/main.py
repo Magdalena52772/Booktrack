@@ -82,7 +82,7 @@ def main():
         print("[CRITICAL ERROR] Blad podczas inicjalizacji okna MainWindow(conn)!")
         traceback.print_exc()
         sys.exit(1)
-    
+
     # Bezpieczne mechanizmy zapobiegające usuwaniu obiektów przez Garbage Collector
     window._bg_workers = []
     window._genre_timer = None
@@ -163,23 +163,21 @@ def main():
                             "books_read": row[5],
                         }
                         new_users.append(u_data)
-                        print(
-                            f"[GROWTH] {datetime.now().strftime('%H:%M:%S')} | Nowy użytkownik: {u_data['name']}"
-                        )
+                        print(f"[GROWTH] {
+                                datetime.now().strftime('%H:%M:%S')} | Nowy użytkownik: {
+                                u_data['name']}")
 
                 if new_users:
                     generate_books(thread_conn, new_users)
                     generate_challenges(thread_conn, new_users)
 
                 # Wyciągnięcie książek zbierających postępy z tabeli relacyjnej
-                cursor.execute(
-                    """
-                    SELECT b.id, ub.user_id, ub.status 
+                cursor.execute("""
+                    SELECT b.id, ub.user_id, ub.status
                     FROM books b
                     JOIN user_books ub ON b.id = ub.book_id
                     WHERE ub.status = 'reading'
-                    """
-                )
+                    """)
                 books_in_progress = [
                     {"id": r[0], "user_id": r[1], "status": r[2]}
                     for r in cursor.fetchall()
@@ -198,12 +196,14 @@ def main():
             cursor.close()
             log_time("Startup data generation completed")
             print("[STARTUP] Zakończone! UI odświeży się automatycznie.")
-            
+
             # Bezpieczne przekazanie flagi zakończenia operacji do głównego wątku okna
             window._startup_generation_done = True
             print("[STARTUP-FLAG] _startup_generation_done = True")
         except Exception as e:
-            print("[STARTUP EXCEPTION IN THREAD] Blad podczas generowania/weryfikacji danych startowych:")
+            print(
+                "[STARTUP EXCEPTION IN THREAD] Blad podczas generowania/weryfikacji danych startowych:"
+            )
             traceback.print_exc()
             thread_conn.rollback()
             window._startup_generation_done = True
@@ -253,7 +253,8 @@ def main():
                 update_all_user_streaks(timer_cursor)
                 conn.commit()
                 print(
-                    f"[STREAKS] {current_time.strftime('%H:%M:%S')} | Daily streak recalculation completed."
+                    f"[STREAKS] {
+                        current_time.strftime('%H:%M:%S')} | Daily streak recalculation completed."
                 )
 
             # Algorytm dopasowania intensywności symulacji ruchu do pory dnia
@@ -265,15 +266,14 @@ def main():
             else:
                 base_activity = random.randint(5, 12)
 
-            # Pobranie aktywnych użytkowników, którzy aktualnie posiadają przypisaną książkę ze statusem 'reading'
-            timer_cursor.execute(
-                """
+            # Pobranie aktywnych użytkowników, którzy aktualnie posiadają przypisaną
+            # książkę ze statusem 'reading'
+            timer_cursor.execute("""
                 SELECT DISTINCT u.id, u.status, u.name, u.username, u.birth_date
                 FROM users u
                 JOIN user_books ub ON u.id = ub.user_id
                 WHERE ub.status = 'reading' AND u.status = 'active'
-                """
-            )
+                """)
             active_list = [
                 {
                     "id": r[0],
@@ -286,14 +286,12 @@ def main():
             ]
 
             # Pobranie listy książek w toku z właściwej tabeli relacyjnej
-            timer_cursor.execute(
-                """
-                SELECT b.id, ub.user_id, ub.status 
+            timer_cursor.execute("""
+                SELECT b.id, ub.user_id, ub.status
                 FROM books b
                 JOIN user_books ub ON b.id = ub.book_id
                 WHERE ub.status = 'reading'
-                """
-            )
+                """)
             current_books = [
                 {"id": r[0], "user_id": r[1], "status": r[2]}
                 for r in timer_cursor.fetchall()
@@ -307,13 +305,14 @@ def main():
                 run_maintenance(conn)
                 conn.commit()
 
-                print(
-                    f"[LIVE] {datetime.now().strftime('%H:%M:%S')} | Added {len(new_logs)} activities:"
-                )
+                print(f"[LIVE] {
+                        datetime.now().strftime('%H:%M:%S')} | Added {
+                        len(new_logs)} activities:")
                 for log in new_logs:
                     print(f"       {log}")
 
-                # Bezpośrednie wstrzykiwanie logów do widoku LiveFeed bez przeładowania interfejsu
+                # Bezpośrednie wstrzykiwanie logów do widoku LiveFeed bez przeładowania
+                # interfejsu
                 if hasattr(window, "view_config"):
                     for cfg in window.view_config.values():
                         if (
@@ -382,7 +381,8 @@ def main():
         window._genre_timer = genre_timer
         return genre_timer
 
-    # Przesunięcie przetwarzania wątków statystyk o 5 minut, by uniknąć wyścigu zasobów przy starcie
+    # Przesunięcie przetwarzania wątków statystyk o 5 minut, by uniknąć
+    # wyścigu zasobów przy starcie
     QTimer.singleShot(300000, start_recurring_genre_timer)
     print(
         "[GENRES] Timer zaplanowany: first run za 5 min (po startup generation), potem co 5 min"
@@ -397,10 +397,10 @@ def main():
 if __name__ == "__main__":
     # Globalny handler dla błędów w pętli zdarzeń Qt/PySide6
     def qt_exception_hook(exctype, value, tb):
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("[CRITICAL UI ERROR] Nieobsłużony wyjątek w widoku aplikacji!")
         traceback.print_exception(exctype, value, tb)
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
         sys.__excepthook__(exctype, value, tb)
 
     # Rejestracja handlera w systemie

@@ -1,5 +1,13 @@
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtWidgets import QWidget, QLabel, QSizePolicy, QPushButton, QMessageBox, QHBoxLayout, QApplication
+from PySide6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QSizePolicy,
+    QPushButton,
+    QMessageBox,
+    QHBoxLayout,
+    QApplication,
+)
 from PySide6.QtGui import QPixmap
 
 from data.utils.status_manager import StatusMsg
@@ -32,7 +40,9 @@ class ClusteringView(QWidget):
         # przycisk do wyświetlania kryteriów klastrów
         self.btn_info = QPushButton("Cluster Criteria")
         self.btn_info.setMinimumSize(180, 40)
-        self.btn_info.setToolTip("Click to view detailed criteria and ranges for K-Means clusters.")
+        self.btn_info.setToolTip(
+            "Click to view detailed criteria and ranges for K-Means clusters."
+        )
 
         self.btn_info.setStyleSheet("""
             QPushButton {
@@ -60,7 +70,8 @@ class ClusteringView(QWidget):
         buttons_layout.addWidget(self.btn_info)
         buttons_layout.addStretch()
 
-        # Zastąpienie istniejącego przycisku w układzie pionowym nowym układem przycisków
+        # Zastąpienie istniejącego przycisku w układzie pionowym nowym układem
+        # przycisków
         self.ui.v4.removeWidget(self.ui.btn_run_clustering)
         self.ui.v4.insertLayout(1, buttons_layout)
 
@@ -69,7 +80,9 @@ class ClusteringView(QWidget):
         dialog = QMessageBox(self)
         dialog.setWindowTitle("K-Means Clustering Criteria & Ranges")
         dialog.setIcon(QMessageBox.Icon.Information)
-        dialog.setText("<b>Behavioral segmentation specification and cluster ranges:</b>")
+        dialog.setText(
+            "<b>Behavioral segmentation specification and cluster ranges:</b>"
+        )
 
         details = (
             "• <b>Cluster 0: Casual Readers (Low Engagement)</b><br>"
@@ -90,7 +103,9 @@ class ClusteringView(QWidget):
         self.lbl_cluster_image = QLabel()
         self.lbl_cluster_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        size_policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        size_policy = QSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.lbl_cluster_image.setSizePolicy(size_policy)
 
         # Stan początkowy przed wygenerowaniem wykresu
@@ -108,7 +123,7 @@ class ClusteringView(QWidget):
         tooltips = {
             "btn_run_clustering": "Execute K-Means machine learning algorithm for user behavioral segmentation.",
             "lbl_cluster_title": "Behavioral cluster criteria and segmentation overview.",
-            "lbl_cluster_image": "Visual representation of user behavioral segmentation."
+            "lbl_cluster_image": "Visual representation of user behavioral segmentation.",
         }
         apply_tooltips(self.ui, tooltips)
 
@@ -118,13 +133,15 @@ class ClusteringView(QWidget):
         pass
 
     def resizeEvent(self, event):
-        # Obsługa zdarzenia zmiany rozmiaru okna, aby przeskalować obraz wykresu klastrów
+        # Obsługa zdarzenia zmiany rozmiaru okna, aby przeskalować obraz wykresu
+        # klastrów
         super().resizeEvent(event)
-        if hasattr(self, 'current_pixmap_path') and self.current_pixmap_path:
+        if hasattr(self, "current_pixmap_path") and self.current_pixmap_path:
             self.update_image_display(self.current_pixmap_path)
 
     def execute_clustering(self):
-        # Uruchomienie procesu klastrowania użytkowników z natychmiastową informacją w UI
+        # Uruchomienie procesu klastrowania użytkowników z natychmiastową
+        # informacją w UI
         from data.services.clustering_service import run_user_clustering
 
         self.statusMessage.emit(*StatusMsg.get("LOAD_START", "AI Clustering"))
@@ -151,15 +168,19 @@ class ClusteringView(QWidget):
 
             if result["success"]:
                 self.lbl_cluster_image.setText("")
-                self.current_pixmap_path = result['output_path']
+                self.current_pixmap_path = result["output_path"]
                 self.update_image_display(self.current_pixmap_path)
                 self.statusMessage.emit(*StatusMsg.get("LOAD_SUCCESS", "AI Clustering"))
             else:
-                self.lbl_cluster_image.setText(f"<span style='color: #c0392b;'>Error: {result['message']}</span>")
-                self.statusMessage.emit(*StatusMsg.get("DB_ERROR", result['message']))
+                self.lbl_cluster_image.setText(
+                    f"<span style='color: #c0392b;'>Error: {result['message']}</span>"
+                )
+                self.statusMessage.emit(*StatusMsg.get("DB_ERROR", result["message"]))
 
         except Exception as e:
-            self.lbl_cluster_image.setText(f"<span style='color: #c0392b;'>Unexpected error: {str(e)}</span>")
+            self.lbl_cluster_image.setText(
+                f"<span style='color: #c0392b;'>Unexpected error: {str(e)}</span>"
+            )
             self.statusMessage.emit(*StatusMsg.get("DB_ERROR", str(e)))
         finally:
             QApplication.restoreOverrideCursor()
@@ -174,12 +195,15 @@ class ClusteringView(QWidget):
             w = self.lbl_cluster_image.width()
             h = self.lbl_cluster_image.height()
 
-            if w < 100: w = 900
-            if h < 100: h = 650
+            if w < 100:
+                w = 900
+            if h < 100:
+                h = 650
 
             scaled_pixmap = pixmap.scaled(
-                w, h,
+                w,
+                h,
                 Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
+                Qt.TransformationMode.SmoothTransformation,
             )
             self.lbl_cluster_image.setPixmap(scaled_pixmap)

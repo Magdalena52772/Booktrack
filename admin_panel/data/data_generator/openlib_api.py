@@ -24,7 +24,8 @@ def fetch_book_from_api(genre_name: str = None, fallback_pool=None):
     """
     for attempt in range(MAX_RETRIES):
         try:
-            # Jeśli jest gatunek, używa go jako zapytania, w przeciwnym razie losowy gatunek z konfiguracji
+            # Jeśli jest gatunek, używa go jako zapytania, w przeciwnym razie losowy
+            # gatunek z konfiguracji
             query = genre_name if genre_name else random.choice(GENRES)
 
             params = {
@@ -62,7 +63,8 @@ def fetch_book_from_api(genre_name: str = None, fallback_pool=None):
             if not isinstance(page_count, int) or page_count <= 0:
                 page_count = 300
 
-            # Wyciąga dane książki z openlibrary_id z klucza, który ma format "/works/OL12345W"
+            # Wyciąga dane książki z openlibrary_id z klucza, który ma format
+            # "/works/OL12345W"
             key = book_doc.get("key", "")
             openlibrary_id = key.split("/")[-1] if key else None
 
@@ -121,7 +123,8 @@ def get_book_live_or_fallback(genre_name=None, fallback_pool=None, force_api=Fal
             pool_by_genre = {}
 
         if pool_books:
-            # Jeśli jest gatunek i są książki w puli dla tego gatunku, wybiera z nich, w przeciwnym razie z całej puli
+            # Jeśli jest gatunek i są książki w puli dla tego gatunku, wybiera z nich,
+            # w przeciwnym razie z całej puli
             if genre_name and genre_name in pool_by_genre:
                 selected = random.choice(pool_by_genre[genre_name])
             else:
