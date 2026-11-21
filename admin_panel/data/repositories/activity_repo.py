@@ -183,3 +183,21 @@ class ActivityRepository:
             formatted_logs.append((time_str, message))
 
         return formatted_logs
+
+    def get_daily_book_metrics(self, day: str):
+        """Returns books started and finished on the given calendar day."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                (SELECT COUNT(*) FROM user_books WHERE date(start_date) = ?),
+                (
+                    SELECT COUNT(*)
+                    FROM user_books
+                    WHERE status = 'finished' AND date(finish_date) = ?
+                )
+            """,
+            (day, day),
+        )
+        started, finished = cursor.fetchone()
+        return started or 0, finished or 0

@@ -16,7 +16,6 @@ from data.repositories.statistics_repo import StatsRepository
 from data.repositories.user_repo import UserRepository
 from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
 from data.utils.formatters.user_profile_formatter import UserProfileFormatter
-from data.services.user_performance_service import UserPerformanceService
 
 
 class UsersView(QWidget):
@@ -369,9 +368,7 @@ class UsersView(QWidget):
             system_avg = self.stats_repo.get_system_wide_ppd("month")
 
             # Metryki wydajnościowe użytkownika (zależą od wybranego filtra)
-            user_ppd = UserPerformanceService.calculate_systematic_ppd(
-                user_id, self.conn, current_filter
-            )
+            user_ppd = self.repo.calculate_systematic_ppd(user_id, current_filter)
 
             # Formatowanie profilu HTML
             info_text = UserProfileFormatter.format_profile(

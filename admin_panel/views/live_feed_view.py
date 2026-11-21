@@ -4,6 +4,7 @@ from datetime import datetime
 
 from data.utils.status_manager import StatusMsg
 from data.utils.helpers.ui_helpers import load_ui, apply_tooltips
+from data.repositories.activity_repo import ActivityRepository
 
 
 class LiveFeedView(QWidget):
@@ -13,6 +14,7 @@ class LiveFeedView(QWidget):
         super().__init__()
 
         self.conn = conn
+        self.activity_repo = ActivityRepository(conn)
 
         # Ładowanie interfejsu z pliku .ui
         self.ui = load_ui(self, "views/ui/LiveFeedView.ui")
@@ -51,14 +53,11 @@ class LiveFeedView(QWidget):
 
     def refresh_event_log(self):
         """Pobiera i wyświetla ostatnie logi aktywności z bazy danych."""
-        from data.repositories.activity_repo import ActivityRepository
-
         # Czyści listę
         self.ui.list_events.clear()
 
         # Pobiera ostatnie 50 logów
-        activity_repo = ActivityRepository(self.conn)
-        logs = activity_repo.get_recent_activity_logs(limit=50)
+        logs = self.activity_repo.get_recent_activity_logs(limit=50)
 
         if logs:
             for time_str, message in logs:
@@ -72,28 +71,10 @@ class LiveFeedView(QWidget):
     def update_daily_metrics(self):
         """Pobiera i wyświetla dzisiejsze KPI (rozpoczęte i ukończone książki)."""
         try:
-            cursor = self.conn.cursor()
             today_str = datetime.now().strftime("%Y-%m-%d")
-
-            # Książki rozpoczęte dzisiaj
-            cursor.execute(
-                """
-                SELECT COUNT(*) FROM user_books
-                WHERE date(start_date) = ?
-            """,
-                (today_str,),
+            start_date, finish_date = self.activity_repo.get_daily_book_metrics(
+                today_str
             )
-            start_date = cursor.fetchone()[0] or 0
-
-            # Książki ukończone dzisiaj
-            cursor.execute(
-                """
-                SELECT COUNT(*) FROM user_books
-                WHERE status = 'finished' AND date(finish_date) = ?
-            """,
-                (today_str,),
-            )
-            finish_date = cursor.fetchone()[0] or 0
 
             # Aktualizacja etykiet w UI
             if hasattr(self.ui, "lbl_books_started_title"):

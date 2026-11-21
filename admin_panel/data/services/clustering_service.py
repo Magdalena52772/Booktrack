@@ -1,5 +1,5 @@
 import numpy as np
-import pandas as pd
+from data.repositories.clustering_repo import ClusteringRepository
 from sklearn.cluster import KMeans, HDBSCAN
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
@@ -18,12 +18,8 @@ def run_user_clustering(
     (góra: rozrzut z centroidami, dół: słupki metryk i pokrycia bazy) do pracy dyplomowej.
     """
     try:
-        query = """
-            SELECT id, username, books_read, pages_per_day, current_streak
-            FROM users
-            WHERE status = 'active'
-        """
-        df = pd.read_sql(query, con=conn)
+        clustering_repo = ClusteringRepository(conn)
+        df = clustering_repo.get_active_users()
 
         if df.empty or len(df) < 4:
             return {
@@ -40,12 +36,7 @@ def run_user_clustering(
         df["cluster"] = kmeans.fit_predict(scaled_features)
         kmeans_silhouette = silhouette_score(scaled_features, df["cluster"])
 
-        cursor = conn.cursor()
-        for _, row in df.iterrows():
-            cursor.execute(
-                "UPDATE users SET cluster_group = ? WHERE id = ?",
-                (int(row["cluster"]), int(row["id"])),
-            )
+        clustering_repo.update_cluster_groups(zip(df["id"], df["cluster"]))
         conn.commit()
 
         # =====================================================================

@@ -14,29 +14,17 @@ import traceback
 from datetime import datetime, timedelta
 from data.utils.helpers.date_helpers import DateHelper
 from data.repositories.statistics_repo import StatsRepository
+from data.repositories.maintenance_repo import MaintenanceRepository
 
 
 def update_genre_stats(conn):
     """Aktualizacja globalnych statystyk popularności gatunków w bazie danych.
     Oblicza zasięg czytelniczy, średnie oceny oraz procentowy udział w przeczytanych stronach dla każdego gatunku.
     """
-    cursor = conn.cursor()
+    repo = MaintenanceRepository(conn)
 
     try:
-        # Agregacja statystyk poprzez złączenie tabeli gatunków, katalogu książek
-        # oraz relacji użytkowników
-        cursor.execute("""
-            SELECT
-                g.id,
-                COUNT(DISTINCT ub.user_id) as readers,
-                ROUND(IFNULL(AVG(CASE WHEN ub.status = 'finished' THEN ub.rating END), 0.0), 2) as avg_rating,
-                COUNT(CASE WHEN ub.status = 'finished' THEN 1 END) as books_read
-            FROM genres g
-            LEFT JOIN books b ON g.id = b.genre_id
-            LEFT JOIN user_books ub ON b.id = ub.book_id
-            GROUP BY g.id
-        """)
-        stats = cursor.fetchall()
+        stats = repo.get_genre_stats()
 
         total_finished = sum(row[3] for row in stats)
 
@@ -49,14 +37,7 @@ def update_genre_stats(conn):
                 share = 0.0
             updates.append((readers, avg_rating, books_read, share, g_id))
 
-        cursor.executemany(
-            """
-            UPDATE genres
-            SET readers = ?, avg_rating = ?, books_read = ?, reading_time_share = ?
-            WHERE id = ?
-        """,
-            updates,
-        )
+        repo.update_genre_stats(updates)
 
         conn.commit()
         print("[STATS] Batch update zakończony sukcesem.")
@@ -65,7 +46,7 @@ def update_genre_stats(conn):
         print(f"[STATS ERROR] {e}")
         traceback.print_exc()
     finally:
-        cursor.close()
+        pass
 
 
 def update_challenges_progress(conn):
@@ -75,34 +56,10 @@ def update_challenges_progress(conn):
     Automatycznie oznacza wyzwania jako 'finished', jeśli osiągnięto cel.
     Oznacza wyzwania jako 'failed', jeśli minął termin końcowy, a cel nie został spełniony.
     """
-    cursor = conn.cursor()
+    repo = MaintenanceRepository(conn)
 
     try:
-        # Aktualizacja postępów na podstawie rekordów ukończenia przypisanych do
-        # tabeli user_books
-        cursor.execute("""
-            UPDATE challenges
-            SET current_value = (
-                SELECT COUNT(*)
-                FROM user_books
-                WHERE user_books.user_id = challenges.user_id
-                  AND user_books.status = 'finished'
-                  AND user_books.finish_date BETWEEN challenges.start_date AND challenges.end_date
-            )
-            WHERE status = 'active' AND type = 'quantity'
-        """)
-
-        cursor.execute("""
-            UPDATE challenges
-            SET status = 'finished'
-            WHERE status = 'active' AND current_value >= target_value
-        """)
-
-        cursor.execute("""
-            UPDATE challenges
-            SET status = 'failed'
-            WHERE status = 'active' AND end_date < datetime('now')
-        """)
+        repo.sync_challenges()
 
         conn.commit()
         print("[CHALLENGES] Zsynchronizowano postępy i statusy wyzwań.")
@@ -111,7 +68,7 @@ def update_challenges_progress(conn):
         print(f"[CHALLENGES ERROR] {e}")
         traceback.print_exc()
     finally:
-        cursor.close()
+        pass
 
 
 def update_all_user_streaks(cursor):
@@ -119,8 +76,8 @@ def update_all_user_streaks(cursor):
 
     Nowe konta (registered today) mają automatycznie 1 dzień streak bez liczenia.
     """
-    cursor.execute("SELECT id, date_joined FROM users")
-    users = cursor.fetchall()
+    repo = MaintenanceRepository(cursor.connection)
+    users, activity_dates = repo.get_users_and_activity_dates()
 
     current_date = datetime.now().date()
     streak_updates = []
@@ -134,14 +91,7 @@ def update_all_user_streaks(cursor):
             streak_updates.append((1, user_id))
             continue
 
-        query = """
-            SELECT DISTINCT date(timestamp) as activity_date
-            FROM activity
-            WHERE user_id = ?
-            ORDER BY activity_date DESC
-            LIMIT 100
-        """
-        rows = cursor.execute(query, (user_id,)).fetchall()
+        rows = activity_dates[user_id]
 
         streak = 0
         if rows:
@@ -160,43 +110,19 @@ def update_all_user_streaks(cursor):
 
         streak_updates.append((streak, user_id))
 
-    cursor.executemany(
-        "UPDATE users SET current_streak = ? WHERE id = ?", streak_updates
-    )
+    repo.update_user_streaks(streak_updates)
 
 
 def run_maintenance(conn):
     """Główny punkt wejścia do konserwacji danych Wywołuje wszystkie funkcje
     aktualizujące statystyki i synchronizujące postępy w wyzwaniach.
     """
-    cursor = conn.cursor()
+    repo = MaintenanceRepository(conn)
     try:
-        # Przeliczanie ogólnej liczby ukończonych książek z poziomu tabeli user_books
-        cursor.execute("""
-            UPDATE users
-            SET books_read = (
-                SELECT COUNT(*) FROM user_books
-                WHERE user_books.user_id = users.id AND user_books.status = 'finished'
-            )
-        """)
-        cursor.execute("""
-            UPDATE users
-            SET pages_per_day = COALESCE(
-                (
-                    SELECT AVG(daily_sum) FROM (
-                        SELECT SUM(pages_read) as daily_sum
-                        FROM activity
-                        WHERE activity.user_id = users.id
-                          AND timestamp > date('now', '-30 days')
-                        GROUP BY date(timestamp)
-                    )
-                ), 0.0
-            )
-            WHERE status != 'inactive'
-        """)
-        cursor.execute("UPDATE users SET pages_per_day = 0.0 WHERE status = 'inactive'")
+        repo.sync_books_read()
+        repo.sync_pages_per_day()
 
-        update_all_user_streaks(cursor)
+        update_all_user_streaks(conn.cursor())
 
         conn.commit()
 
@@ -214,4 +140,4 @@ def run_maintenance(conn):
         traceback.print_exc()
         raise
     finally:
-        cursor.close()
+        pass

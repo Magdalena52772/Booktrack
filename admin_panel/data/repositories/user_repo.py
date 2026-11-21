@@ -4,6 +4,7 @@ from typing import List
 from data.models.user import User
 from data.utils.time_periods import period_start
 from data.utils.helpers.date_helpers import DateHelper
+from data.services.time_filter_service import TimeFilterService
 from data.services.user_performance_service import UserPerformanceService
 
 
@@ -260,8 +261,6 @@ class UserRepository:
             age = DateHelper.calculate_age(birth_date_raw)
 
             # Obliczanie regularności (Activity Ratio) za ostatnie 30 dni
-            cursor_performance = self.conn.cursor()
-
             # Obsługa nowego konta zarejestrowanego dzisiaj
             reg_date_dt = DateHelper.to_datetime(reg_date_raw)
             reg_date = reg_date_dt.date() if reg_date_dt else datetime.now().date()
@@ -269,9 +268,7 @@ class UserRepository:
             if reg_date == datetime.now().date():
                 consistency_score = (1.0 / 30) * 100
             else:
-                active_days_30 = UserPerformanceService.get_active_days_in_range(
-                    cursor_performance, user_id, 30
-                )
+                active_days_30 = self.get_active_days_in_range(user_id, 30)
                 consistency_score = UserPerformanceService.calculate_consistency_score(
                     active_days_30, 30
                 )
@@ -302,6 +299,48 @@ class UserRepository:
         res = cursor.fetchone()
         return max(res[0], 1) if res and res[0] else 1
 
+    def get_active_days_in_range(self, user_id: int, days_limit: int) -> int:
+        """Counts distinct activity days for a user in a rolling time window."""
+        cursor = self.conn.cursor()
+        result = cursor.execute(
+            """
+            SELECT COUNT(DISTINCT date(timestamp))
+            FROM activity
+            WHERE user_id = ? AND timestamp >= date('now', ?)
+            """,
+            (user_id, f"-{days_limit} days"),
+        ).fetchone()
+        return result[0] if result else 0
+
+    def calculate_systematic_ppd(self, user_id: int, time_filter: str = "all") -> float:
+        """Calculates a user's time-based pages-per-day metric."""
+        cursor = self.conn.cursor()
+        condition, params = TimeFilterService.build_time_filter(time_filter)
+        query = f"""
+            SELECT IFNULL(SUM(pages_read), 0)
+            FROM activity
+            WHERE user_id = ? {condition}
+        """
+        cursor.execute(query, [user_id] + params)
+        total_pages = cursor.fetchone()[0] or 0
+
+        if time_filter.lower() == "week":
+            days_in_filter = 7
+        elif time_filter.lower() == "month":
+            days_in_filter = 30
+        elif time_filter.lower() == "year":
+            days_in_filter = 365
+        else:
+            cursor.execute(
+                "SELECT (julianday('now') - julianday(date_joined)) "
+                "FROM users WHERE id = ?",
+                (user_id,),
+            )
+            result = cursor.fetchone()
+            days_in_filter = max(int(result[0]) if result and result[0] else 1, 1)
+
+        return round(total_pages / days_in_filter, 1)
+
     def get_user_streak(self, user_id: int) -> int:
         """Pobiera gotowy, przeliczony streak z bazy danych (High Performance)."""
         cursor = self.conn.cursor()
@@ -309,31 +348,6 @@ class UserRepository:
             "SELECT current_streak FROM users WHERE id = ?", (user_id,)
         ).fetchone()
         return res[0] if res and res[0] else 0
-
-    def get_user_report_metrics(self, period: str = "all"):
-        """Pobiera metryki dla User Report - total, growth, average PPD."""
-        cursor = self.conn.cursor()
-
-        # Całkowita liczba użytkowników w systemie
-        cursor.execute("SELECT COUNT(*) FROM users")
-        total_users = cursor.fetchone()[0] or 0
-
-        # Wyznaczanie liczby nowych użytkowników dla określonego przedziału czasowego
-        since = None if period.lower() == "all" else period_start(period)
-        if since:
-            since_str = since.strftime("%Y-%m-%d %H:%M:%S")
-            cursor.execute(
-                "SELECT COUNT(*) FROM users WHERE date_joined >= ?", (since_str,)
-            )
-            new_users = cursor.fetchone()[0] or 0
-        else:
-            new_users = 0
-
-        # Wyliczanie średniej wartości PPD aktywnej społeczności
-        cursor.execute("SELECT AVG(pages_per_day) FROM users WHERE status = 'active'")
-        avg_ppd = cursor.fetchone()[0] or 0
-
-        return total_users, new_users, round(avg_ppd, 1)
 
     def get_top_users_report(self, period: str = "all", limit: int = 5):
         """Pobiera top użytkowników rankingiem - top 5 wg stron przeczytanych w okresie."""
@@ -387,9 +401,7 @@ class UserRepository:
             if reg_date == datetime.now().date():
                 consistency_score = (1.0 / period_days) * 100
             else:
-                active_days = UserPerformanceService.get_active_days_in_range(
-                    cursor, user_id, period_days
-                )
+                active_days = self.get_active_days_in_range(user_id, period_days)
                 consistency_score = UserPerformanceService.calculate_consistency_score(
                     active_days, period_days
                 )

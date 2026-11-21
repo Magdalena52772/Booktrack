@@ -1,6 +1,7 @@
 import random
 from data.config import ARCHETYPE_SETTINGS
 from data.services.maintenance_service import run_maintenance
+from data.repositories.maintenance_repo import MaintenanceRepository
 
 
 def slugify(text):
@@ -47,44 +48,18 @@ def get_archetype_name(roll=None):
 
 
 def update_user_ppd(cursor, user_id):
-    """Oblicza realne PPD na podstawie historii sesji i aktualizuje tabelę users."""
-    cursor.execute(
-        """
-        SELECT
-            SUM(pages_read) as total_pages,
-            COUNT(DISTINCT strftime('%Y-%m-%d', timestamp)) as active_days
-        FROM activity
-        WHERE user_id = ?
-    """,
-        (user_id,),
-    )
-
-    res = cursor.fetchone()
-    if res and res[1] > 0:
-        new_ppd = round(res[0] / res[1], 1)
-        cursor.execute(
-            "UPDATE users SET pages_per_day = ? WHERE id = ?", (new_ppd, user_id)
-        )
+    """Aktualizuje PPD przez repozytorium danych."""
+    MaintenanceRepository(cursor.connection).update_user_ppd(user_id)
 
 
 def finalize_database_consistency(conn):
     """Główny punkt wejścia do synchronizacji danych po ciężkich operacjach SQL/API."""
-    cursor = conn.cursor()
-
     # Uruchamia główny proces maintenance (Streaki, PPD, Książki)
     run_maintenance(conn)
 
     # Synchronizacja licznika książek z tabeli USER_BOOKS
     # Liczy faktycznie przeczytane pozycje na podstawie relacyji N:M
-    cursor.execute("""
-        UPDATE users
-        SET books_read = (
-            SELECT COUNT(*)
-            FROM user_books
-            WHERE user_books.user_id = users.id
-              AND user_books.status = 'finished'
-        )
-    """)
+    MaintenanceRepository(conn).sync_books_read()
 
     conn.commit()
     print("Baza zsynchronizowana: Dane wynikają z rekordów aktywności.")

@@ -52,22 +52,6 @@ class UserPerformanceService:
         return round(score, 1)
 
     @staticmethod
-    def get_active_days_in_range(cursor, user_id: int, days_limit: int) -> int:
-        """
-        Pobiera liczbę unikalnych dni aktywności w danym przedziale czasowym
-        Pomocnicza metoda do obliczania consistency score
-        """
-        res = cursor.execute(
-            """
-            SELECT COUNT(DISTINCT date(timestamp))
-            FROM activity
-            WHERE user_id = ? AND timestamp >= date('now', ?)
-        """,
-            (user_id, f"-{days_limit} days"),
-        ).fetchone()
-        return res[0] if res else 0
-
-    @staticmethod
     def get_potential_ppd(total_pages: float, active_reading_days: int) -> float:
         """
         Oblicza Potential PPD (Activity-based Pages Per Day)
@@ -78,56 +62,6 @@ class UserPerformanceService:
         if active_reading_days <= 0:
             return 0.0
         return round(total_pages / active_reading_days, 1)
-
-    @staticmethod
-    def calculate_systematic_ppd(user_id: int, conn, time_filter: str = "all") -> float:
-        """
-        Oblicza Systematic PPD (TIME-BASED) dla użytkownika w wybranym przedziale czasowym.
-
-        TIME-BASED PPD = Suma stron / liczba dni w filtrze (brutalna średnia)
-        Zmienia się z filtrem: week vs month vs year = różne wartości
-
-        Args:
-            user_id: ID użytkownika
-            conn: Połączenie z bazą
-            time_filter: Filtr czasowy (all, week, month, year)
-
-        Returns:
-            Systematic PPD (float)
-        """
-        from data.services.time_filter_service import TimeFilterService
-
-        cursor = conn.cursor()
-        condition, params = TimeFilterService.build_time_filter(time_filter)
-
-        # Oblicza sumę stron w danym filtrze
-        query = f"""
-            SELECT IFNULL(SUM(pages_read), 0)
-            FROM activity
-            WHERE user_id = ? {condition}
-        """
-        params_with_user = [user_id] + params
-        cursor.execute(query, params_with_user)
-        total_pages = cursor.fetchone()[0] or 0
-
-        # Określa liczbę dni dla dzielnika
-        if time_filter.lower() == "week":
-            days_in_filter = 7
-        elif time_filter.lower() == "month":
-            days_in_filter = 30
-        elif time_filter.lower() == "year":
-            days_in_filter = 365
-        else:  # all
-            # Dla "all" - liczy rzeczywiste dni od rejestracji
-            cursor.execute(
-                "SELECT (julianday('now') - julianday(date_joined)) FROM users WHERE id = ?",
-                (user_id,),
-            )
-            result = cursor.fetchone()
-            days_in_filter = max(int(result[0]) if result and result[0] else 1, 1)
-
-        systematic_ppd = total_pages / days_in_filter if days_in_filter > 0 else 0.0
-        return round(systematic_ppd, 1)
 
     @staticmethod
     def calculate_all_metrics(profile_data: dict) -> dict:
